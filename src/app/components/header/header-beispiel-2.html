@@ -1,0 +1,74 @@
+<div class="navbar fixed top-0 w-full z-50 bg-base-100 shadow-md">
+  <!-- Logo und Menü für mobile Geräte -->
+  <div class="flex-1">
+    <a class="btn btn-ghost text-xl">Meine Website</a>
+  </div>
+
+  <!-- Navigationslinks für Desktop -->
+  <div class="flex-none hidden md:block">
+    <ul class="menu menu-horizontal px-1">
+       <li>
+        <!-- popup as modal -->
+        <button class="btn btn-neutral" (click)="dialog.showModal()">Open Modal w form</button>`
+  `     <dialog #dialog class="modal">`
+          <div class="modal-box">
+            <h3 class="text-lg font-bold">Hello!</h3>
+            <p class="py-4">Press ESC key or click the button below to close</p>
+            <div class="modal-action">
+              <form method="dialog">
+                <!-- if there is a button in form, it will close the modal -->
+                <button class="btn">Close</button>
+              </form>
+            </div>
+          </div>
+    `   </dialog>
+      </li>
+      <li>
+        <!-- popup as modal -->
+        <button class="btn btn-neutral" (click)="dialog.showModal()">Open Simple Modal</button>`
+    `    <dialog #dialog class="modal">`
+      `    <p>Quick template-only modal!</p>`
+      `     <button (click)="dialog.close()" class="btn">Close</button>`
+    `   </dialog>
+      </li>
+      <li><a>Startseite</a></li>
+      <li><a>Über uns</a></li>
+      <li><a>Dienstleistungen</a></li>
+      <li><a>Kontakt</a></li>
+    </ul>
+  </div>
+
+  <!-- Hamburger-Menü für mobile Geräte -->
+  <div class="flex-none md:hidden">
+    <button class="btn btn-square btn-ghost" (click)="toggleMenu()">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-5 h-5 stroke-current">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<!-- Mobile Menü (versteckt auf Desktop) -->
+<div id="mobile-menu" class="md:hidden fixed top-16 left-0 w-full bg-base-100 shadow-md z-40"
+  [ngClass]="isBeispiel2MenuVisible ? '' : 'hidden'">
+  <ul class="menu menu-vertical p-4">
+    <li><a>Startseite</a></li>
+    <li><a>Über uns</a></li>
+    <li><a>Dienstleistungen</a></li>
+    <li><a>Kontakt</a></li>
+  </ul>
+</div>
+
+<!-- Platzhalter für das Menü -->
+<div class="h-16"></div>
+
+<!-- Restlicher Inhalt der Seite -->
+<div class="p-4">
+  <p class="mb-4">Hier beginnt der Inhalt deiner Seite.</p>
+  <p>Scroll nach unten, um zu sehen, dass das Menü oben bleibt.</p>
+  <!-- Viele Absätze, um das Scrollen zu ermöglichen -->
+  <p class="mt-32">...</p>
+  <p class="mt-32">...</p>
+  <p class="mt-32">...</p>
+</div>
+

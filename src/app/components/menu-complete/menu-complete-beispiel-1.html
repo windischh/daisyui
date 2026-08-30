@@ -1,0 +1,41 @@
+<!-- p-2 2 pixel padding   w-52 52 pixel wide  mt-4 margin top 4 pixel -->
+ <ul  class="dropdown-content menu shadow bg-base-100 rounded-box p-2 w-52 mt-4">
+  <li >
+    <!-- this li item is a submenu-->
+    <details class="dropdown">
+      <summary>
+        HIER weiteres Submenu
+        <!-- icon class not necessary for menu with submenu  - we use standard details/summary
+        <i  id="dropdownIcon"></i>
+         -->
+      </summary>
+      <!-- here starts content of submenu-->
+      <ul  class="dropdown-content menu shadow bg-base-100 rounded-box p-2 w-52 mt-4">
+        <li>
+         <a>
+            erster Submenupunkt
+         </a>
+        </li>
+        <li>
+         <a>
+           zweiter Submenupunkt
+         </a>
+        </li>
+      </ul>
+    </details>
+  </li>
+  <li class="menu-title text-lg">
+     <!-- this li item is a header -->
+      Header item
+  </li>
+  <li>
+     <!-- this li item has a link - so we use a -->
+     <a>
+        <i class="fas fa-user mr-2"></i> Menupunkt mit user icon
+    </a>
+  </li>
+  <li class="menu-title">
+     <!-- this li item is a divider  -->
+    <div class="divider"></div>
+  </li>
+</ul>

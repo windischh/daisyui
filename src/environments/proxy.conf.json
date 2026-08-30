@@ -1,0 +1,27 @@
+{
+  "/log/**": {
+    "target": "http://127.0.0.1:3260",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/logs/**": {
+    "target": "http://127.0.0.1:3260",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/data/**": {
+    "target": "http://127.0.0.1:3260",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/linkedDocuments/**": {
+    "target": "http://127.0.0.1:3260",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/checkDocuments/**": {
+    "target": "http://127.0.0.1:3260",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

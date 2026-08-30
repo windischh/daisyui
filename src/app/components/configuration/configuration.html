@@ -1,0 +1,32 @@
+@if (auth && sessionForViews && area && isShowForm && !isOptionsSort) {
+  <dsy-configuration-form-view
+    [formAction]="formAction"
+    [session]="sessionForViews" [area]="area" [configurationOptionsLoadCounter]="configurationOptionsLoadCounter"
+    [configurationOptions]="configurationOptions"  [txt]="auth.txt" [optiontxt]="optiontxt"
+    (configurationFormClose)="closeConfigurationForm()" (updateConfigurationOption)="configurationOptionUpdate($event)" (newConfigurationOption)="configurationOptionCreate($event)"
+    (disableConfigurationOption)="disableConfigurationOption($event)"
+    (setOptionsSort)="setOptionsSort(true)">
+  </dsy-configuration-form-view>
+}
+
+@if (auth && sessionForViews && area && isShowForm && isOptionsSort) {
+  <dsy-configuration-sort-view
+    [session]="sessionForViews" [area]="area" [isOptionsSort]="isOptionsSort"
+    [configurationOptions]="configurationOptions"  [txt]="auth.txt" [optiontxt]="optiontxt"
+    (optionsSorted)="sortOptions($event)" (setOptionsSort)="setOptionsSort($event)" (setOptions)="setOptions()">
+  </dsy-configuration-sort-view>
+}
+
+<!-- option-list is shown if there are options or option may be created -->
+@if (refreshSignal() === 1 && auth && sessionForViews && configurationOptions && isShowList) {
+  <dsy-configuration-list-view
+    [session]="sessionForViews"
+    [areas]="areas"
+    [isCreate]="isCreate" [isMaint]="isMaint"
+    [configurationOptions]="configurationOptions" [configurationOption]="configurationOption"
+    [txt]="auth.txt" [optiontxt]="optiontxt"
+    (configurationListClose)="closeConfigurationList()" (areaInsert)="insertArea()"
+    (areaShow)="showArea($event)" (areaMaint)="maintArea($event)"
+    (changeLanguage)="changeLanguage($event)">
+  </dsy-configuration-list-view>
+}

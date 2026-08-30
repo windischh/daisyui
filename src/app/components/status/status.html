@@ -1,0 +1,51 @@
+<br>
+<div class="ui grid container">
+  <div class="row">
+    <!--  -->
+    <div class="two wide column">
+    </div>
+    <div class="twelve wide column">
+      <h2 class="ui center aligned header">  {{auth.txt['status']}} </h2>
+    </div>
+  </div>
+  <div class="row">
+    <div class="six wide column">
+      <h3>  {{auth.txt['mode']}}: </h3>
+    </div>
+    <div class="two wide column">
+      <select class="ui selection dropdown" (change)="selectMode($event)">
+        @for (mode of modeChoices; track mode) {
+          <option [value]="mode.value"
+            [selected]="mode.isSelected">
+            {{mode.text}}
+          </option>
+        }
+      </select>
+    </div>
+  </div>
+  <div class="row">
+    <div class="six wide column">
+      <h3> {{auth.txt['last_tx_time']}}: </h3>
+    </div>
+    <div class="ten wide column">
+      <h3> {{session?.lastTxClient|date:'dd.MM.yyyy HH:mm'}} </h3>
+    </div>
+  </div>
+  <div class="row">
+    <div class="six wide column">
+      <h3>  {{auth.txt['language']}}: </h3>
+    </div>
+    <div class="two wide column">
+      <select class="ui selection dropdown" (change)="selectLanguage($event)">
+        @for (lang of languageChoices; track lang) {
+          <option [value]="lang.value"
+            [selected]="lang.isSelected">
+            {{lang.text}}
+          </option>
+        }
+      </select>
+    </div>
+  </div>
+</div>
+
+

@@ -1,0 +1,207 @@
+
+<br>
+@if (session && txt && contacttxt) {
+  <div class="ui grid container">
+    <div class="row">
+      <div class="five wide column">
+        <!-- we do not reset filter when leaving the filter entry ...
+        (blur)="setFilter(filterTerm.value); filterTerm.value='' " -->
+        <div class="ui tiny action input">
+          <input (keyup.enter)="setFilter(filterTerm.value)" #filterTerm
+            type="text" placeholder="{{txt['filter'] }}... " data-testid="contact-filter">
+            @if (contactFilter === '') {
+              <button class="ui small green icon button"
+                type="button" (click)="setFilter(filterTerm.value)"
+                [attr.data-tooltip]="txt['set']  + ' ' + txt['filter'] " data-position="bottom center"
+                data-testid="contact-filter-enter">
+                <i class="check icon"></i>
+              </button>
+            }
+            @if (contactFilter !== '') {
+              <button class="ui small red icon button"
+                type="button" (click)="filterTerm.value=''; setFilter(filterTerm.value)"
+                [attr.data-tooltip]="txt['reset']  + ' ' + txt['filter'] " data-position="bottom center">
+                <i class="times icon"></i>
+              </button>
+            }
+        </div>
+        <div class="ui checkbox">
+          <input type="checkbox" [checked]="isShowDisabled" (change)="setShowDisabled($event)">
+          <label>{{txt['show_disabled'] }}</label>
+        </div>
+      </div>
+      <div class="seven wide column">
+        <h2 class="ui center aligned header">  {{session.serviceLevel.contact < 2 ? txt['contact']  : txt['contacts'] }} {{txt['list'] }}  </h2>
+      </div>
+      <div class="four wide column">
+        <!-- integrated search component - selected contact is shown in -detail component -->
+        <dsy-contact-search (contactSelected)="showSearched($event)" class="column">
+        </dsy-contact-search>
+        <!-- no return because list is leading view ....
+        <button class="left floated ui tiny circular red icon button"
+          [attr.data-tooltip]="txt['close']" data-position="bottom center" data-inverted=""
+          (click)="return()">
+          <i class="times icon"></i>
+        </button>
+        -->
+      </div>
+    </div>
+  </div>
+}
+<!-- if we await more than 100 records or use complex query we should activate data load dimmer
+<div *ngIf="!contacts" class="ui active inverted dimmer">
+  <div class="ui large text loader">{{txt['loading_data'] }}</div>
+</div>
+-->
+<!-- paginator selectedPage as ngModel (external selected page necessary for 2 parallel paginators...)-->
+@if (contactsReadySignal() === 1 && session) {
+  <dsy-paginator [(ngModel)]="selectedPage"
+    [externalSelectedPage]="selectedPage"
+    [total]="total" [limit]="limit" [abbrPlaces]="abbrPlaces"
+    [txt]="txt" [elementName]="session.serviceLevel.contact < 2 ? txt['contact'] : txt['contact']"
+    [names]="names" (pageSelect)="onPageSelect($event)">
+  </dsy-paginator>
+}
+
+@if (contactsReadySignal() === 1 && session && txt && contacttxt) {
+  <table class="ui celled structured table">
+    <thead>
+      <tr>
+        <!-- // TODO <th class="four/five/... wide" -->
+        <th>{{contacttxt['contactNr']}}
+          @if (sortDirection === 1) {
+            <i class="link disabled angle up icon"></i>
+          }
+          @if (sortDirection !== 1) {
+            <i class="link angle up icon" (click)="sort(1)"></i>
+          }
+          @if (sortDirection === 2) {
+            <i class="link disabled angle down icon"></i>
+          }
+          @if (sortDirection !== 2) {
+            <i class="link angle down icon" (click)="sort(2)"></i>
+          }
+        </th>
+        <th>{{contacttxt['name']}}
+          @if (sortDirection === 3) {
+            <i class="link disabled angle up icon"></i>
+          }
+          @if (sortDirection !== 3) {
+            <i class="link angle up icon" (click)="sort(3)"></i>
+          }
+          @if (sortDirection === 4) {
+            <i class="link disabled angle down icon"></i>
+          }
+          @if (sortDirection !== 4) {
+            <i class="link angle down icon" (click)="sort(4)"></i>
+          }
+        </th>
+        <th>{{contacttxt['displayName']}}
+          @if (sortDirection === 5) {
+            <i class="link disabled angle up icon"></i>
+          }
+          @if (sortDirection !== 5) {
+            <i class="link angle up icon" (click)="sort(5)"></i>
+          }
+          @if (sortDirection === 6) {
+            <i class="link disabled angle down icon"></i>
+          }
+          @if (sortDirection !== 6) {
+            <i class="link angle down icon" (click)="sort(6)"></i>
+          }
+        </th>
+        <th>{{session.serviceLevel.contact < 2 ? txt['company'] : contacttxt['longName']}}</th>
+        <th>{{contacttxt['street']}}</th>
+        <th>{{contacttxt['plz']}}</th>
+        <th>{{contacttxt['city']}}</th>
+        <th class="two wide center aligned" colspan="2">{{txt['show'] + (isMaint ? ' / ' + txt['update'] : '')}}</th>
+        <th class="one wide center aligned">
+          @if (isCreate && !isShowDisabled) {
+            <button class="right floated ui tiny circular yellow icon button"
+              [attr.data-tooltip]="txt['insert']" data-inverted=""
+              (click)="insert()">
+              <i class="large plus icon"></i>
+            </button>
+          }
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (contact of shownContacts; track contact.contactId; let i = $index) {
+        <tr>
+          <td class="left aligned" >
+            <div class="ui label" [ngStyle]="contact.style">
+              {{contact.contactNr}}
+            </div>
+          </td>
+          <td class="left aligned" >
+            {{contact.contactName|slice:0:8}}
+          </td>
+          <td class="left aligned" >
+            {{contact.displayName|slice:0:30}}
+          </td>
+          <td class="left aligned">
+            {{contact.longName|slice:0:40}}
+          </td>
+          <td class="left aligned">
+            {{contact.street|slice:0:30}}
+          </td>
+          <td class="left aligned">
+            {{contact.plz === 0 ? '' : contact.plz}}
+          </td>
+          <td class="left aligned">
+            {{contact.city|slice:0:20}}
+          </td>
+          <td >
+            @if (!isShowDisabled) {
+              <button class="ui tiny circular teal icon button"
+                [attr.data-tooltip]="txt['show']"  data-inverted=""
+                (click)="show(i)">
+                <i class="arrow right icon"></i>
+              </button>
+            }
+          </td>
+          <td >
+            @if (isMaint && !isShowDisabled) {
+              <button class="ui tiny circular yellow icon button"
+                [attr.data-tooltip]="txt['update']" data-inverted=""
+                (click)="maint(i)">
+                <i class="arrow down icon"></i>
+              </button>
+            }
+          </td>
+          <td >
+            @if (isMaint && !isShowDisabled  && contact.contactId > 0) {
+              <button class="ui tiny circular gray icon button"
+                [attr.data-tooltip]="txt['disable']"
+                (click)="disable(i)">
+                <i class="trash alternate icon"></i>
+              </button>
+            }
+            @if (isMaint && isShowDisabled  && contact.contactId > 0 ) {
+              <button class="ui tiny circular green icon button"
+                [attr.data-tooltip]="txt['enable']"
+                (click)="enable(i)">
+                <i class="trash alternate icon"></i>
+              </button>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  @if (contacts && contacts.length === 0) {
+    <br>
+    {{txt['no_records_to_show']}}
+  }
+}
+<br>
+<!-- paginator selectedPage as ngModel -->
+@if (contactsReadySignal() === 1 && session) {
+  <dsy-paginator [(ngModel)]="selectedPage"
+    [externalSelectedPage]="selectedPage"
+    [total]="total" [limit]="limit" [abbrPlaces]="abbrPlaces"
+    [txt]="txt" [elementName]="session.serviceLevel.contact < 2 ? txt['contact'] : txt['contact']"
+    [names]="names" (pageSelect)="onPageSelect($event)">
+  </dsy-paginator>
+}

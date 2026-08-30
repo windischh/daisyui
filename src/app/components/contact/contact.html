@@ -1,0 +1,27 @@
+@if (auth && sessionForViews && contact && isShowForm) {
+  <dsy-contact-form-view
+    [formAction]="formAction"
+    [session]="sessionForViews"
+    [contact]="contact" [isContactNrChangeable]="isContactNrChangeable"
+    [txt]="auth.txt" [contacttxt]="contacttxt"
+    (contactFormClose)="closeContactForm()" (updateContact)="contactUpdate($event)" (newContact)="contactCreate($event)">
+  </dsy-contact-form-view>
+}
+
+<!-- contact-list is shown if there are contacts or contact may be created -->
+@if (refreshSignal() === 1 && auth && sessionForViews && isShowList) {
+  <dsy-contact-list-view
+    [session]="sessionForViews"
+    [isCreate]="isCreate" [isMaint]="isMaint"
+    [contacts]="contacts" [contactsLoadCounter]="contactsLoadCounter" [contact]="contact"
+    [txt]="auth.txt" [contacttxt]="contacttxt"
+    (contactListClose)="closeContactList()" (contactInsert)="insertContact()"
+    (contactShow)="showContact($event)" (contactMaint)="maintContact($event)"
+    (contactDisable)="disableContact($event)" (contactEnable)="enableContact($event)">
+  </dsy-contact-list-view>
+}
+
+
+
+
+

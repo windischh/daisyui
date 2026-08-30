@@ -1,0 +1,17 @@
+@if (messageService.messages().length > 0) {
+  <div class="fixed bottom-0 left-0 w-full p-4">
+    <div class="flex justify-between">
+      <div class="badge badge-outline badge-info">Messages </div>
+      <button  class="btn btn-sm btn-outline btn-info"
+        (click)="messageService.clear()">
+        <i class="fas fa-trash-can"></i>
+        clear
+      </button>
+    </div>
+    @for (message of messageService.messages(); track $index) {
+      <div class = ""> {{message}} </div>
+    }
+  </div>
+}
+
+

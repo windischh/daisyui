@@ -1,0 +1,49 @@
+<div id="navbar" class="navbar fixed top-0 w-full z-50 transition-all duration-300"
+    [ngClass]="isBeispiel3NavbarWhite ? 'bg-primary' : ['bg-accent', 'shadow-md']">
+  <div class="flex-1">
+    <a class="btn btn-ghost text-xl text-white">
+      Meine Website
+    </a>
+  </div>
+  <div class="flex-none">
+    <ul class="menu menu-horizontal px-1 text-white">
+      <li><a>Startseite</a></li>
+      <li><a>Über uns</a></li>
+      <li><a>Dienstleistungen</a></li>
+      <li><a>Kontakt</a></li>
+    </ul>
+  </div>
+</div>
+
+<!-- Platzhalter für das Menü -->
+<div class="h-16"></div>
+
+<!-- Restlicher Inhalt der Seite -->
+<div class="p-4">
+  <p class="mb-4">Hier beginnt der Inhalt deiner Seite.</p>
+  <p>Scroll nach unten, um zu sehen, dass das Menü seine Farbe ändert.</p>
+  <!-- Viele Absätze, um das Scrollen zu ermöglichen -->
+  <p class="mt-32">...</p>
+  <p class="mt-32">...</p>
+  <p class="mt-32">...</p>
+  <p class="mt-32">...</p>
+  <p class="mt-32">...</p>
+  <p class="mt-32">...</p>
+</div>
+
+<!-- script is ignored, scroll is handled in angularcomponent-->
+<script>
+  const navbar = document.getElementById('navbar');
+
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      // Menü bekommt einen Hintergrund, wenn nach unten gescrollt wird
+      navbar.classList.add('bg-base-100', 'shadow-md');
+      navbar.classList.remove('text-white');
+    } else {
+      // Menü wird wieder transparent
+      navbar.classList.remove('bg-base-100', 'shadow-md');
+      navbar.classList.add('text-white');
+    }
+  });
+</script>

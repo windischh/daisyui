@@ -1,0 +1,20 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import "tailwindcss";
+@plugin "daisyui";
+
+/* Benutzerdefiniertes Theme: "mein-theme" */
+[data-theme="myTheme"] {
+  /* Primärfarbe */
+  --color-primary: #00bba7; /* Teal (Tailwind teal-500) */
+  --color-primary-content: #ffffff; /* Weiß (Textfarbe auf primärem Hintergrund) */
+
+  /* Sekundärfarbe */
+  --color-secondary: #ec4899; /* Pink (Tailwind pink-500) */
+  --color-secondary-content: #ffffff; /* Weiß */
+  
+}
+
+
+
+

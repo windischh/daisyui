@@ -1,0 +1,75 @@
+<ul class="dropdown-content shadow bg-base-100 rounded-box p-2 w-52 mt-4">
+   @if (menu && menu.items.length > 0) {
+    @for (it of menu.items; track it; let i = $index) {
+      @if (it.isDivider) {
+        <li class="menu-title">
+          <div class="divider"></div>
+        </li>
+      }
+      @else {
+        @if (it.isHeader && it.text) {
+          <li class="menu-title text-lg">
+            <span class="tooltip" [attr.data-tip]="txt[it.description] && txt[it.description] !== '' ? txt[it.description] : ''">
+              {{txt[it.text] && txt[it.text] !== '' ? txt[it.text] : it.text}}
+            </span>
+          </li>
+        } @else {
+          <!-- we show a menu item only if there is text for it ....-->
+          @if ((it.hasSubMenu && it.subMenu && it.subMenu.text) || (it.text && it.text !== '')) {
+            <li>
+              <a>
+                @if (it.labelClassLeft && it.labelClassLeft !== '' && it.hasLabelLeft) {
+                  <span class="badge" id="itemLabel" [ngClass]="it.labelClassLeft"
+                  (click)="it.hasSubMenu ? showMenu(i, $event) : link(it.link)">
+                    {{it.labelTextLeft}}
+                  </span>
+                }
+                @if (it.iconClassLeft && it.iconClassLeft !== ''  && it.hasIconLeft) {
+                  <i class="mr-2" id="itemIcon" [ngClass]="it.iconClassLeft"
+                  (click)="it.hasSubMenu ? showMenu(i, $event) : link(it.link)"></i>
+                }
+                <div class="tooltip" [attr.data-tip]="it.description && it.description !== '' ? it.description : ''">
+                  @if (it.hasSubMenu && it.subMenu) {
+                    <details class="dropdown" id="dropdownItem" [attr.open]="it.subMenu.isVisible ? true : undefined">
+                      <summary  id="dropdownSpan" class="btn" data-testid="submenu"
+                      (click)="showMenu(i, $event)">
+                        {{txt[it.text] && txt[it.text] !== '' ? txt[it.text] : it.text &&  it.text !== '' ? it.text : txt[it.subMenu.text] && txt[it.subMenu.text] !== '' ? txt[it.subMenu.text] : it.subMenu.text}}
+                         <i class="fas fa-angle-down"
+                          [class.rotate-180]="it.subMenu.isVisible"></i>
+                      </summary>
+                      <!-- dsy -menu complete is our implemntation for a self containing (sub) menu
+                      below an item
+                      -->
+                      <dsy-menu-complete
+                        [menu]="it.subMenu" [isLeft]="it.isSubMenuLeft" [isRight]="it.isSubMenuRight"
+                        [txt]="txt"
+                        (linkActivated)="link($event)">
+                      </dsy-menu-complete>
+                    </details>
+                  } @else {
+                    <span class="text" id="itemText"
+                    (click)="link(it.link)">
+                      {{txt[it.text] && txt[it.text] !== '' ? txt[it.text] : it.text}}
+                    </span>
+                  }
+                </div>
+                @if (it.iconClassRight && it.iconClassRight !== ''  && it.hasIconRight) {
+                  <i class="ml-2" id="itemIcon" [ngClass]="it.iconClassRight"
+                  (click)="it.hasSubMenu ? showMenu(i, $event) : link(it.link)"></i>
+                }
+                @if (it.labelClassRight && it.labelClassRight !== '' && it.hasLabelRight) {
+                  <span class="badge" id="itemLabel" [ngClass]="it.labelClassRight"
+                  (click)="it.hasSubMenu ? showMenu(i, $event) : link(it.link)">
+                    {{it.labelTextRight}}
+                  </span>
+                }
+              </a>
+            </li>
+          } <!-- endif text -->
+        } <!-- endelse header -->
+      }  <!-- endelse divider- -->
+    } <!--endfor menu.items- -->
+  } <!-- endif menu.items -->
+</ul>
+
+

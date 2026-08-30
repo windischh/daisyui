@@ -1,0 +1,95 @@
+<br>
+@if (txt && optiontxt) {
+  <div class="ui grid">
+    <div class="row">
+      <div class="two wide column">
+      </div>
+      <div class="twelve wide column">
+        <h2>
+          {{areaTxt}} {{optiontxt['className']}} {{txt['sort']}}
+        </h2>
+      </div>
+      <div class="right floated one wide column">
+      </div>
+    </div>
+  </div>
+}
+<br>
+@if (isUpdateOk) {
+  <div class="ui segment">
+    <div class="ui active inverted dimmer">
+      <div class="ui large text loader">loading data ...</div>
+    </div>
+    <br>
+  </div>
+}
+@if (txt && optiontxt) {
+  <div class="ui container">
+    @if (areaOptions) {
+      <table class="ui celled structured table">
+        <thead>
+          <tr>
+            <th class="one wide"></th>
+            <th class="one wide">{{optiontxt['optionNr']}}</th>
+            <th class="two wide">{{optiontxt['optionName']}}</th>
+            <th class="four wide">{{optiontxt['optionStringValue']}}</th>
+            <th class="one wide">{{optiontxt['type']}}</th>
+            <th class="four wide" colspan="2">
+              <button class="ui tiny circular green icon button"
+                [attr.data-tooltip]="txt['submit']" data-position="top center"
+                (click)="setUpdates()"
+                [disabled]="!isNewSorted">
+                <i class="check icon"></i>
+              </button>
+              <button class="ui tiny circular red icon button"
+                [attr.data-tooltip]="txt['cancel']" data-position="top center"
+                (click)="cancelUpdates()">
+                <i class="times icon"></i>
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (o of areaOptions; track o; let i = $index) {
+            <tr>
+              <!-- SHOW    option              -->
+              <td>
+                <div class="center aligned">
+                  @if (i > 0) {
+                    <button class="ui tiny circular teal icon button"
+                      [attr.data-tooltip]="txt['position_lower']" data-position="bottom center"
+                      (click)="lowerOption(i)" >
+                      <i class="arrow up icon"></i>
+                    </button>
+                  }
+                </div>
+              </td>
+              <td> {{o.optionNr}}</td>
+              <td> {{o.txt}}</td>
+              <td> {{o.value}}
+                @if (o.value === 'true') {
+                  <i class="green check icon"></i>
+                }
+                @if (o.value === 'false') {
+                  <i class="red x icon"></i>
+                }
+              </td>
+              <td>{{o.typeText}}</td>
+              <td>
+                @if ((i < areaOptions.length - 1)) {
+                  <button class="ui tiny circular teal icon button"
+                    [attr.data-tooltip]="txt['position_raise']" data-position="bottom center"
+                    (click)="raiseOption(i)">
+                    <i class="arrow down icon"></i>
+                  </button>
+                }
+              </td>
+              <td></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+}
+

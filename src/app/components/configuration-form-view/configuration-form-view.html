@@ -1,0 +1,337 @@
+<br>
+@if (txt && optiontxt) {
+  <div class="ui grid">
+    <div class="row">
+      <div class="two wide column">
+      </div>
+      <div class="twelve wide column">
+        <h2>
+          <ng-container>{{areaTxt}} {{optiontxt['className']}}</ng-container>
+          @if (isMaint && area) {
+            {{txt['update']}}
+          }
+          @if (isMaint && !area) {
+            {{txt['insert']}}
+          }
+          @if (!isMaint) {
+            {{txt['show']}}
+          }
+        </h2>
+      </div>
+      <div class="right floated one wide column">
+        <button type="button" class="left floated ui tiny circular red icon button"
+          [attr.data-tooltip]="txt['close']" data-position="bottom center" data-inverted=""
+          (click)="return()">
+          <i class="times icon"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+}
+@if (isStyle) {
+  <div class="ui divider"></div>
+}
+@if (isStyle) {
+  <div class="ui grid container">
+    <div class="three column row">
+      <div class="column">
+      </div>
+      <div class="column">
+        @if (isMaint && area) {
+          <div class="ui input">
+            <input (keyup.enter)="setStyle(styleString.value); styleString.value=''"
+              #styleString type="text" [placeholder]="txt['enter_a_number']">
+            <button class="ui small round yellow icon button"
+              type="button" (click)="setStyle(styleString.value)"
+              [attr.data-tooltip]="txt['create_new_style']" data-position="bottom center">
+              <i class="plus icon"></i>
+            </button>
+          </div>
+        }
+        @if (area) {
+          <div class="one inline field">
+            <label for="styleSelect" class="ui label">{{txt['style']}}: </label>
+            <select class="ui search dropdown" id="styleSelect"
+              [disabled]="isUpdateOption" (change)="selectStyle($event)">
+              @for (s of styleChoices; track s) {
+                <option [value]="s.value"
+                  [selected]="s.isSelected">
+                  {{s.value}} - {{s.text}}
+                </option>
+              }
+            </select>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+<br>
+<!-- FORM starts here                    -->
+
+<form [formGroup] = "thisForm"
+  (ngSubmit)="submitForm()">
+
+  @if (txt && optiontxt) {
+    <div class="ui container">
+      <table class="ui celled structured table">
+        <thead>
+          <tr>
+            <th class="one wide">{{optiontxt['optionNr']}}</th>
+            @if (isStyle) {
+              <th class="two wide" >{{txt['option_group']}}</th>
+            }
+            <th class="two wide">{{optiontxt['optionName']}}</th>
+            <th class="four wide">{{txt['value']}}</th>
+            @if (!isStyle) {
+              <th class="one wide" >{{optiontxt['type']}}</th>
+            }
+            <th class="two wide">
+              @if (isMaint && !isStyle) {
+                <button type="button" class="ui tiny circular teal icon button"
+                  [disabled]="isUpdateOption"  [attr.data-tooltip]="txt['sort']" data-position="bottom center"
+                  (click)="setSort()">
+                  <i class="sort icon"></i>
+                </button>
+              }
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (o of shownOptions; track o; let i = $index) {
+            <!-- SHOW    option               -->
+            @if (!isUpdateOption || !(i === optionIx)) {
+              <tr>
+                @if (isStyle) {
+                  <td>
+                    @if (o.optionGroup  && (i === 0 || o.optionGroup !== shownOptions[i-1].optionGroup)) {
+                      @if (o.optionGroup > 0) {
+                        <span >{{o.optionGroup}} </span>
+                      }
+                      @if (o.optionNr > 0) {
+                        <span> / {{o.optionNr}}</span>
+                      }
+                    }
+                  </td>
+                }
+                @if (!isStyle) {
+                  <td>{{o.optionNr}}</td>
+                }
+                @if (isStyle) {
+                  <td>
+                    @if ((i === 0 || o.optionGroup !== shownOptions[i-1].optionGroup)) {
+                      {{o.optionGroupName}}
+                    }
+                  </td>
+                }
+                <td> {{o.txt}}</td>
+                <td> {{o.value}}
+                  @if (o.value === 'true') {
+                    <i class="green check icon"></i>
+                  }
+                  @if (o.value === 'false') {
+                    <i class="red x icon"></i>
+                  }
+                </td>
+                @if (!isStyle) {
+                  <td>{{o.typeText}}</td>
+                }
+                <td>
+                  @if (isMaint) {
+                    <button type="button" class="ui tiny circular yellow icon button"
+                      [disabled]="isUpdateOption"
+                      [attr.data-tooltip]="txt['update']" data-position="bottom center"
+                      (click)="setOption(i)">
+                      <i class="arrow down icon"></i>
+                    </button>
+                  }
+                  <!-- the standard options are protected from beeing deleted by isDeleteable
+                  a whole style (style header, o.optionGroup === 0) can be deleted if no option for this style
+                  -->
+                  @if (o.isDeleteable && o.optionId > 0) {
+                    <button type="button" class="ui tiny circular gray icon button"
+                      [disabled]="isUpdateOption"
+                      (click)="setDelete(i)" [attr.data-tooltip]="txt['delete']" data-position="bottom center">
+                      <i class="trash alternate icon"></i>
+                    </button>
+                  }
+                </td>
+              </tr>
+            } <!-- endif SHOW    option               -->
+            <!-- UPDATE option               -->
+            @if (isUpdateOption && (i === optionIx)) {
+              <tr formGroupName="option" >
+                <td class="one wide">@if (!isStyle) {
+                  <span>{{o.optionNr}}</span>
+                }</td>
+                <td class="six wide" colspan="3">
+                  <div class="ui form">
+                    @if (isNewOption && !isStyle) {
+                      <div class="field">
+                        <select class="ui search dropdown" formControlName="optionType">
+                          @for (t of typeChoicesFiltered; track t) {
+                            <option
+                              [ngValue]="t.value">{{t.text}}
+                            </option>
+                          }
+                        </select>
+                      </div>
+                    }
+                    @if (isNewOption && isStyle) {
+                      <div class="field">
+                        <select class="ui search dropdown" formControlName="optionGroup">
+                          @for (g of groupChoices; track g) {
+                            <option
+                              [ngValue]="g.value">{{g.value.toString() + ' ' + g.text}}
+                            </option>
+                          }
+                        </select>
+                      </div>
+                    }
+                    @if (isStyle) {
+                      <div class="row">
+                        <h4>{{o.optionGroupName}}</h4>
+                      </div>
+                    }
+                    <div class="field">
+                      <input class="ui fluid input" formControlName="optionName" [placeholder]="optiontxt['optionName']"
+                        [readonly]="!isNewOption || (isStyle && !isStringNameEntry) ">
+                    </div>
+                    @if (errors['option.optionName']) {
+                      <div class="ui negative message">
+                        {{ errors['option.optionName'] }}
+                      </div>
+                    }
+                    <!-- OptionType.stringSeqBothChoice are entered 2 times - first,  name is choosen
+                    then - if isValueChoice is set - string is choosen from string values -->
+                    @if (isNewOption && isStringNameChoice) {
+                      <div class="field">
+                        @for (s of stringNameChoices; track s) {
+                          <div class="ui radio checkbox">
+                            <input type="radio" formControlName="optionName" [value]="s.text">
+                            <label>{{s.text}} </label>
+                          </div>
+                        }
+                      </div>
+                    }
+                    @if (isStringChoice && (!(isNewOption && isStringNameChoice) || isValueChoice)) {
+                      <div class="field">
+                        @for (s of stringChoices; track s) {
+                          <div class="ui radio checkbox">
+                            <input type="radio" formControlName="optionValue" [value]="s.text">
+                            <label>
+                              <span>{{s.text}}
+                                @if (s.text === '') {
+                                  <i class="red x icon"></i>
+                                }
+                              </span>
+                            </label>
+                          </div>
+                        }
+                      </div>
+                    }
+                    @if (isIntChoice) {
+                      <div class="field">
+                        @for (n of intChoices; track n) {
+                          <div class="ui radio checkbox">
+                            <input type="radio" formControlName="optionValue" [value]="n.value.toString()">
+                            <label>{{n.text}} </label>
+                          </div>
+                        }
+                      </div>
+                    }
+                    @if (isStyleChoice) {
+                      <div class="field">
+                        <label for="styleSelect" class="ui label">{{txt['style']}}: </label>
+                        <select class="ui search dropdown" id="styleSelect" formControlName="optionValue">
+                          @for (s of styleChoices; track s) {
+                            <option [value]="s.value">
+                              {{s.value}} - {{s.text}}
+                            </option>
+                          }
+                        </select>
+                      </div>
+                    }
+                    @if (isBooleanChoice) {
+                      <div class="field">
+                        @for (b of booleanChoices; track b) {
+                          <div class="ui radio checkbox">
+                            <input type="radio" formControlName="optionValue" [value]="b.text" >
+                            <label><span>{{b.text}}
+                              @if (b.text === 'true') {
+                                <i class="green check icon"></i>
+                              }
+                              @if (b.text === 'false') {
+                                <i class="red x icon"></i>
+                              }
+                            </span>
+                          </label>
+                        </div>
+                      }
+                    </div>
+                  }
+                  @if (!isStringChoice && !isIntChoice && !isBooleanChoice  && !isStyleChoice) {
+                    <div class="field">
+                      <input class="ui fluid input" formControlName="optionValue">
+                    </div>
+                  }
+                  @if (!(isStyle && o.optionGroup !== 0)) {
+                    <div class="field">
+                      <textarea formControlName="optionDescription" rows="3" [placeholder]="optiontxt['optionDescription']">
+                      </textarea>
+                    </div>
+                  }
+                  @if (errors['option']) {
+                    <div class="ui negative message">
+                      {{ errors['option'] }}
+                    </div>
+                  }
+                </div>
+                </td>
+                <td>
+                  <button class="ui tiny circular green icon button"
+                    [disabled]="!thisForm.valid"
+                    type="submit" [attr.data-tooltip]="txt['submit']" data-position="top center">
+                    <i class="check icon"></i>
+                  </button>
+                  <button type="button" class="ui tiny circular red icon button"
+                    [attr.data-tooltip]="txt['cancel']" data-position="top center"
+                    (click)="cancelUpdates()">
+                    <i class="times icon"></i>
+                  </button>
+                </td>
+              </tr>
+            } <!-- endif - UPDATE option               -->
+            <!-- SHOW    description          -->
+            @if (!isUpdateOption && o.optionDescription) {
+              <tr>
+                <td></td>
+                <td colspan="3"><small><pre>{{o.optionDescription}}</pre></small></td>
+                <td></td>
+              </tr>
+            }
+          } <!-- end for -->
+          <tr> <!-- ADD NEW option                      -->
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>
+              <!-- we restrict adding options for admin users only, except it are style options and style options name record exists ...  -->
+              @if ((isNew || isMaint) && ((isStyle && shownOptions && shownOptions.length > 0) || !isStyle)) {
+                <button type="button" class="ui tiny circular yellow icon button"
+                  [disabled]="isUpdateOption"
+                  (click)="addOption()" [attr.data-tooltip]="txt['insert']" data-inverted="" data-position="bottom center">
+                  <i class="large plus icon"></i>
+                </button>
+              }
+            </td>
+          </tr> <!-- end row ADD NEW option                      -->
+        </tbody>
+      </table>
+    </div>
+  } <!-- endif txt && optiontxt-->
+</form>
+
+
+

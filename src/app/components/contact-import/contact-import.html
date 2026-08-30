@@ -1,0 +1,264 @@
+<br>
+@if (refreshCounterSignal() > 0) {
+  <div class="ui grid container">
+    <div class="row">
+      <div class="two wide column">
+      </div>
+      <div class="twelve wide column">
+        <h2 class="ui center aligned header">  {{session.serviceLevel.contact === 1 ? auth.txt['contact_import'] : auth.txt['contact_import']}} {{sourceReadySignal() === 0 ? '(.' + fileType + ')' : ''}}
+          {{sourceReadySignal() === 1 && importReadySignal() === 0 ? auth.txt['source'] : ''}} {{sourceCheckedSignal() === 1 && importReadySignal() === 0 ? auth.txt['checked'] : ''}} {{importReadySignal() === 1 ? auth.txt['ready_for_import'] : ''}}
+        </h2>
+      </div>
+      @if (resetableSignal() === 1) {
+        <div class="column">
+          <button class="ui tiny circular red icon button"
+            [attr.data-tooltip]="auth.txt['reset']"
+            (click)="resetImport()">
+            <i class="times icon"></i>
+          </button>
+        </div>
+      }
+    </div>
+    <div class="ui divider"></div>
+    <!-- select local file by file name and type                 -->
+    <div class="row">
+      <div class="two wide column">
+        <!-- open update area for  file name ....  -->
+        @if (sourceReadySignal() === 0 && !isUpdateFileType) {
+          <button class="ui tiny circular yellow icon button"
+            [attr.data-tooltip]="auth.txt['fileType'] + ' ' + auth.txt['update']"
+            (click)="setUpdateFileType()">
+            <i class="arrow down icon"></i>
+          </button>
+        }
+      </div>
+      <div class="seven wide column">
+        @if (validVcfFileSignal() === 1) {
+          <h4>
+            {{auth.txt['fileName']}}: {{extendedFileName}}
+          </h4>
+          @if (fileSize > 0) {
+            <h4>
+              {{auth.txt['fileSize']}}: {{fileSize/1000|number:'1.3-3'}}
+            </h4>
+          }
+        } @else {
+          <h4>
+            {{auth.txt['filePattern']}}: {{fileName + '.' + fileType}}
+          </h4>
+        }
+      </div>
+      <div class="six wide column">
+        @if (validVcfFileSignal() === 1 && sourceReadySignal() === 0 && !isUpdateFileType) {
+          <div class="ui small labeled input">
+            <div class="ui label" [attr.data-tooltip]="auth.txt['start_with']">
+              {{custtxt['contactNr']}}
+            </div>
+            <input  (keyup.enter)="prepareImport(startCustNr.value)"
+              #startCustNr [value]="startContactNr" type="text">
+          </div>
+          <button class="ui tiny circular green icon button"
+            [attr.data-tooltip]="auth.txt['prepare_import']"
+            (click)="prepareImport(startCustNr.value)">
+            <i class="arrow right icon"></i>
+          </button>
+        }
+        @if (sourceReadySignal() === 1 && sourceCheckedSignal() === 0 && recordCount > 0) {
+          <button class="ui tiny circular green icon button"
+            [attr.data-tooltip]="auth.txt['check_source']"
+            (click)="setImportSourceChecked()">
+            <i class="arrow right icon"></i>
+          </button>
+        }
+        @if (sourceCheckedSignal() === 1 && importReadySignal() === 0) {
+          <button class="ui tiny circular yellow icon button"
+            [attr.data-tooltip]="auth.txt['go_back']"
+            (click)="resetImportSource()">
+            <i class="arrow left icon"></i>
+          </button>
+        }
+        @if (sourceCheckedSignal() === 1 && importReadySignal() === 0) {
+          <button class="ui tiny circular green icon button"
+            [attr.data-tooltip]="auth.txt['check_import']"
+            (click)="setImportDuplicates()">
+            <i class="arrow right icon"></i>
+          </button>
+        }
+        @if (importReadySignal() === 1 && importFinishedSignal() === 0) {
+          <button class="ui tiny circular yellow icon button"
+            [attr.data-tooltip]="auth.txt['go_back']"
+            (click)="resetImportDuplicates()">
+            <i class="arrow left icon"></i>
+          </button>
+        }
+        @if (importReadySignal() === 1 && importFinishedSignal() === 0 && recordCount > 0) {
+          <button class="ui tiny green button"
+            [attr.data-tooltip]="auth.txt['do_import']"
+            (click)="setImportFinished()">
+            IMPORT
+          </button>
+        }
+        @if (sourceReadySignal() === 1 && importFinishedSignal() === 0 && recordCount > 0) {
+          <div class="ui checkbox">
+            <input type="checkbox" [checked]="isShowRemarked" (change)="toggleRemarked($event)">
+            <label><small>{{auth.txt['show_errors'] }} </small></label>
+          </div>
+        }
+        @if (sourceReadySignal() === 1 && recordCount === 0) {
+          <h4>
+            {{auth.txt['no_records_to_import']}}
+          </h4>
+        }
+        @if (importFinishedSignal() === 1) {
+          <h4>
+            {{importCount + ' ' + auth.txt['records_imported']}}
+          </h4>
+        }
+      </div>
+    </div>
+    @if (sourceReadySignal() === 1 && importFinishedSignal() === 0 && recordCount > 0) {
+      <div class="row"> <!-- import process messages-->
+        <div class="two wide column">
+        </div>
+        <div class="thirteen wide column">
+          <h4>
+            {{auth.txt['record_count'] + ': ' + recordCount}}&nbsp;&nbsp;{{errorCount > 0 ? auth.txt['from_this'] + ' ' + auth.txt['error_count'] + ': ' + errorCount : ''}}
+            <br>
+            &nbsp;&nbsp;{{rejected > 0 ? '( ' + auth.txt['rejected_count'] + ': ' + rejected.toString() + ')' : ''}} &nbsp;&nbsp;
+            @if (sourceCheckedSignal() === 1) {
+              <br>
+              &nbsp;&nbsp;&nbsp;&nbsp;{{auth.txt['unchanged'] + ': ' + (recordCount - errorCount - accepted - rejected)}}&nbsp;&nbsp;{{accepted > 0 ? auth.txt['accepted_count'] + ': ' + accepted : ''}}
+              <br>
+              &nbsp;&nbsp;&nbsp;&nbsp;{{noDuplicates > 0 ? auth.txt['no_duplicates_count'] + ': ' + noDuplicates : ''}}&nbsp;&nbsp;{{duplicates > 0 ? auth.txt['duplicates_count'] + ': ' + duplicates : ''}}
+            }
+          </h4>
+        </div>
+      </div>
+    }
+    @if (isUpdateFileType) {
+      <!-- updating file type              -->
+      <div class="ui divider"></div>
+      <div class="row">
+        <div class="two wide column">
+          <h4> {{auth.txt['fileType']}}:</h4>
+        </div>
+        <div class="two wide column" >
+        </div>
+        <div class="six wide column" >
+          <h4>
+            <div class="ui fluid input">
+              <input (keyup.enter)="updateFileType(type.value)"
+                #type [value]="fileType" type="text" [placeholder]="auth.txt['fileType'] + '  ...'">
+              <button class="ui tiny green icon button"
+                [attr.data-tooltip]="auth.txt['submit']" data-position="top center"
+                (click)="updateFileType(type.value)">
+                <i class="check icon"></i>
+              </button>
+            </div>
+          </h4>
+        </div>
+      </div>
+    }
+    @if (!isUpdateFileType && sourceReadySignal() === 0) {
+      <div class="row"> <!-- select directory for import     -->
+        <div class="ten wide column ">
+          <h3>{{auth.txt['directory_upload'] }}:</h3>
+        </div>
+      </div>
+      <div class="row">
+        <div class="ten wide column center aligned">
+          <div class="ui checkbox">
+            <input type="checkbox" [checked]="isUploadDirectory" (change)="setUploadDirectory($event)">
+            <label><small>{{auth.txt['choose_directory'] }} </small></label>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="ten wide column center aligned">
+          @if (isUploadDirectory) {
+            <input #selectedfiles type="file" webkitdirectory multiple
+              (change)="selectedfiles && selectedfiles.files ? fileAdd(selectedfiles.files) : null"/>
+          } @else {
+            <input #selectedfiles type="file" multiple [attr.accept]="(fileType !== '' ? '.' : '') + fileType"
+              (change)="selectedfiles && selectedfiles.files ? fileAdd(selectedfiles.files) : null"/>
+          }
+          @if (validVcfFileSignal() === 1 === false && error) {
+            <div class="ui red label">
+              {{auth.txt['wrong_vcf_format'] + ': ' + error}}
+            </div>
+          }
+        </div>
+      </div>
+
+
+    }
+  </div>
+}
+@if (sourceReadySignal() === 1 && validVcfFileSignal() === 1) {
+  <!-- table with import records                 -->
+  <ng-container *ngTemplateOutlet="paginator" ></ng-container>
+  <table class="ui compact celled structured table">
+    <thead>
+      <tr>
+        <th>{{custtxt['contactNr']}}</th>
+        <th>{{custtxt['name']}}</th>
+        <th>{{auth.txt['company']}}</th>
+        <th>{{custtxt['contactEmail']}}</th>
+        <th>{{custtxt['contactTel']}}</th>
+        <th>{{custtxt['street']}}</th>
+        <th>{{custtxt['plz']}}</th>
+        <th>{{custtxt['city']}}</th>
+        <th>{{auth.txt['message']}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (contact of shownContacts; track $index; let i = $index) {
+        <tr>
+          <td class="left aligned" >
+            <div class="ui label" [ngStyle]="contact.style">
+              {{contact.contactNr}}
+            </div>
+          </td>
+          <td class="left aligned" >
+            {{contact.contactName|slice:0:30}}
+          </td>
+          <td class="left aligned" >
+            {{contact.longName|slice:0:20}}
+          </td>
+          <td class="left aligned">
+            {{contact.contactEmail|slice:0:40}}
+          </td>
+          <td class="left aligned">
+            {{contact.contactTel|slice:0:20}}
+          </td>
+          <td class="left aligned">
+            {{contact.street|slice:0:30}}
+          </td>
+          <td class="left aligned">
+            {{contact.plz === 0 ? '' : contact.plz}}
+          </td>
+          <td class="left aligned">
+            {{contact.city|slice:0:20}}
+          </td>
+          <td class="left aligned" [ngStyle]="contact.type < 0 || contact.status >= 9 ? {'background-color': 'LightSalmon'} : contact.status > 0 ? {'background-color': 'LightYellow'} : {}">
+            {{contact.message}}
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  <!-- we must not use paginator as ng-template because ngModel usage does not allow it
+  <ng-container *ngTemplateOutlet="paginator; context:{ $implicit: isSelectedPageChanged}"></ng-container>
+  <ng-template #paginator let-selectedPageChanged>
+    -->
+  <ng-container *ngTemplateOutlet="paginator"></ng-container>
+}
+<ng-template #paginator> <!-- paginator selectedPage as ngModel -->
+  <dsy-paginator [(ngModel)]="selectedPage"
+    [externalSelectedPage]="selectedPage"
+    [total]="total" [limit]="limit" [abbrPlaces]="abbrPlaces"
+    [txt]="auth.txt" [elementName]="''"
+    [names]="names" (pageSelect)="onPageSelect($event)">
+  </dsy-paginator>
+</ng-template>
+

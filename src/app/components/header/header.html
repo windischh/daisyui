@@ -1,0 +1,168 @@
+<div class="navbar fixed top-0 w-full z-50 bg-base-100 shadow-md">
+  <!-- nabbar DaisyUI-Komponente für die Navigationsleiste -->
+
+  <div class="flex-none">
+    <!-- here we start a top horizontal menu -->
+    <ul class="menu menu-horizontal">
+      <!-- router menu - choosing functions .... -->
+      @if (isSessionReady) {
+        <li id="menu">
+          @if (routerMenu.items.length > 0) {
+            <details class="dropdown" id="dropdownItem" [attr.open]="routerMenu.isVisible ? true : undefined">
+              <summary  id="dropdownSpan" class="btn m-1" data-testid="header-router-menu"
+                (click)="showRouterMenu($event)">
+                {{auth.txt[routerMenu.text]}}
+                <!-- icon class not necessary - we use standard details/summary
+                <i  id="dropdownIcon"></i>
+                -->
+              </summary>
+              <!-- pwl-menu complete is our implemntation for a self containing (sub) menu
+              below an item
+              -->
+              <!-- we have no menuUrl caus router  menu is completely built in header component ...-->
+              <dsy-menu-complete
+                [menu]="routerMenu" [txt]="auth.txt" (linkActivated)="routerMenuLink($event)">
+              </dsy-menu-complete>
+            </details>
+          }
+        </li>
+      }
+
+      <!-- user -->
+      @if (isSessionReady) {
+        <li  >
+          <!--  ui secondary menu is without emphasizing ....
+          (item should be  "highlighted" when mouseover )
+          tooltip must be attached to element below menu and below item
+          -->
+          @if (userName && userName !== '') {
+            <a class=""
+              (click)="userList()" data-testid="header-userlist">
+              <span
+                [attr.data-tooltip]="auth.txt['show_user']" data-position="bottom left" data-inverted="">
+                {{auth.txt['user']}}: {{userName}}
+              </span>
+            </a>
+          }
+        </li>
+      }
+    </ul>
+  </div>
+
+  <!-- title of app -->
+  <div class="flex-1">
+    @if (!isSessionReady) {
+      <span class="text-xl text-center">
+        daisytest
+      </span>
+    }
+    @if (isSessionReady) {
+      <span class="text-xl text-center" data-testid="header-session-active">
+        {{auth.txt['application_title']}}
+      </span>
+    }
+  </div>
+
+  <!-- fixed area -->
+  <div class="flex-none">
+    <!-- here we start a top horizontal menu -->
+    <ul class="menu menu-horizontal">
+
+      <!-- user info -->
+      <li>
+        @if (userName && userName !== '') {
+        <a
+          (click)="userList()" data-testid="header-userlist">
+          <span class="tooltip tooltip-left tooltip-primary" [attr.data-tip]="auth.txt['show_user']">
+            {{auth.txt['user']}}: {{userName}}
+          </span>
+        </a>
+        } @else {
+          <a class="item" (click)="unknownUser()">
+            <span class="tooltip tooltip-left tooltip-primary" [attr.data-tip]="auth.txt['set_user']">
+              {{auth.txt['user']}}: {{auth.txt['unknown']}}
+            </span>
+          </a>
+        }
+      </li>
+      <!-- release info -->
+      <li>
+        <small>
+          rel. {{Math.floor(GlobalFunctions.release/10000) + '.' + (Math.floor(GlobalFunctions.release /100) - Math.floor(GlobalFunctions.release /10000)*100) + '.' + (GlobalFunctions.release  - Math.floor(GlobalFunctions.release /100)*100)}} {{environment}}
+        </small>
+      </li>
+
+      <!-- test popup-->
+      <li>
+         <button class="btn bg-error btn-circle btn-sm m-1" 
+            (click)="testPopup()">
+            <i class="fas fa-bell text-primary-content"></i>
+      </button>
+      </li>
+
+      <!-- refresh  -->
+      <li class="tooltip tooltip-left tooltip-primary" [attr.data-tip]="auth.txt['session_refresh']">
+
+          <button class="btn btn-primary btn-circle btn-sm m-1" id="item"
+            (click)="refreshSession()">
+            <i class="fas fa-redo text-primary-content"></i>
+          </button>
+
+      </li>
+    </ul>  <!-- end of horizontal menu -->
+  </div>  <!-- end of fixed area -->
+</div> <!-- end of navbar -->
+
+<!-- this column contains popups, if they are shown -->
+<dialog #popupDialog class="modal">`
+  <div class="modal-box">
+    <h3 class="text-lg font-bold">{{popupHeaderText}}</h3>
+    @if (popupContentText !== '') {
+      <p class="py-4">{{popupContentText}}</p>
+    }
+    @if (popupConfirmText!== '') {
+      <button (click)="popupDialog.close()" class="btn" [ngClass]="isPopupPositive ? 'btn-success' : 'btn-error'">{{popupConfirmText}}</button>`
+    }
+  </div>
+</dialog>
+
+ <!-- components content below header top menu -->
+<div class="">
+  @if (refreshSignal() === 0) {
+    <!-- dimming thw whole screen -->
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+      <!-- modals upon dimmed screen -->
+      <div class="bg-white p-4 rounded-lg">
+        <button class="btn">
+          <div class="loading loading-spinner loading-lg"></div>
+          loading data ...
+        </button>
+      </div>
+    </div>
+  }
+  @if (refreshSignal() === 1) {
+   
+    <!-- login and user form are shown with deactivated  sidebar -->
+    @if (c['user']?.isAutoSelected) {
+      <dsy-user [userId]="userId"
+        [isMaint]="true" [isCreate]="isCreateUser" [userComponentUsage]="c['user']?.usage ?? ''"
+        (userClose)="closeUserComponent()" (userUpdated)="updateUser(userId)"
+        (userSelect)="selectUser(userId)" >
+      </dsy-user>
+    }
+    @if (c['calendar']?.isSelected) {
+      <dsy-calendar
+        [calendarLoadCounter]="calendarLoadCounter" [isShowEvent]="isShowEvent" [eventId]="eventId"
+        (restart)="restart()">
+      </dsy-calendar>
+    }
+    <router-outlet>
+    </router-outlet>
+    <p></p>
+    <p></p>
+    <!-- messages are used only for system messages -->
+    @if (isMessageActive) {
+      <dsy-messages></dsy-messages>
+    }
+  }
+</div> <!-- end of components content -->

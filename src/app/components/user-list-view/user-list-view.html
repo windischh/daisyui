@@ -1,0 +1,109 @@
+
+@if (txt && usertxt) {
+  <table class="ui celled structured table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>{{usertxt['userName']}}</th>
+        <th>{{usertxt['lastActivity']}}</th>
+        <th class="center aligned">{{txt['select']}}</th>
+        <th class="center aligned" colspan="3">{{txt['show']}} / {{txt['update']}}</th>
+        <th>
+          @if (isCreate) {
+            <button class="right floated ui tiny circular yellow icon button"
+              [attr.data-tooltip]="txt['insert']" data-inverted="" data-testid="user-insert"
+              (click)="insert()">
+              <i class="large plus icon"></i>
+            </button>
+          }
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (user of users; track user; let i = $index) {
+        <tr>
+          <!-- we show tooltips with mandantId - not necessary for user type admin, there is no user list for them ...-->
+          <td>
+            @if (user.type === 2) {
+              <div class="ui green label" [attr.data-tooltip]="txt['server_user']" data-position="top left">
+                <i class="level up alternate icon"></i>
+              </div>
+            }
+            @if (user.type === 1) {
+              <div class="ui label" [attr.data-tooltip]="txt['local_user']" data-position="top left">
+                <i class="level up alternate icon"></i>
+              </div>
+            }
+          </td>
+          <td class="left aligned">{{user.userName !== '' ? user.userName : txt['unknown']}}</td>
+          <td class="left aligned">{{user.lastActivity|date:'dd.MM.yyyy HH:mm'}}</td>
+          <td>
+            @if (user.userId !== userId) {
+              <button class="fluid ui button"
+                [attr.data-tooltip]="txt['select_user']" data-testid="user-select"
+                (click)="select(i)">
+              </button>
+            }
+            @if (user.userId === userId) {
+              <button class="fluid green ui button"
+                [attr.data-tooltip]="txt['user_is_selected']">
+              </button>
+            }
+          </td>
+          <td class="right aligned">
+            @if (user['isShowAuthorizations']) {
+              <button class="ui tiny circular gray icon button"
+                [attr.data-tooltip]="txt['hide_authorizations']"
+                (click)="showAuthorizations(i)">
+                <i class="arrow up icon"></i>
+              </button>
+            }
+            @if (!user['isShowAuthorizations']) {
+              <button class="ui tiny circular gray icon button"
+                [attr.data-tooltip]="txt['show_authorizations']"
+                (click)="showAuthorizations(i)">
+                <i class="arrow down icon"></i>
+              </button>
+            }
+          </td>
+          <td class="right aligned">
+            <button class="ui tiny circular teal icon button"
+              [attr.data-tooltip]="txt['show_user']" data-inverted=""
+              (click)="show(i)">
+              <i class="arrow right icon"></i>
+            </button>
+          </td>
+          <td>
+            @if (isMaint) {
+              <button class="ui tiny circular yellow icon button"
+                [attr.data-tooltip]="txt['update']" data-inverted=""
+                (click)="maint(i)">
+                <i class="arrow down icon"></i>
+              </button>
+            }
+          </td>
+          <td>
+            @if (isMaint && user.userId !== userId) {
+              <button class="ui tiny circular gray icon button"
+                [attr.data-tooltip]="txt['disable']"
+                (click)="disable(i)">
+                <i class="trash alternate icon"></i>
+              </button>
+            }
+          </td>
+        </tr>
+        @if (user['isShowAuthorizations']) {
+          <tr>
+            <td colspan="10">
+              <dsy-user-authorizations-view
+                [user]="user" [txt]="txt" [usertxt]="usertxt"
+                (updateUser)="userUpdate($event)">
+              </dsy-user-authorizations-view>
+            </td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+}
+

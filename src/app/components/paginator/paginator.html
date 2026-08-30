@@ -1,0 +1,51 @@
+
+<div class="ui fifteen column grid">
+  @if (numberOfPages < 3) {
+    <div class="one wide column"></div>
+  }
+  @if (numberOfPages < 5) {
+    <div class="one wide column"></div>
+  }
+  @if (numberOfPages < 7) {
+    <div class="one wide column"></div>
+  }
+  @if (numberOfPages < 9) {
+    <div class="one wide column"></div>
+  }
+  <div class="three wide column"></div>
+  <div class="column">
+    @if (numberOfPages > 1) {
+      <div class="ui pagination menu">
+        @if (numberOfPages > 1 && selectedPage > 1) {
+          <a class="item" (click)="goBack()">
+            <i class="angle left icon" ></i>
+          </a>
+        }
+        <a class="item" (click)="selectPage(1)" [ngClass]="{active: selectedPage==1}"
+        [attr.data-tooltip]="getPageTooltip(1)" [attr.data-position]="getTooltipPosition()" data-variation="tiny basic">{{1}}</a>
+        @if (numberOfPages > 10 && selectedPage > 5) {
+          <a class="item" (click)="goBack10()">...</a>
+        }
+        @for (page of pages; track $index) {
+          <a class="item" (click)="selectPage(page)" [ngClass]="{active: selectedPage==page}"
+          [attr.data-tooltip]="getPageTooltip(page)"[attr.data-position]="getTooltipPosition()" data-variation="tiny basic">{{page}}</a>
+        }
+        @if (numberOfPages > 10 && selectedPage < numberOfPages-5) {
+          <a class="item" (click)="goForward10()">...</a>
+        }
+        <a class="item" (click)="selectPage(numberOfPages)" [ngClass]="{active: selectedPage==numberOfPages}"
+        [attr.data-tooltip]="getPageTooltip(numberOfPages)" [attr.data-position]="getTooltipPosition()" data-variation="tiny basic">{{numberOfPages}}</a>
+        @if (numberOfPages > 1 && selectedPage < numberOfPages) {
+          <a class="item" (click)="goForward()">
+            <i class="angle right icon" ></i>
+          </a>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+<!--
+<input [(ngModel)]="modelPage"/> local: {{page}}
+-->
+

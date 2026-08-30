@@ -1,0 +1,248 @@
+
+
+<div class="ui grid container">
+  <div class="three column row">
+    <div class="column">
+      @if (user?.userName !== '') {
+        <button class="left floated ui tiny teal labeled icon button"
+          [attr.data-tooltip]="txt['list']" data-inverted="" data-testid="user-form-return"
+          (click)="return()">return
+          <i class="arrow up icon"></i>
+        </button>
+      }
+    </div>
+    <div class="column">
+      @if (isNew || isClone) {
+        <h2>  {{usertxt['className']}} {{txt['insert']}} </h2>
+      }
+      @if (!(isNew || isClone) && isMaint) {
+        <h2> {{usertxt['className']}} {{txt['update']}} </h2>
+      }
+      @if (!isMaint && !isNew && !isClone) {
+        <h2> {{usertxt['className']}} {{txt['show']}} </h2>
+      }
+    </div>
+    <div class="column">
+    </div>
+  </div>
+</div>
+<div class="ui divider"></div>
+
+<!--
+<div *ngIf="!issue" class="ui active inverted dimmer">
+  <div class="ui large issue loader">Daten werden geladen...</div>
+</div>
+-->
+
+<!-- FORM starts here                    -->
+
+<form [formGroup] = "thisForm"
+  (ngSubmit)="submitForm()">
+  <!-- this place is used for tests: <p>user objects: {{ intChoices | json }}</p> -->
+  <!-- GRID Container  -->
+  <div class="ui grid container">
+    <!-- -UPDATE trigger BUTTONs  uniqueId  -->
+    @if (isMaint) {
+      <div class="row">
+        <div class="four wide column">
+          <!-- update of uniqueId -->
+          @if (!(isNew || isClone)) {
+            <button class="ui tiny circular yellow icon button"
+              type="button" [attr.data-tooltip]="txt['update']" data-inverted=""
+              [disabled]="isUpdate()"
+              (click)="setUniqueId()">
+              <i class="arrow down icon"></i>
+            </button>
+          }
+          <!-- clone of uniqueId
+          <button class="ui tiny circular yellow icon button" *ngIf="!(isNew || isClone)"
+            [attr.data-tooltip]="txt['clone']" data-inverted=""
+            [disabled]="isUpdate()"
+            (click)="setUniqueIdClone()">
+            <i class="arrow right icon"></i>
+          </button>
+          -->
+        </div>
+      </div>
+    }
+    <!-- SHOW  uniqueId fields  -->
+    <div class="row">
+      <div class="six wide column">
+        <h3>{{usertxt['userName']}}:</h3>
+      </div>
+      <div class="ten wide column">
+        <h3> {{user?.userName}}</h3>
+      </div>
+    </div>
+    <!-- UPDATE uniqueId fields  -->
+    @if ((isNew || isClone || isUpdateUniqueId)) {
+      <div class="row">
+        <div class="twelve wide column">
+          <div class="ui form">
+            <fieldset  formGroupName="uniqueId" >
+              @if (isNew  && locale === 'DE') {
+                <legend class = "ui green label">{{usertxt['userName']}} {{txt['enter']}}:</legend>
+              }
+              @if (isNew  && locale !== 'DE') {
+                <legend class = "ui green label">{{txt['enter']}} {{usertxt['userName']}}:</legend>
+              }
+              @if (isUpdateUniqueId) {
+                <legend class = "ui green label">{{usertxt['userName']}} {{txt['update']}}:</legend>
+              }
+              <div class="inline fields">
+                <label for="userName" class="ui label">{{usertxt['userName']}}:</label>
+                <input placeholder="userName" id="userName" formControlName="userName">
+              </div>
+              @if ( errors['uniqueId.userName']) {
+                <div class="ui negative message">
+                  {{ errors['uniqueId.userName'] }}
+                </div>
+              }
+              @if (errors['uniqueId']) {
+                <div class="ui negative message">
+                  {{ errors['uniqueId']}}
+                </div>
+              }
+            </fieldset>
+          </div>
+        </div>
+        <!-- BUTTONs uniqueId updating                -->
+        @if (isUpdateUniqueId || isNew || isClone) {
+          <div class="four wide column">
+            <button class="ui tiny circular green icon button"
+              [attr.data-tooltip]="txt['submit']" data-position="top center" data-testid="user-header-submit"
+              [disabled]="!thisForm.valid"
+              type="submit">
+              <i class="check icon"></i>
+            </button>
+            <button class="ui tiny circular red icon button"
+              type="button" [attr.data-tooltip]="txt['cancel']" data-position="top center"
+              [disabled]="isNew"
+              (click)="cancelUpdates()">
+              <i class="times icon"></i>
+            </button>
+          </div>
+        }
+      </div>
+    }
+    <div class="ui divider"></div>
+    <!-- -UPDATE trigger BUTTONs user header  -->
+    @if (isMaint && user?.userName !== '') {
+      <div class="row">
+        <div class="two wide column">
+          <button class="ui tiny circular yellow icon button"
+            type="button" [attr.data-tooltip]="txt['update']" data-inverted=""
+            [disabled]="isUpdate()"
+            (click)="setHeader()">
+            <i class="arrow down icon"></i>
+          </button>
+        </div>
+      </div>
+    }
+    <!-- -SHOW  user header  -->
+    <div class="row">
+      <div class="fourteen wide column">
+        <table class="ui very basic table">
+          <tbody>
+             <tr>
+              <!-- no header data ....-->
+             </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- -UPDATE issue hdr  -->
+    @if (isUpdateHdr) {
+      <div class="row">
+        <div class="twelve wide column">
+          <div class="ui form">
+            <fieldset  formGroupName="hdrGroup">
+              <!-- no header data ....-->
+              <legend class = "ui green label">{{usertxt['className']}} {{txt['field']}} {{txt['update']}} </legend>
+              <div class="inline fields">
+                <!-- no header data ....-->
+              </div>
+            </fieldset>
+          </div>
+        </div>
+        <!-- BUTTONs issue header updating                -->
+        <div class="four wide column">
+          @if (isUpdateHdr) {
+            <button class="ui tiny circular green icon button"
+              [attr.data-tooltip]="txt['submit']" data-position="top center"
+              [disabled]="!thisForm.valid"
+              type="submit">
+              <i class="check icon"></i>
+            </button>
+          }
+          @if (isUpdateHdr) {
+            <button class="ui tiny circular red icon button"
+              type="button" [attr.data-tooltip]="txt['cancel']" data-position="top center"
+              (click)="cancelUpdates()">
+              <i class="times icon"></i>
+            </button>
+          }
+        </div>
+      </div>
+    }
+    <div class="ui divider"></div>
+    <!-- -UPDATE trigger BUTTONs  issue footer  -->
+    @if (isMaint && user?.userName !== '') {
+      <div class="row">
+        <div class="two wide column">
+          <button class="ui tiny circular yellow icon button"
+            type="button" [attr.data-tooltip]="txt['update']" data-inverted=""
+            [disabled]="isUpdate()"
+            (click)="setFooter()">
+            <i class="arrow down icon"></i>
+          </button>
+        </div>
+      </div>
+    }
+    <!-- -SHOW  issue footer  -->
+    <div class="row">
+      <div class="fourteen wide column">
+        <table class="ui very basic table">
+          <tbody>
+            <tr>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- -UPDATE  issue footer   -->
+    @if (isUpdateFtr) {
+      <div class="row">
+        <div class="twelve wide column">
+          <div class="ui form">
+            <fieldset  formGroupName="ftrGroup">
+              <legend class = "ui green label">{{usertxt['className']}} {{txt['field']}} {{txt['update']}} </legend>
+              <div class="inline fields">
+              </div>
+            </fieldset>
+          </div>
+        </div>
+        <!-- BUTTONs  issue footer  updating                -->
+        <div class="four wide column">
+          @if (isUpdateFtr) {
+            <button class="ui tiny circular green icon button"
+              [attr.data-tooltip]="txt['submit']" data-position="top center"
+              [disabled]="!thisForm.valid"
+              type="submit">
+              <i class="check icon"></i>
+            </button>
+          }
+          @if (isUpdateFtr) {
+            <button class="ui tiny circular red icon button"
+              [attr.data-tooltip]="txt['cancel']" data-position="top center"
+              (click)="cancelUpdates()">
+              <i class="times icon"></i>
+            </button>
+          }
+        </div>
+      </div>
+    }
+    <!-- end of GRID Container  -->
+  </div>
+</form>
+

@@ -1,0 +1,16 @@
+<!-- ATTENTION  [ngClass] is used to set css behaviour - in this case via semantic ui -->
+<div class="ui search"  [ngClass]="{ loading: isLoading }">
+  <div class="ui fluid icon input">
+    <input (keyup)="keyup.emit(searchTerm.value)" #searchTerm class="prompt" type="text" placeholder="{{auth.txt['search']}}... ">
+    <i class="search icon"></i>
+  </div>
+  <div class="results transition" [ngClass]="{ visible: foundContacts.length }">
+    @for (contact of foundContacts; track contact) {
+      <a href (click)="selectContact(contact); false" class="result">
+        <div class="content">
+          <div class="title" id="searchContent" >{{ contact.displayNr }}  {{ contact.name }}  {{ contact.plz === 0 ? '' : contact.plz}} {{ contact.city }}</div>
+        </div>
+      </a>
+    }
+  </div>
+</div>

@@ -1,0 +1,36 @@
+<br>
+<div class="ui grid container">
+  <div class="row">
+    <div class="two wide column">
+    </div>
+    <div class="twelve wide column">
+      <h2 class="ui center aligned primary header">
+         {{auth.txt['user_title_server']}}
+      </h2>
+    </div>
+    <div class="two wide column">
+      <button class="right floated ui tiny circular red icon button"
+        [attr.data-tooltip]="auth.txt['close']"  data-position="bottom center" data-inverted=""
+        (click)="return()">
+        <i class="times icon"></i>
+      </button>
+    </div>
+  </div>
+</div>
+<br>
+@if (refreshSignal() === 1 && auth && users && isShowList) {
+  <dsy-user-list-view
+    [users]="users" [userId]="userId" 
+    [isCreate]="isCreate" [isMaint]="isMaint" [txt]="auth.txt" [usertxt]="usertxt"
+    (userListClose)="closeUserList()" (userInsert)="insertUser()" (userSelect)="selectUser($event)" 
+    (userShow)="showUser($event)" (userMaint)="maintUser($event)" (userDisable)="disableUser($event)"
+    (updateUser)="userUpdate($event)">
+  </dsy-user-list-view>
+}
+@if (auth && (user || formAction === 'new') && (userComponentUsage  === 'form' || isShowForm)) {
+  <dsy-user-form-view
+    [formAction]="formAction" [user]="user" [txt]="auth.txt" [usertxt]="usertxt"
+    (userFormClose)="closeUserForm()" (updateUser)="userUpdate($event)" (newUser)="userCreate($event)">
+  </dsy-user-form-view>
+}
+
