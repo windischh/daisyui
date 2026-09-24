@@ -1,49 +1,34 @@
 
-<div class="ui fifteen column grid">
-  @if (numberOfPages < 3) {
-    <div class="one wide column"></div>
-  }
-  @if (numberOfPages < 5) {
-    <div class="one wide column"></div>
-  }
-  @if (numberOfPages < 7) {
-    <div class="one wide column"></div>
-  }
-  @if (numberOfPages < 9) {
-    <div class="one wide column"></div>
-  }
-  <div class="three wide column"></div>
-  <div class="column">
-    @if (numberOfPages > 1) {
-      <div class="ui pagination menu">
-        @if (numberOfPages > 1 && selectedPage > 1) {
-          <a class="item" (click)="goBack()">
-            <i class="angle left icon" ></i>
-          </a>
-        }
-        <a class="item" (click)="selectPage(1)" [ngClass]="{active: selectedPage==1}"
-        [attr.data-tooltip]="getPageTooltip(1)" [attr.data-position]="getTooltipPosition()" data-variation="tiny basic">{{1}}</a>
-        @if (numberOfPages > 10 && selectedPage > 5) {
-          <a class="item" (click)="goBack10()">...</a>
-        }
-        @for (page of pages; track $index) {
-          <a class="item" (click)="selectPage(page)" [ngClass]="{active: selectedPage==page}"
-          [attr.data-tooltip]="getPageTooltip(page)"[attr.data-position]="getTooltipPosition()" data-variation="tiny basic">{{page}}</a>
-        }
-        @if (numberOfPages > 10 && selectedPage < numberOfPages-5) {
-          <a class="item" (click)="goForward10()">...</a>
-        }
-        <a class="item" (click)="selectPage(numberOfPages)" [ngClass]="{active: selectedPage==numberOfPages}"
-        [attr.data-tooltip]="getPageTooltip(numberOfPages)" [attr.data-position]="getTooltipPosition()" data-variation="tiny basic">{{numberOfPages}}</a>
-        @if (numberOfPages > 1 && selectedPage < numberOfPages) {
-          <a class="item" (click)="goForward()">
-            <i class="angle right icon" ></i>
-          </a>
-        }
-      </div>
-    }
+@if (numberOfPages > 1) {
+  <div class="flex justify-center items-center p-4">
+    <div class="join">
+      @if (numberOfPages > 1 && selectedPage > 1) {
+        <button class="join-item btn btn-outline btn-primary" (click)="goBack()" [attr.data-tip]="getPageTooltip(selectedPage-1)" data-position="getTooltipPosition()">
+          <i class="fas fa-angle-left"></i>
+        </button>
+      }
+      <button class="join-item btn" (click)="selectPage(1)" [ngClass]="{ 'btn-active': selectedPage==1 }"
+      [attr.data-tip]="getPageTooltip(1)">{{1}}</button>
+      @if (numberOfPages > 10 && selectedPage > 5) {
+        <button class="join-item btn btn-outline" (click)="goBack10()">...</button>
+      }
+      @for (page of pages; track $index) {
+        <button class="join-item btn" (click)="selectPage(page)" [ngClass]="{ 'btn-active': selectedPage==page }"
+        [attr.data-tip]="getPageTooltip(page)">{{page}}</button>
+      }
+      @if (numberOfPages > 10 && selectedPage < numberOfPages-5) {
+        <button class="join-item btn btn-outline" (click)="goForward10()">...</button>
+      }
+      <button class="join-item btn" (click)="selectPage(numberOfPages)" [ngClass]="{ 'btn-active': selectedPage==numberOfPages }"
+      [attr.data-tip]="getPageTooltip(numberOfPages)">{{numberOfPages}}</button>
+      @if (numberOfPages > 1 && selectedPage < numberOfPages) {
+        <button class="join-item btn btn-outline btn-primary" (click)="goForward()" [attr.data-tip]="getPageTooltip(selectedPage+1)">
+          <i class="fas fa-angle-right"></i>
+        </button>
+      }
+    </div>
   </div>
-</div>
+}
 
 <!--
 <input [(ngModel)]="modelPage"/> local: {{page}}

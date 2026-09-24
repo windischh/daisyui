@@ -1,51 +1,48 @@
-<br>
-<div class="ui grid container">
-  <div class="row">
-    <!--  -->
-    <div class="two wide column">
+<div class="container mx-auto p-4">
+  @if (refreshSignal() > 0) {
+    <div class="flex justify-center mt-4 mb-8">
+      <h1 class="text-2xl md:text-3xl font-bold">  {{auth.txt['status']}} </h1>
     </div>
-    <div class="twelve wide column">
-      <h2 class="ui center aligned header">  {{auth.txt['status']}} </h2>
+    <!-- no change to server mode ... -->
+    <div class="flex flex-wrap gap-4 mt-4 items-center">
+      <div class="flex-none w-32 ml-12">
+        <h3>  {{auth.txt['mode']}}: </h3>
+      </div>
+      <div class="flex-inital w-32">
+        <select class="select select-primary" (change)="selectMode($event)">
+          @for (mode of modeChoices; track mode) {
+            <option [value]="mode.value"
+              [selected]="mode.isSelected">
+              {{mode.text}}
+            </option>
+          }
+        </select>
+      </div>
     </div>
-  </div>
-  <div class="row">
-    <div class="six wide column">
-      <h3>  {{auth.txt['mode']}}: </h3>
+    <div class="flex flex-wrap gap-4 mt-4 items-center">
+      <div class="flex-none w-32 ml-12">
+        <h3> {{auth.txt['last_tx_time']}}: </h3>
+      </div>
+      <div class="flex-inital w-32">
+        <h3> {{session?.lastTxClient|date:'dd.MM.yyyy HH:mm'}} </h3>
+      </div>
     </div>
-    <div class="two wide column">
-      <select class="ui selection dropdown" (change)="selectMode($event)">
-        @for (mode of modeChoices; track mode) {
-          <option [value]="mode.value"
-            [selected]="mode.isSelected">
-            {{mode.text}}
-          </option>
-        }
-      </select>
+    <div class="flex flex-wrap gap-4 mt-4 items-center">
+      <div class="flex-none w-32 ml-12">
+        <h3>  {{auth.txt['language']}}: </h3>
+        </div>
+      <div class="flex-inital w-32">
+        <select class="select select-primary" (change)="selectLanguage($event)">
+          @for (lang of languageChoices; track lang) {
+            <option [value]="lang.value"
+              [selected]="lang.isSelected">
+              {{lang.text}}
+            </option>
+          }
+        </select>
+      </div>
     </div>
-  </div>
-  <div class="row">
-    <div class="six wide column">
-      <h3> {{auth.txt['last_tx_time']}}: </h3>
-    </div>
-    <div class="ten wide column">
-      <h3> {{session?.lastTxClient|date:'dd.MM.yyyy HH:mm'}} </h3>
-    </div>
-  </div>
-  <div class="row">
-    <div class="six wide column">
-      <h3>  {{auth.txt['language']}}: </h3>
-    </div>
-    <div class="two wide column">
-      <select class="ui selection dropdown" (change)="selectLanguage($event)">
-        @for (lang of languageChoices; track lang) {
-          <option [value]="lang.value"
-            [selected]="lang.isSelected">
-            {{lang.text}}
-          </option>
-        }
-      </select>
-    </div>
-  </div>
+  }
 </div>
 
 

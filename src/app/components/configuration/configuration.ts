@@ -51,7 +51,7 @@ export class ConfigurationComponent implements OnInit {
   public configurationOptionsLoadCounter = 0;
 
   // refresh signal triggers change detection
-  // signal value   0 - no data loaded   1 - data loded
+  // signal value   0 - no data loaded   > 0 - data loded
   public refreshSignal = signal(0);
 
   areas!: Array<IConfigurationArea>;
@@ -110,12 +110,11 @@ export class ConfigurationComponent implements OnInit {
     await this.auth.activateSession(this.name);
     if (this.auth.isSessionActive()) {
       this.sessionForViews  = this.auth.getSession(this.name);
-      this.refreshSignal.set(0);
       this.loadDbTexts();
       await this.getConfigurationOptions();
       if (this.isShowList) {
         await this.getOptionAreas();
-        this.refreshSignal.set(1);
+        this.refreshSignal.set(this.refreshSignal() + 1);
       }
     } else {
       // session could not be activated - duration exhausted
@@ -156,6 +155,7 @@ export class ConfigurationComponent implements OnInit {
       this.configurationOptions = [];
     }
     this.configurationOptionsLoadCounter++;
+    this.refreshSignal.set(this.refreshSignal() + 1);
   }
 
   // special areas with style options are defined explicit - in the moment 'invoicePrint', 'workCalendar'
@@ -297,6 +297,8 @@ export class ConfigurationComponent implements OnInit {
 
   async changeLanguage(event: number) {
     await this.auth.changeLanguage(event, this.name);
+    await this.sessionActivate();
+    // this.refreshSignal.set(this.refreshSignal() + 1);
   }
 
   /** ------------------------------ configurationOption-form-view ------------------------- */
@@ -304,7 +306,7 @@ export class ConfigurationComponent implements OnInit {
   // configurationOption data were entered in form-view, we proceed the updates here
   public async configurationOptionUpdate(configurationOption: ConfigurationOption) {
     if (configurationOption && configurationOption.optionName !== '') {
-      const updatedId = await this.configurationService.setConfigurationOption(configurationOption, this.name);
+      const updatedId = this.configurationService.setConfigurationOption(configurationOption, this.name);
       if (updatedId > 0) {
         // with getConfigurationOption we get updated configurationOption ...
         // not needed with this kind of -form-view
@@ -405,7 +407,7 @@ export class ConfigurationComponent implements OnInit {
     }
     if (isCreated) {
       await this.getConfigurationOptions();
-      alert(this.auth.txt['options_are_stored_sort_again']);
+      // alert(this.auth.txt['options_are_stored_sort_again']);
     }
     this.isOptionsSort = false;
   }

@@ -1,50 +1,54 @@
-<br>
 @if (txt && optiontxt) {
-  <div class="ui grid">
-    <div class="row">
-      <div class="two wide column">
+  <div class="container mx-auto p-4">
+    <div class="flex items-center gap-4">
+      <div class="flex-1"></div>
+      <div class="flex-1 text-center">
+        <h1 class="text-2xl md:text-3xl font-bold">
+          {{optiontxt['className']}} 
+        </h1>
+         <h3 class="text-xl md:text-2xl">
+           {{areaTxt}} 
+        </h3>
+        <h1 class="text-2xl md:text-3xl font-bold">
+          {{txt['sort']}}
+        </h1>
       </div>
-      <div class="twelve wide column">
-        <h2>
-          {{areaTxt}} {{optiontxt['className']}} {{txt['sort']}}
-        </h2>
-      </div>
-      <div class="right floated one wide column">
-      </div>
+      <div class="flex-1"></div>
     </div>
   </div>
 }
 <br>
 @if (isUpdateOk) {
-  <div class="ui segment">
-    <div class="ui active inverted dimmer">
-      <div class="ui large text loader">loading data ...</div>
+  <div class="card bg-base-100 shadow-md p-4">
+    <div class="flex items-center justify-center p-4">
+      <div class="loading loading-spinner loading-lg"></div>
+      <span class="ml-4">loading data ...</span>
     </div>
     <br>
   </div>
 }
 @if (txt && optiontxt) {
-  <div class="ui container">
+  <div class="overflow-x-auto p-4">
     @if (areaOptions) {
-      <table class="ui celled structured table">
+      <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th class="one wide"></th>
-            <th class="one wide">{{optiontxt['optionNr']}}</th>
-            <th class="two wide">{{optiontxt['optionName']}}</th>
-            <th class="four wide">{{optiontxt['optionStringValue']}}</th>
-            <th class="one wide">{{optiontxt['type']}}</th>
-            <th class="four wide" colspan="2">
-              <button class="ui tiny circular green icon button"
-                [attr.data-tooltip]="txt['submit']" data-position="top center"
+            <th class="w-1/12"></th>
+            <th class="w-1/12">{{optiontxt['optionNr']}}</th>
+            <th class="w-1/6">{{optiontxt['optionName']}}</th>
+            <th class="w-1/3">{{optiontxt['optionStringValue']}}</th>
+            <th class="w-1/12">{{optiontxt['type']}}</th>
+            <th class="w-1/3" colspan="2" class="text-center">
+              <button class="btn btn-circle btn-sm btn-success text-primary-content"
+                [attr.data-tip]="txt['submit']" data-position="top"
                 (click)="setUpdates()"
                 [disabled]="!isNewSorted">
-                <i class="check icon"></i>
+                <i class="fas fa-check"></i>
               </button>
-              <button class="ui tiny circular red icon button"
-                [attr.data-tooltip]="txt['cancel']" data-position="top center"
+              <button class="btn btn-circle btn-sm btn-error text-primary-content"
+                [attr.data-tip]="txt['cancel']" data-position="top"
                 (click)="cancelUpdates()">
-                <i class="times icon"></i>
+                <i class="fas fa-times"></i>
               </button>
             </th>
           </tr>
@@ -53,34 +57,32 @@
           @for (o of areaOptions; track o; let i = $index) {
             <tr>
               <!-- SHOW    option              -->
-              <td>
-                <div class="center aligned">
-                  @if (i > 0) {
-                    <button class="ui tiny circular teal icon button"
-                      [attr.data-tooltip]="txt['position_lower']" data-position="bottom center"
-                      (click)="lowerOption(i)" >
-                      <i class="arrow up icon"></i>
-                    </button>
-                  }
-                </div>
+              <td class="text-center">
+                @if (i > 0) {
+                  <button class="btn btn-circle btn-sm btn-info text-primary-content"
+                    [attr.data-tip]="txt['position_lower']" data-position="bottom"
+                    (click)="lowerOption(i)" >
+                    <i class="fas fa-arrow-up"></i>
+                  </button>
+                }
               </td>
               <td> {{o.optionNr}}</td>
               <td> {{o.txt}}</td>
               <td> {{o.value}}
                 @if (o.value === 'true') {
-                  <i class="green check icon"></i>
+                  <i class="fas fa-check text-success"></i>
                 }
                 @if (o.value === 'false') {
-                  <i class="red x icon"></i>
+                  <i class="fas fa-times text-error"></i>
                 }
               </td>
               <td>{{o.typeText}}</td>
-              <td>
+              <td class="text-center">
                 @if ((i < areaOptions.length - 1)) {
-                  <button class="ui tiny circular teal icon button"
-                    [attr.data-tooltip]="txt['position_raise']" data-position="bottom center"
+                  <button class="btn btn-circle btn-sm btn-info text-primary-content"
+                    [attr.data-tip]="txt['position_raise']" data-position="bottom"
                     (click)="raiseOption(i)">
-                    <i class="arrow down icon"></i>
+                    <i class="fas fa-arrow-down"></i>
                   </button>
                 }
               </td>

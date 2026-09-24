@@ -1,37 +1,41 @@
 
 @if (txt) {
-  <table class="ui celled structured table">
-    <thead>
-      <tr>
-        <th>{{txt['issue_provider']}}</th>
-        <th>{{txt['login']}}</th>
-        <th>{{txt['last_login_successful']}}</th>
-        <th>{{txt['last_login_rejected']}}</th>
-        <th class="center aligned" >{{txt['reset_existing_authorization']}}</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (authorization of user.authorizations; track authorization; let i = $index) {
-        <!-- no line for client provider if we store work at server -->
-        @if ((authorization.providerType === IssueProviderType.client && user.type === 1) || (authorization.providerId > 1)) {
-          <tr>
-            <td class="left aligned" [attr.data-tooltip]="authorization.providerDataUrl">{{authorization['issueProviderName']}}</td>
-            <td class="column">{{authorization.login}}</td>
-            <td class="left aligned">{{authorization.lastLoginSuccessful|date:'dd.MM.yyyy HH:mm'}}</td>
-            <td class="left aligned">{{authorization.lastLoginRejected|date:'dd.MM.yyyy HH:mm'}}</td>
-            <td>
-              @if (authorization['issueProviderType'] !== issueProviderType.client && authorization.authorization !== '') {
-                <button class="ui tiny circular gray icon button"
-                  [attr.data-tooltip]="txt['reset'] + ' ' + txt['login']"
-                  (click)="reset(i)">
-                  <i class="trash alternate icon"></i>
-                </button>
-              }
-            </td>
-          </tr>
+  <div class="overflow-x-auto p-4">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>{{txt['provider']}}</th>
+          <th>{{txt['login']}}</th>
+          <th>{{txt['last_login_successful']}}</th>
+          <th>{{txt['last_login_rejected']}}</th>
+          <th class="text-center">{{txt['reset_existing_authorization']}}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (authorization of user.authorizations; track authorization; let i = $index) {
+          <!-- no line for client provider and - in the moment - no web server provider is possible -->
+          @if ( (authorization.providerId > 2)) {
+            <tr>
+              <td class="tooltip tooltip-bottom tooltip-accent" [attr.data-tip]="authorization.providerDataUrl">
+                {{authorization.providerName}}
+              </td>
+              <td>{{authorization.login}}</td>
+              <td>{{authorization.lastLoginSuccessful|date:'dd.MM.yyyy HH:mm'}}</td>
+              <td>{{authorization.lastLoginRejected|date:'dd.MM.yyyy HH:mm'}}</td>
+              <td class="text-center">
+                @if (authorization.providerType !== providerType.client && authorization.authorization !== '') {
+                  <button class="btn btn-circle btn-sm btn-neutral"
+                    [attr.data-tip]="txt['reset']" data-position="bottom"
+                    (click)="reset(i)">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                }
+              </td>
+            </tr>
+          }
         }
-      }
-    </tbody>
-  </table>
+      </tbody>
+    </table>
+  </div>
 }
 

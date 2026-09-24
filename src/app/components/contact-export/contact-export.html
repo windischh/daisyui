@@ -1,98 +1,95 @@
-<br>
-<div class="ui grid container">
-  <div class="row">
-    <div class="two wide column">
+@if (refreshCounterSignal() > 0) {
+  <div class="container mx-auto p-4">
+  <div class="flex flex-wrap gap-4 items-center">
+    <div class="flex-1"></div>
+    <div class="flex-1 text-center">
+      <h1 class="text-2xl md:text-3xl font-bold">  {{auth.txt['contact_export']}} </h1>
     </div>
-    <div class="twelve wide column">
-      <h2 class="ui center aligned header">  {{auth.txt['contact_export']}} </h2>
+    <div class="flex-1 flex justify-end">
+      @if (resetSignal() > 0) {
+      <button class="btn btn-circle btn-sm btn-error text-primary-content"
+        [attr.data-tip]="auth.txt['reset']" data-position="bottom"
+        (click)="resetExport()">
+        <i class="fas fa-times"></i>
+      </button>
+      }
     </div>
-    @if (resetSignal() === 1) {
-      <div class="column">
-        <button class="ui tiny circular red icon button"
-          [attr.data-tooltip]="auth.txt['reset']"
-          (click)="resetExport()">
-          <i class="times icon"></i>
-        </button>
-      </div>
-    }
   </div>
-  @if (refreshSignal() === 1) {
-    <div class="ui divider"></div>
-    <div class="row">
-      <div class="two wide column">
-      </div>
-      <div class="twelve wide column">
-        <h3 class="ui center aligned header">  {{auth.txt['export_all_contacts']}} </h3>
-      </div>
+  <div class="divider"></div>
+  <div class="flex flex-wrap gap-4 items-center">
+    <div class="flex-1"></div>
+    <div class="flex-1 text-center">
+      <h4 class="text-lg md:text-xl font-semibold">  {{auth.txt['export_all_contacts']}} </h4>
     </div>
-    <div class="row">
-      <div class="two wide column">
-        <!-- open update area for extended file name ....  -->
-        @if (readySignal() === 0 && !isUpdateExtendedFileName) {
-          <button class="ui tiny circular yellow icon button"
-            [attr.data-tooltip]="auth.txt['fileName'] + ' ' + auth.txt['update']"
-            (click)="setUpdateExtendedFileName()">
-            <i class="arrow down icon"></i>
-          </button>
-        }
-        @if (isUpdateExtendedFileName) {
-          <button class="ui tiny circular green icon button"
-            [attr.data-tooltip]="auth.txt['fileName'] + ' ' + auth.txt['update']"
-            [disabled]="isUpdateFileName || isUpdateFileType"
-            (click)="setUpdateExtendedFileName()">
-            <i class="check icon"></i>
-          </button>
-        }
-      </div>
-      <div class="eight wide column">
+    <div class="flex-1"></div>
+  </div>
+  <div class="flex gap-4 items-center">
+    <div class="w-1/6">
+      <!-- open update area for extended file name ....  -->
+      @if (readySignal() === 0 && !isUpdateExtendedFileName) {
+        <button class="btn btn-circle btn-sm btn-warning text-primary-content"
+          [attr.data-tip]="auth.txt['fileName'] + ' ' + auth.txt['update']" data-position="bottom"
+          (click)="setUpdateExtendedFileName()">
+          <i class="fas fa-arrow-down"></i>
+        </button>
+      }
+      @if (isUpdateExtendedFileName) {
+        <button class="btn btn-circle btn-sm btn-success text-primary-content"
+          [attr.data-tip]="auth.txt['fileName'] + ' ' + auth.txt['update']" data-position="bottom"
+          [disabled]="isUpdateFileName || isUpdateFileType"
+          (click)="setUpdateExtendedFileName()">
+          <i class="fas fa-check"></i>
+        </button>
+      }
+    </div>
+    <div class="w-2/3">
+      <h4>
+        {{auth.txt['fileName']}}: {{extendedFileName}}
+      </h4>
+      @if (readySignal() === 1 && finishedSignal() === 0  && recordCount > 0) {
         <h4>
-          {{auth.txt['fileName']}}: {{extendedFileName}}
+          {{'   ' + auth.txt['record_count'] + ': ' + recordCount}}
         </h4>
-        @if (readySignal() === 1 && finishedSignal() === 0  && recordCount > 0) {
-          <h4>
-            {{'   ' + auth.txt['record_count'] + ': ' + recordCount}}
-          </h4>
-        }
-      </div>
-      <div class="two wide column">
-        @if (readySignal() === 0 && !isUpdateExtendedFileName) {
-          <button class="ui tiny circular green icon button"
-            [attr.data-tooltip]="auth.txt['prepare_export']"
-            (click)="prepareExport()">
-            <i class="arrow right icon"></i>
-          </button>
-        }
-        <!-- design the a link as button is best possibility to use href ....  -->
-        @if (readySignal() === 1 && finishedSignal() === 0 && recordCount > 0) {
-          <a class="ui tiny green button"
-            [href]="encodedUri|safeResource"
-            [attr.download]="extendedFileName"
-            [attr.data-tooltip]="auth.txt['do_export']"
-            (click)="setExportFinished()">
-            DOWNLOAD
-          </a>
-        }
-        @if (readySignal() === 1 && recordCount === 0) {
-          <h4>
-            {{auth.txt['no_records_to_export']}}
-          </h4>
-        }
-        @if (finishedSignal() === 1 ) {
-          <h4>
-            {{recordCount + ' ' + auth.txt['records_exported']}}
-          </h4>
-        }
-      </div>
+      }
     </div>
-  }
+    <div class="w-1/6 flex justify-end">
+      @if (readySignal() === 0 && !isUpdateExtendedFileName) {
+        <button class="btn btn-circle btn-sm btn-success text-primary-content"
+          [attr.data-tip]="auth.txt['prepare_export']" data-position="bottom"
+          (click)="prepareExport()">
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      }
+      <!-- design the a link as button is best possibility to use href ....  -->
+      @if (readySignal() === 1 && finishedSignal() === 0 && recordCount > 0) {
+        <a class="btn btn-success btn-sm text-primary-content"
+          [href]="encodedUri|safeResource"
+          [attr.download]="extendedFileName"
+          [attr.data-tip]="auth.txt['do_export']" data-position="bottom"
+          (click)="setExportFinished()">
+          <i class="fas fa-download mr-2"></i>DOWNLOAD
+        </a>
+      }
+      @if (readySignal() === 1 && recordCount === 0) {
+        <h4>
+          {{auth.txt['no_records_to_export']}}
+        </h4>
+      }
+      @if (finishedSignal() === 1 ) {
+        <h4>
+          {{recordCount + ' ' + auth.txt['records_exported']}}
+        </h4>
+      }
+    </div>
+  </div>
   <!-- updating file name                     -->
   @if (resetSignal() === 0 && isUpdateExtendedFileName) {
-    <div class="ui divider"></div>
-    <div class="row">
-      <div class="two wide column">
+    <div class="divider"></div>
+    <div class="flex  gap-4 items-center">
+      <div class="w-1/6">
         <h4> {{auth.txt['fileName']}}:</h4>
       </div>
-      <div class="eight wide column" >
+      <div class="w-2/3" >
         @if (readySignal() === 0 && !isUpdateFileName) {
           <h4>
             {{fileName}}
@@ -100,47 +97,49 @@
         }
         @if (readySignal() === 0 && isUpdateFileName) {
           <h4>
-            <div class="ui fluid input">
+            <div class="join w-full">
               <input (keyup.enter)="updateFileName(name.value)"
-                #name [value]="fileName" type="text" [placeholder]="auth.txt['fileName'] + '  ...'">
-              <button class="ui tiny green icon button"
-                [attr.data-tooltip]="auth.txt['submit']" data-position="top center"
+                #name [value]="fileName" type="text" [placeholder]="auth.txt['fileName'] + '  ...'" class="input join-item w-full">
+              <button class="btn btn-success text-primary-content join-item "
+                [attr.data-tip]="auth.txt['submit']" data-position="top"
                 (click)="updateFileName(name.value)">
-                <i class="check icon"></i>
+                <i class="fas fa-check"></i>
               </button>
             </div>
           </h4>
         }
       </div>
       @if (readySignal() === 0 && !isUpdateFileName && !isUpdateFileType) {
-        <div class="column">
-          <button class="ui tiny circular yellow icon button"
-            [attr.data-tooltip]="auth.txt['fileName'] + ' ' + auth.txt['update']"
+        <div class="w-1/6 flex justify-end">
+          <button class="btn btn-circle btn-sm btn-warning text-primary-content"
+            [attr.data-tip]="auth.txt['fileName'] + ' ' + auth.txt['update']" data-position="bottom"
             (click)="setUpdateFileName()">
-            <i class="arrow left icon"></i>
+            <i class="fas fa-arrow-left"></i>
           </button>
         </div>
       }
     </div>
-    <div class="row">
-      <div class="two wide column">
+    <div class="flex gap-4 items-center">
+      <div class="w-1/6">
       </div>
-      <div class="two wide column" >
-        <div class="ui checkbox">
-          <input type="checkbox" [checked]="isFileExtension"
-            [disabled]="isUpdateFileName || isUpdateFileType || readySignal() === 1"
-            (change)="setShowExtension($event)">
-          <label>{{auth.txt['fileNameExtension']}} </label>
+      <div class="w-2/3" >
+        <div class="form-control">
+          <label class="label cursor-pointer">
+            <input type="checkbox" [checked]="isFileExtension"
+              [disabled]="isUpdateFileName || isUpdateFileType || readySignal() === 1"
+              (change)="setShowExtension($event)" class="checkbox">
+            <span class="label-text ml-2">{{auth.txt['fileNameExtension']}} </span>
+          </label>
         </div>
       </div>
     </div>
-    <div class="row">
-      <div class="two wide column">
+    <div class="flex gap-4 items-center">
+      <div class="w-1/6">
         <h4> {{auth.txt['fileType']}}:</h4>
       </div>
-      <div class="two wide column" >
+      <div class="w-1/6" >
       </div>
-      <div class="six wide column" >
+      <div class="w-1/3" >
         @if (readySignal() === 0 && !isUpdateFileType) {
           <h4>
             {{fileType}}
@@ -148,27 +147,28 @@
         }
         @if (readySignal() === 0 && isUpdateFileType) {
           <h4>
-            <div class="ui fluid input">
+            <div class="join w-full">
               <input (keyup.enter)="updateFileType(type.value)"
-                #type [value]="fileType" type="text" [placeholder]="auth.txt['fileType'] + '  ...'">
-              <button class="ui tiny green icon button"
-                [attr.data-tooltip]="auth.txt['submit']" data-position="top center"
+                #type [value]="fileType" type="text" [placeholder]="auth.txt['fileType'] + '  ...'" class="input join-item w-full">
+              <button class="btn btn-success text-primary-content join-item"
+                [attr.data-tip]="auth.txt['submit']" data-position="top"
                 (click)="updateFileType(type.value)">
-                <i class="check icon"></i>
+                <i class="fas fa-check"></i>
               </button>
             </div>
           </h4>
         }
       </div>
       @if (readySignal() === 0 && !isUpdateFileName && !isUpdateFileType) {
-        <div class="column">
-          <button class="ui tiny circular yellow icon button"
-            [attr.data-tooltip]="auth.txt['fileType'] + ' ' + auth.txt['update']"
+        <div class="w-1/3 flex justify-end">
+          <button class="btn btn-circle btn-sm btn-warning text-primary-content"
+            [attr.data-tip]="auth.txt['fileType'] + ' ' + auth.txt['update']" data-position="bottom"
             (click)="setUpdateFileType()">
-            <i class="arrow left icon"></i>
+            <i class="fas fa-arrow-left"></i>
           </button>
         </div>
       }
     </div>
   }
 </div>
+}

@@ -1,21 +1,20 @@
-<br>
 @if (auth && auth.txt && isParametersSet) {
-  <div class="ui grid container">
-    <div class="row">
-      <div class="three wide column">     <!-- left column has customer/order/reviewTime -->
-        <div class="row">
-          @for (t of reviewTimeChoices; track t) {
-            <div class="ui radio checkbox" >
-              <input type="radio"  [value]="t.value" [checked]="t.isSelected" (change)="setReviewTime($event)">
-              <label>{{t.text}}</label>
-            </div>
+  <div class="container mx-auto p-1 mt-2">
+    <div class="flex flex-wrap gap-2 items-center">
+      <div class="w-2/12">
+        <select class="select select-primary" (change)="selectLogPublisher($event)">
+          @for (publisher of logPublisherChoices; track publisher) {
+            <option [value]="publisher.value"
+              [selected]="publisher.isSelected">
+              {{publisher.text}}
+            </option>
           }
-        </div>
+        </select>
       </div>
-      <div class="one wide column">     <!-- date picker -->
-        <button type="button" class="ui small icon button" (click)="dp.toggleCalendar()"
-          [attr.data-tooltip]="auth.txt['select'] + ' ' + auth.txt['date']" data-position="bottom center">
-          <i class="calendar alternate outline icon"></i>
+      <div class="w-1/12">
+        <button type="button" class="btn btn-outline btn-primary" (click)="dp.toggleCalendar()"
+          [attr.data-tip]="auth.txt['select'] + ' ' + auth.txt['date']" data-position="bottom">
+          <i class="fas fa-calendar-alt"></i>
         </button>
         <!-- with type="hidden" display of date input is deactivated - workDayDisplay is shown! -->
         <input angular-mydatepicker name="mydate"
@@ -23,64 +22,54 @@
           (inputFieldChanged)="onInputFieldChanged($event)" (dateChanged)="onDateChanged($event)"
           [attr.disabled]="dpDisabled?'':null"/>
       </div>
-      <div class="three wide column">     <!-- header -->
-        <h2> {{logtxt['className']}} {{auth.txt['list']}}</h2>
-      </div>
-      <div class="three wide column">     <!-- mandant filter -->
-        <div class="ui fluid action input">
-          <input  (keyup.enter)="setMandantFilter(mandantFilterTerm.value)"  #mandantFilterTerm  type="text"
-            placeholder="{{auth.txt['filter']}} {{auth.txt['mandant']}}.... ">
-          @if (mandantFilter !== '') {
-            <button class="ui mini red icon button"
-              type="button" (click)="mandantFilterTerm.value=''; setMandantFilter(mandantFilterTerm.value)"
-              [attr.data-tooltip]="auth.txt['reset'] + ' ' + auth.txt['filter']" data-position="bottom center">
-              <i class="times icon"></i>
-            </button>
+      <div class="w-3/12">
+        <div class="flex flex-wrap gap-2">
+          @for (t of reviewTimeChoices; track t) {
+            <div class="form-control">
+              <label class="label cursor-pointer">
+                <input type="radio" class="radio radio-xs" [value]="t.value" [checked]="t.isSelected" (change)="setReviewTime($event)">
+                <span class="label-text text-xs ml-2">{{t.text}}</span>
+              </label>
+            </div>
           }
         </div>
       </div>
-      <div class="three wide column">     <!-- user filter -->
-        <div class="ui fluid action input">
-          <input  (keyup.enter)="setUserFilter(userFilterTerm.value)"  #userFilterTerm  type="text"
-            placeholder="{{auth.txt['filter']}} {{auth.txt['user']}}.... ">
-          @if (userFilter !== '') {
-            <button class="ui mini red icon button"
-              type="button" (click)="userFilterTerm.value=''; setUserFilter(userFilterTerm.value)"
-              [attr.data-tooltip]="auth.txt['reset'] + ' ' + auth.txt['filter']" data-position="bottom center">
-              <i class="times icon"></i>
-            </button>
-          }
-        </div>
+      <div class="w-2/12">
+        <h1 class="text-2xl md:text-3xl font-bold">
+          {{logtxt['className']}} {{auth.txt['list']}}
+        </h1>
       </div>
-      <div class="one wide column" >     <!-- level -->
-        <div class="ui inline dropdown">
-          <button class="ui tiny right floated circular gray icon button" id="dropdownButton"
-            (click)="toggleMenu()">
-            <i class="ellipsis vertical icon"></i>
+      <div class="w-1/24">
+        <div class="dropdown dropdown-end">
+          <button class="btn btn-circle btn-sm btn-info" id="dropdownButton" (click)="toggleMenu()">
+            <i class="fas fa-ellipsis-v"></i>
           </button>
-          <div class="menu transition" [ngClass]="{ visible: isShowDropdown }">
+          <ul class="dropdown-content menu shadow bg-base-100 rounded-box p-2 w-52 mt-4">
             @for (l of logLevelChoices; track l) {
-              <div class="item">
-                <div class="ui checkbox" id="checkbox">
-                  <input type="checkbox" id="checkboxInput" [value]="l.value" [checked] = "l.isSelected" (change)="setLevel($event)">
-                  <label><small>{{l.value}}{{l.text ? ' - ' : ''}}{{l.text|slice:0:10}}</small></label>
+              <li>
+                <div class="form-control">
+                  <label class="label cursor-pointer">
+                    <input type="checkbox" id="checkboxInput" [value]="l.value" [checked] = "l.isSelected" (change)="setLevel($event)" class="checkbox">
+                    <span class="label-text ml-2"><small>{{l.value}}{{l.text ? ' - ' : ''}}{{l.text|slice:0:10}}</small></span>
+                  </label>
                 </div>
-              </div>
+              </li>
             }
-          </div>
+          </ul>
         </div>
       </div>
-      <div class="two wide column"> <!-- clear logs-->
-        @for (publishedLog of publishedLogs; track publishedLog) {
-          <!--  each log which is defined in this environment - except webApi log - can be cleared .... -->
-          @if (publishedLog !== 'webapi') {
-            <button class="ui tiny circular gray icon button"
-              [attr.data-tooltip]="auth.txt['clear_log'] + ': ' + publishedLog"
-              (click)="clearLog(publishedLog)">
-              <i class="trash alternate icon"></i>
+      <div class="w-2/12">
+        <div class="join w-full">
+          <input  (keyup.enter)="setUserFilter(userFilterTerm.value)"  #userFilterTerm  type="text"
+            placeholder="{{auth.txt['filter']}} {{auth.txt['user']}}.... " class="input join-item w-full">
+          @if (userFilter !== '') {
+            <button class="btn btn-error join-item"
+              type="button" (click)="userFilterTerm.value=''; setUserFilter(userFilterTerm.value)"
+              [attr.data-tip]="auth.txt['reset'] + ' ' + auth.txt['filter']" data-position="bottom">
+              <i class="fas fa-times"></i>
             </button>
           }
-        }
+        </div>
       </div>
     </div>
   </div>
@@ -88,8 +77,9 @@
 
 <!-- we await update and getting new data from server   -->
 @if (logsReadySignal() === 0) {
-  <div class="ui active inverted dimmer">
-    <div class="ui large text loader">processing data on server  ...</div>
+  <div class="flex items-center justify-center p-4">
+    <div class="loading loading-spinner loading-lg"></div>
+    <span class="ml-4">processing data on server  ...</span>
   </div>
 }
 
@@ -97,72 +87,65 @@
 <div [style]="scrollWrapperStyle">
   <!-- first stuck to fix first column since fomantic 2.9 -->
   @if (logsReadySignal() === 1) {
-    <table class="ui first stuck celled structured unstackable table" [style]="tableScrollStyle">
-      <thead>
-        <tr>
-          <th class="left aligned">
-            <div class="ui label">
-              {{auth.txt['dateFrom']}}:
-            </div>
-          </th>
-          <th>{{dateFrom|date:'dd.MM.yyyy'}}</th>
-          <th class="left aligned">
-            <div class="ui label">
-              {{auth.txt['dateTo']}}:
-            </div>
-          </th>
-          <th>{{dateTo|date:'dd.MM.yyyy'}}</th>
-          <th class="right aligned">
-            <div class="ui label">
-              {{auth.txt['log_level']}}:
-            </div>
-          </th>
-          <th>{{levels}}</th>
-          <th>{{logtxt['systemName']}}</th>
-          <th>{{logtxt['mandantName']}}</th>
-        </tr>
-        <tr>
-          <th>{{logtxt['date']}}</th>
-          <th>{{logtxt['mandantId']}}</th>
-          <th>{{logtxt['component']}}</th>
-          <th>{{logtxt['logMessage']}}</th>
-          <th>{{logtxt['extraInfo']}}</th>
-          <th>{{logtxt['logLevel']}}</th>
-          <th>{{logtxt['login']}}</th>
-          <th>{{logtxt['userName']}}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (log of showLogs; track log; let i = $index) {
+    <div class="overflow-x-auto" [style]="tableScrollStyle">
+      <table class="table table-zebra w-full">
+        <thead>
           <tr>
-            <td class="left aligned">
-              {{log.date|date:'dd.MM.yyyy HH:mm'}}
-            </td>
-            <td>
-              {{log.mandantId}}
-            </td>
-            <td>
-              {{log.component}}
-            </td>
-            <td>
-              {{log.logMessage|slice:0:80}}
-            </td>
-            <td>
-              {{log.extraInfo ? log.extraInfo.replace('[','').replace(']','') : ''|slice:0:40}}
-            </td>
-            <td>
-              {{log.logLevel}}
-            </td>
-            <td>
-              {{log.processId > 0 ? log.systemName : log.login}}
-            </td>
-            <td>
-              {{log.processId > 0 ? (log.mandantName|slice:0:15)  : log.userName}}
-            </td>
+            <th class="text-left">
+              <span class="badge badge-info">{{auth.txt['dateFrom']}}:</span>
+            </th>
+            <th>{{dateFrom|date:'dd.MM.yyyy'}}</th>
+            <th class="text-left">
+              <span class="badge badge-info">{{auth.txt['dateTo']}}:</span>
+            </th>
+            <th>{{dateTo|date:'dd.MM.yyyy'}}</th>
+            <th class="text-left">
+              <span class="badge badge-info">{{auth.txt['log_level']}}:</span>
+              {{levels}}
+            </th>
+            <th>
+              <button class="btn btn-circle btn-sm btn-outline"
+                [attr.data-tip]="auth.txt['clear_log'] + ': ' + logPublisher" data-position="bottom"
+                (click)="clearLog(logPublisher)">
+                <i class="fas fa-trash"></i>
+              </button>
+            </th>
           </tr>
-        }
-      </tbody>
-    </table>
+          <tr>
+            <th>{{logtxt['date']}}</th>
+            <th>{{logtxt['component']}}</th>
+            <th>{{logtxt['logMessage']}}</th>
+            <th>{{logtxt['extraInfo']}}</th>
+            <th>{{logtxt['logLevel']}}</th>
+            <th>{{logtxt['userName']}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of showLogs; track log; let i = $index) {
+            <tr>
+              <td>
+                {{log.date|date:'dd.MM.yyyy HH:mm'}}
+              </td>
+              <td>
+                {{log.component}}
+              </td>
+              <td>
+                {{log.logMessage|slice:0:80}}
+              </td>
+              <td>
+                {{log.extraInfo ? log.extraInfo.replace('[','').replace(']','') : ''|slice:0:40}}
+              </td>
+              <td>
+                {{log.logLevel}}
+              </td>
+              <td>
+                {{log.userName}}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 </div>
 

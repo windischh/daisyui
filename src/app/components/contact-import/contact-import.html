@@ -1,39 +1,42 @@
-<br>
 @if (refreshCounterSignal() > 0) {
-  <div class="ui grid container">
-    <div class="row">
-      <div class="two wide column">
+  <div class="container mx-auto p-4">
+    <!-- header and reset button-->
+    <div class="flex flex-wrap gap-4 items-center">
+      <div class="flex-1"></div>
+      <div class="flex-1 text-center">
+        <h1 class="text-2xl md:text-3xl font-bold">  {{auth.txt['contact_import']}}  </h1>
+        <h3 class="text-xl md:text-2xl">
+          {{importReadySignal() === 0 ? '(.' + fileType + ')' : ''}}
+          {{importReadySignal()  >= 1 ? auth.txt['source'] : ''}} {{importReadySignal() === 2 ? auth.txt['checked'] : ''}} {{importReadySignal() === 3 ? auth.txt['ready_for_import'] : ''}}
+        </h3>
       </div>
-      <div class="twelve wide column">
-        <h2 class="ui center aligned header">  {{session.serviceLevel.contact === 1 ? auth.txt['contact_import'] : auth.txt['contact_import']}} {{sourceReadySignal() === 0 ? '(.' + fileType + ')' : ''}}
-          {{sourceReadySignal() === 1 && importReadySignal() === 0 ? auth.txt['source'] : ''}} {{sourceCheckedSignal() === 1 && importReadySignal() === 0 ? auth.txt['checked'] : ''}} {{importReadySignal() === 1 ? auth.txt['ready_for_import'] : ''}}
-        </h2>
+      <div class="flex-1">
+        @if (resetableSignal()) {
+          <div class="flex-1 flex justify-end">
+            <button class="btn btn-circle btn-sm btn-error text-primary-content"
+              [attr.data-tip]="auth.txt['reset']" data-position="bottom"
+              (click)="resetImport()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        }
       </div>
-      @if (resetableSignal() === 1) {
-        <div class="column">
-          <button class="ui tiny circular red icon button"
-            [attr.data-tooltip]="auth.txt['reset']"
-            (click)="resetImport()">
-            <i class="times icon"></i>
-          </button>
-        </div>
-      }
     </div>
-    <div class="ui divider"></div>
+    <div class="divider"></div>
     <!-- select local file by file name and type                 -->
-    <div class="row">
-      <div class="two wide column">
+    <div class="flex gap-4 items-center">
+      <div class="w-1/6">
         <!-- open update area for  file name ....  -->
-        @if (sourceReadySignal() === 0 && !isUpdateFileType) {
-          <button class="ui tiny circular yellow icon button"
-            [attr.data-tooltip]="auth.txt['fileType'] + ' ' + auth.txt['update']"
+        @if (validVcfFileSignal() === false && !isUpdateFileType) {
+          <button class="btn btn-circle btn-sm btn-warning text-primary-content"
+            [attr.data-tip]="auth.txt['fileType'] + ' ' + auth.txt['update']" data-position="bottom"
             (click)="setUpdateFileType()">
-            <i class="arrow down icon"></i>
+            <i class="fas fa-arrow-down"></i>
           </button>
         }
       </div>
-      <div class="seven wide column">
-        @if (validVcfFileSignal() === 1) {
+      <div class="w-1/2">
+        @if (validVcfFileSignal()) {
           <h4>
             {{auth.txt['fileName']}}: {{extendedFileName}}
           </h4>
@@ -48,88 +51,103 @@
           </h4>
         }
       </div>
-      <div class="six wide column">
-        @if (validVcfFileSignal() === 1 && sourceReadySignal() === 0 && !isUpdateFileType) {
-          <div class="ui small labeled input">
-            <div class="ui label" [attr.data-tooltip]="auth.txt['start_with']">
-              {{custtxt['contactNr']}}
-            </div>
-            <input  (keyup.enter)="prepareImport(startCustNr.value)"
-              #startCustNr [value]="startContactNr" type="text">
+      <div class="w-1/3">
+        @if (validVcfFileSignal() && importReadySignal() === 0 && !isUpdateFileType) {
+          <div class="join w-full">
+             <div class="flex items-center gap-2">
+                <label for="prepareInput" class="label">{{auth.txt['start_with']}}</label>
+                <input  id="prepareInput"  (keyup.enter)="prepareImport(startCustNr.value)"
+                  #startCustNr [value]="startContactNr" type="text" 
+                  [placeholder]="" class="input input-success join-item w-full">
+             </div>
+            <button class="btn btn-success text-primary-content join-item"
+              [attr.data-tip]="auth.txt['prepare_import']" data-position="bottom"
+              (click)="prepareImport(startCustNr.value)">
+              <i class="fas fa-arrow-right"></i>
+            </button>
           </div>
-          <button class="ui tiny circular green icon button"
-            [attr.data-tooltip]="auth.txt['prepare_import']"
-            (click)="prepareImport(startCustNr.value)">
-            <i class="arrow right icon"></i>
-          </button>
         }
-        @if (sourceReadySignal() === 1 && sourceCheckedSignal() === 0 && recordCount > 0) {
-          <button class="ui tiny circular green icon button"
-            [attr.data-tooltip]="auth.txt['check_source']"
+        @if (importReadySignal() === 1 && sourceContacts.length > 0) {
+          <button class="btn btn-circle btn-sm btn-success text-primary-content"
+            [attr.data-tip]="auth.txt['check_source']" data-position="bottom"
             (click)="setImportSourceChecked()">
-            <i class="arrow right icon"></i>
+            <i class="fas fa-arrow-right"></i>
           </button>
         }
-        @if (sourceCheckedSignal() === 1 && importReadySignal() === 0) {
-          <button class="ui tiny circular yellow icon button"
-            [attr.data-tooltip]="auth.txt['go_back']"
+        @if (importReadySignal() === 2) {
+          <button class="btn btn-circle btn-sm btn-warning text-primary-content"
+            [attr.data-tip]="auth.txt['go_back']" data-position="bottom"
             (click)="resetImportSource()">
-            <i class="arrow left icon"></i>
+            <i class="fas fa-arrow-left"></i>
           </button>
         }
-        @if (sourceCheckedSignal() === 1 && importReadySignal() === 0) {
-          <button class="ui tiny circular green icon button"
-            [attr.data-tooltip]="auth.txt['check_import']"
-            (click)="setImportDuplicates()">
-            <i class="arrow right icon"></i>
+        @if (importReadySignal() === 2) {
+          <button class="btn btn-circle btn-sm btn-success text-primary-content"
+            [attr.data-tip]="auth.txt['check_import']" data-position="bottom"
+            (click)="setImportOverwrites()">
+            <i class="fas fa-arrow-right"></i>
           </button>
         }
-        @if (importReadySignal() === 1 && importFinishedSignal() === 0) {
-          <button class="ui tiny circular yellow icon button"
-            [attr.data-tooltip]="auth.txt['go_back']"
-            (click)="resetImportDuplicates()">
-            <i class="arrow left icon"></i>
+        @if (importReadySignal() === 3) {
+          <button class="btn btn-circle btn-sm btn-warning text-primary-content"
+            [attr.data-tip]="auth.txt['go_back']" data-position="bottom"
+            (click)="resetImportOverwrites()">
+            <i class="fas fa-arrow-left"></i>
           </button>
         }
-        @if (importReadySignal() === 1 && importFinishedSignal() === 0 && recordCount > 0) {
-          <button class="ui tiny green button"
-            [attr.data-tooltip]="auth.txt['do_import']"
+        @if (importReadySignal() === 3 && sourceContacts.length > 0) {
+          <button class="btn btn-success btn-sm text-primary-content"
+            [attr.data-tip]="auth.txt['do_import']" data-position="bottom"
             (click)="setImportFinished()">
-            IMPORT
+            <i class="fas fa-download mr-2"></i>IMPORT
           </button>
         }
-        @if (sourceReadySignal() === 1 && importFinishedSignal() === 0 && recordCount > 0) {
-          <div class="ui checkbox">
-            <input type="checkbox" [checked]="isShowRemarked" (change)="toggleRemarked($event)">
-            <label><small>{{auth.txt['show_errors'] }} </small></label>
+        @if (importReadySignal() > 0 && importReadySignal() < 3 && sourceContacts.length > 0) {
+          <div class="form-control">
+            <label class="label cursor-pointer">
+              <input type="checkbox" [checked]="isShowRemarked" (change)="toggleRemarked($event)" class="checkbox">
+              <span class="label-text ml-2"><small>{{auth.txt['show_errors'] }} </small></span>
+            </label>
           </div>
         }
-        @if (sourceReadySignal() === 1 && recordCount === 0) {
+         @if (importReadySignal() === 2 && sourceContacts.length > 0) {
+          <div class="form-control">
+            <label class="label cursor-pointer">
+              <input type="checkbox" [checked]="isOverwriteExisting" (change)="toggleOverwrites($event)" class="checkbox">
+              <span class="label-text ml-2"><small>{{auth.txt['allow_overwrite'] }} </small></span>
+            </label>
+          </div>
+        }
+        @if (importReadySignal() >= 1 && sourceContacts.length === 0) {
           <h4>
             {{auth.txt['no_records_to_import']}}
           </h4>
         }
-        @if (importFinishedSignal() === 1) {
+        @if (importReadySignal() === 4) {
           <h4>
             {{importCount + ' ' + auth.txt['records_imported']}}
           </h4>
         }
       </div>
     </div>
-    @if (sourceReadySignal() === 1 && importFinishedSignal() === 0 && recordCount > 0) {
-      <div class="row"> <!-- import process messages-->
-        <div class="two wide column">
+    @if (importReadySignal() >= 1 && importReadySignal() <= 3 && sourceContacts.length > 0) {
+      <div class="flex flex-wrap gap-4 items-center"> <!-- import process messages-->
+        <div class="w-1/6">
         </div>
-        <div class="thirteen wide column">
+        <div class="w-5/6">
           <h4>
-            {{auth.txt['record_count'] + ': ' + recordCount}}&nbsp;&nbsp;{{errorCount > 0 ? auth.txt['from_this'] + ' ' + auth.txt['error_count'] + ': ' + errorCount : ''}}
+            {{auth.txt['record_count'] + ': ' + sourceContacts.length}}&nbsp;&nbsp;{{errorCount > 0 ? auth.txt['from_this'] + ' ' + auth.txt['error_count'] + ': ' + errorCount : ''}}
             <br>
-            &nbsp;&nbsp;{{rejected > 0 ? '( ' + auth.txt['rejected_count'] + ': ' + rejected.toString() + ')' : ''}} &nbsp;&nbsp;
-            @if (sourceCheckedSignal() === 1) {
+            &nbsp;&nbsp;{{(notAcceptedCount + rejectedCount) > 0 ? '( ' + auth.txt['rejected_count'] + ': ' + (notAcceptedCount + rejectedCount).toString() + ' )' : ''}} &nbsp;&nbsp;
+            @if (importReadySignal() === 2) {
               <br>
-              &nbsp;&nbsp;&nbsp;&nbsp;{{auth.txt['unchanged'] + ': ' + (recordCount - errorCount - accepted - rejected)}}&nbsp;&nbsp;{{accepted > 0 ? auth.txt['accepted_count'] + ': ' + accepted : ''}}
+              &nbsp;&nbsp;&nbsp;&nbsp;{{auth.txt['unchanged'] + ': ' + (sourceContacts.length - errorCount - acceptedCount - notAcceptedCount)}}
+              &nbsp;&nbsp;{{acceptedCount > 0 ? auth.txt['accepted_count'] + ': ' + acceptedCount : ''}}
+              &nbsp;&nbsp;{{duplicatesCount > 0 ? '( ' + auth.txt['duplicates_count'] + ': ' + duplicatesCount + ' )' : ''}}
+            }
+            @if (importReadySignal() === 3) {
               <br>
-              &nbsp;&nbsp;&nbsp;&nbsp;{{noDuplicates > 0 ? auth.txt['no_duplicates_count'] + ': ' + noDuplicates : ''}}&nbsp;&nbsp;{{duplicates > 0 ? auth.txt['duplicates_count'] + ': ' + duplicates : ''}}
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{overwritesCount > 0 ? '( ' + auth.txt['overwrites_count'] + ': ' + overwritesCount + ' )' : ''}}
             }
           </h4>
         </div>
@@ -137,55 +155,50 @@
     }
     @if (isUpdateFileType) {
       <!-- updating file type              -->
-      <div class="ui divider"></div>
-      <div class="row">
-        <div class="two wide column">
-          <h4> {{auth.txt['fileType']}}:</h4>
-        </div>
-        <div class="two wide column" >
-        </div>
-        <div class="six wide column" >
-          <h4>
-            <div class="ui fluid input">
-              <input (keyup.enter)="updateFileType(type.value)"
-                #type [value]="fileType" type="text" [placeholder]="auth.txt['fileType'] + '  ...'">
-              <button class="ui tiny green icon button"
-                [attr.data-tooltip]="auth.txt['submit']" data-position="top center"
-                (click)="updateFileType(type.value)">
-                <i class="check icon"></i>
-              </button>
-            </div>
-          </h4>
+      <div class="flex justify-center gap-4 mt-4">
+        <div class="w-1/4 join">
+          <label for="type" class="label">{{auth.txt['fileType']}}:&nbsp;&nbsp;</label>
+          <input id="type" (keyup.enter)="updateFileType(type.value)"
+            #type [value]="fileType" type="text" [placeholder]="auth.txt['fileType'] + '  ...'" 
+            class="input input-success join-item">
+          <button class="btn btn-success text-primary-content join-item"
+            [attr.data-tip]="auth.txt['submit']" data-position="top"
+            (click)="updateFileType(type.value)">
+            <i class="fas fa-check"></i>
+          </button>
         </div>
       </div>
     }
-    @if (!isUpdateFileType && sourceReadySignal() === 0) {
-      <div class="row"> <!-- select directory for import     -->
-        <div class="ten wide column ">
-          <h3>{{auth.txt['directory_upload'] }}:</h3>
+    @if (!isUpdateFileType && importReadySignal() === 0) {
+      <div class="flex flex-wrap gap-4 items-center mt-4"> <!-- select directory for import     -->
+        <div class="w-full">
+          <h4 class="text-center text-lg md:text-xl font-semibold">{{auth.txt['directory_upload'] }}:</h4>
         </div>
       </div>
-      <div class="row">
-        <div class="ten wide column center aligned">
-          <div class="ui checkbox">
-            <input type="checkbox" [checked]="isUploadDirectory" (change)="setUploadDirectory($event)">
-            <label><small>{{auth.txt['choose_directory'] }} </small></label>
+      <div class="flex flex-wrap gap-4 items-center">
+        <div class="w-full text-center">
+          <div class="form-control">
+            <label class="label cursor-pointer">
+              <input type="checkbox" [checked]="isUploadDirectory" (change)="setUploadDirectory($event)" class="checkbox">
+              <span class="label-text ml-2"><small>{{auth.txt['choose_directory'] }} </small></span>
+            </label>
           </div>
         </div>
       </div>
-      <div class="row">
-        <div class="ten wide column center aligned">
+      <div class="flex flex-wrap gap-4 items-center">
+        <div class="w-full text-center">
           @if (isUploadDirectory) {
-            <input #selectedfiles type="file" webkitdirectory multiple
+            <input #selectedfiles type="file" webkitdirectory multiple class="file-input file-input-success"
               (change)="selectedfiles && selectedfiles.files ? fileAdd(selectedfiles.files) : null"/>
           } @else {
-            <input #selectedfiles type="file" multiple [attr.accept]="(fileType !== '' ? '.' : '') + fileType"
+            <input #selectedfiles type="file" multiple class="file-input file-input-success"
+              [attr.accept]="(fileType !== '' ? '.' : '') + fileType"
               (change)="selectedfiles && selectedfiles.files ? fileAdd(selectedfiles.files) : null"/>
           }
-          @if (validVcfFileSignal() === 1 === false && error) {
-            <div class="ui red label">
+          @if (validVcfFileSignal() === false && error) {
+            <span class="badge badge-error">
               {{auth.txt['wrong_vcf_format'] + ': ' + error}}
-            </div>
+            </span>
           }
         </div>
       </div>
@@ -193,60 +206,103 @@
 
     }
   </div>
+} @else {
+  <!-- dimming thw whole screen -->
+  <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+    <!-- modals upon dimmed screen -->
+    <div class="bg-white p-4 rounded-lg">
+      <button class="btn">
+        <div class="loading loading-spinner loading-lg"></div>
+        loading data ...
+      </button>
+    </div>
+  </div>
 }
-@if (sourceReadySignal() === 1 && validVcfFileSignal() === 1) {
+@if (importReadySignal() > 0) {
   <!-- table with import records                 -->
   <ng-container *ngTemplateOutlet="paginator" ></ng-container>
-  <table class="ui compact celled structured table">
-    <thead>
-      <tr>
-        <th>{{custtxt['contactNr']}}</th>
-        <th>{{custtxt['name']}}</th>
-        <th>{{auth.txt['company']}}</th>
-        <th>{{custtxt['contactEmail']}}</th>
-        <th>{{custtxt['contactTel']}}</th>
-        <th>{{custtxt['street']}}</th>
-        <th>{{custtxt['plz']}}</th>
-        <th>{{custtxt['city']}}</th>
-        <th>{{auth.txt['message']}}</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (contact of shownContacts; track $index; let i = $index) {
+  <div class="overflow-x-auto p-4">
+    <table class="table table-zebra w-full">
+      <thead>
         <tr>
-          <td class="left aligned" >
-            <div class="ui label" [ngStyle]="contact.style">
-              {{contact.contactNr}}
-            </div>
-          </td>
-          <td class="left aligned" >
-            {{contact.contactName|slice:0:30}}
-          </td>
-          <td class="left aligned" >
-            {{contact.longName|slice:0:20}}
-          </td>
-          <td class="left aligned">
-            {{contact.contactEmail|slice:0:40}}
-          </td>
-          <td class="left aligned">
-            {{contact.contactTel|slice:0:20}}
-          </td>
-          <td class="left aligned">
-            {{contact.street|slice:0:30}}
-          </td>
-          <td class="left aligned">
-            {{contact.plz === 0 ? '' : contact.plz}}
-          </td>
-          <td class="left aligned">
-            {{contact.city|slice:0:20}}
-          </td>
-          <td class="left aligned" [ngStyle]="contact.type < 0 || contact.status >= 9 ? {'background-color': 'LightSalmon'} : contact.status > 0 ? {'background-color': 'LightYellow'} : {}">
-            {{contact.message}}
-          </td>
+          <th>{{contacttxt['contactNr']}}</th>
+          <th>{{contacttxt['name']}}</th>
+          <th>{{auth.txt['company']}}</th>
+          <th>{{contacttxt['contactEmail']}}</th>
+          <th>{{contacttxt['contactTel']}}</th>
+          <th>{{contacttxt['street']}}</th>
+          <th>{{contacttxt['plz']}}</th>
+          <th>{{contacttxt['city']}}</th>
+          <th>{{auth.txt['message']}}</th>
         </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (contact of shownContacts; track $index; let i = $index) {
+          <tr>
+            <td>
+              <span class="badge" [ngStyle]="contact.style">
+                {{contact.contactNr}}
+              </span>
+            </td>
+            <td>
+              {{contact.displayName|slice:0:30}}
+            </td>
+            <td>
+              {{contact.companyName|slice:0:20}}
+            </td>
+             @if (contact.contactEmail === '' && contact.companyEmail !== ``) {
+              <td class="bg-base-300">
+                {{contact.companyEmail|slice:0:40}}
+              </td>
+             } @else {
+              <td>
+                {{contact.contactEmail|slice:0:40}}
+              </td>
+             }
+              @if (contact.contactTel === '' && contact.companyTel !== ``) {
+              <td class="bg-base-300">
+                {{contact.companyTel|slice:0:20}}
+              </td>
+             } @else {
+              <td>
+                {{contact.contactTel|slice:0:20}}
+              </td>
+             }
+             @if (contact.contactStreet === '' && contact.street !== ``) {
+              <td class="bg-base-300">
+                {{contact.street|slice:0:30}}
+              </td>
+             } @else {
+              <td>
+                {{contact.contactStreet|slice:0:30}}
+              </td>
+             }
+             @if (contact.contactPlz === 0 && contact.plz !== 0) {
+              <td class="bg-base-300">
+                {{contact.plz}}
+              </td>
+             } @else {
+              <td>
+                {{contact.contactPlz === 0 ? '' : contact.contactPlz}}
+              </td>
+             }
+              @if (contact.contactCity === '' && contact.city !== ``) {
+              <td class="bg-base-300">
+                {{contact.city|slice:0:20}}
+              </td>
+             } @else {
+              <td>
+                {{contact.contactCity|slice:0:20}}
+              </td>
+             }
+            <td [ngStyle]="contact.type < 0 || contact.status >= 9 ? {'background-color': 'rgb(255, 193, 193)'} : contact.status > 0 ? {'background-color': 'rgb(255, 255, 193)'} : {}">
+              {{contact.message}}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
   <!-- we must not use paginator as ng-template because ngModel usage does not allow it
   <ng-container *ngTemplateOutlet="paginator; context:{ $implicit: isSelectedPageChanged}"></ng-container>
   <ng-template #paginator let-selectedPageChanged>

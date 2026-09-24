@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, signal, ViewChild } from '@angular/core';
+import { Component, effect, ElementRef, HostListener, signal, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterOutlet } from "@angular/router";
 
 import { environment } from '../../../environments/environment';
@@ -24,6 +24,7 @@ import { MessagesComponent } from '../messages/messages';
 import { MenuCompleteComponent } from '../menu-complete/menu-complete';
 import { MenuItemFactory } from '../../_db/menu-item-factory';
 import { NgClass } from '@angular/common';
+import { App } from '../../_enums/app.enum';
 
 
 
@@ -43,6 +44,12 @@ export class HeaderComponent {
 
   public GlobalFunctions: typeof GlobalFunctions = GlobalFunctions;
 
+  public language!: number;
+
+    // we need App and app as property for html template ....
+  public App: typeof App = App;
+  public app!: number;
+
    // session user data which are used in template
   public userId!: number;
   public userName!: string;
@@ -54,6 +61,7 @@ export class HeaderComponent {
   // all components which are sub components with @Input and @Output are managed here ...
   {name: 'user', displayName: '', isSelected: false, isAutoSelected: false, isSelectable: false},
   {name: 'login-form', displayName: '', isSelected: false, isAutoSelected: false, isSelectable: false},
+  // TODO calendar moght become a routed app ....
   {name: 'calendar', displayName:  '', isSelected: false, isAutoSelected: false, isSelectable: true}
   ];
 
@@ -65,20 +73,21 @@ export class HeaderComponent {
   public eventId: number | undefined;
 
   // refresh signal triggers change detection
-  // signal value   0 - no data loaded   1 - data loded
+  // signal value   0 - no data loaded   > ß - data loded
   public refreshSignal = signal(0);
 
   // we show "data loading ..." if isDirectoryDataLoading is true
   public isDirectoryDataLoading = false;
 
-  public isCreateUser = false;
+  // in the moment every user can create other users
+  public isCreateUser = true;
 
   public popupHeaderText = '';
   public popupContentText = '';
   public popupConfirmText = '';
-  @ViewChild('popupDialog') dialogRef!: ElementRef<HTMLDialogElement>; 
+  @ViewChild('popupDialog') dialogRef!: ElementRef<HTMLDialogElement>;
   openPopup() { this.dialogRef.nativeElement.showModal(); };
-  closePopup() { this.dialogRef.nativeElement.close(); } 
+  closePopup() { this.dialogRef.nativeElement.close(); }
   // triggers class for  confirm button
   public isPopupPositive = true;
 
@@ -89,11 +98,12 @@ export class HeaderComponent {
   public menuLoadCounter = 0;
   public lastMenuId = 0;
 
+
   // handles changes which trigger reload of calendar component
   public calendarLoadCounter = 0;
 
   // session data are actualized - components can be shown
-  public isSessionReady = false;
+  public isSessionReadySignal = signal(false);
 
   public isMessageActive = environment.userMessages;
 
@@ -116,12 +126,35 @@ export class HeaderComponent {
     private userService: UserService,
     public auth: AuthenticationService) {
       this.childComponents.forEach(_ => {this.c[_.name] = _;});
+      effect(() => {
+        // we must build langSignal in order to trigger effect()
+        const langSignal = this.auth.getLanguageSignal(this.name);
+        // console.log('signalValue: ', langSignal());
+        if (this.refreshSignal && this.language && this.language !== langSignal()) {
+          this.refreshSignal.set(this.refreshSignal() + 1);
+        }
+        this.language = langSignal();
+      })
     }
 
   async ngOnInit() {
-    if (this.route.snapshot.url.toString().substring(0, 6).toLowerCase() === 'server') {
+    // console.log('ngOnInit - url: ', this.route.snapshot.url.toString());
+    if (this.route.snapshot.url.toString().substring(0, 5).toLowerCase() === 'admin') {
+      sessionStorage.setItem('appType', 'admin');
+    }
+    // empty url is redirected to 'server' by routing ...
+    if (this.route.snapshot.url.toString().substring(0, 6).toLowerCase() === 'server')  {
+      sessionStorage.setItem('appType', 'server');
+    }
+    if (this.route.snapshot.url.toString().substring(0, 5).toLowerCase() === 'local')  {
+      sessionStorage.setItem('appType', 'local');
+    }
+    if (this.route.snapshot.url.toString().substring(0, 6).toLowerCase() === 'server'
+    || this.route.snapshot.url.toString().substring(0, 5).toLowerCase() === 'admin'
+    || this.route.snapshot.url.toString().substring(0, 5).toLowerCase() === 'local') {
+      // console.log ('param issueProvider: ', this.route.snapshot.params['issueProvider']);
       sessionStorage.setItem('appParams', JSON.stringify(this.route.snapshot.params));
-      // if component was entered via app itself, it is now reloaded with url /header ...
+      // if component was entered via pwork, it is now reloaded with url /header ...
       this.router.navigate(['../header'], { relativeTo: this.route.parent });
     } else if (this.route.snapshot.url.toString().substring(0, 7).toLowerCase() === 'restart') {
       this.router.navigate(['../header'], { relativeTo: this.route.parent });
@@ -142,8 +175,9 @@ export class HeaderComponent {
       if (this.auth.isSessionActive()) {
         await this.processParams();
         await this.buildRouterMenu();
-        this.isSessionReady = true;
-        this.refreshSignal.set(1);
+        this.isSessionReadySignal.set(true);
+        this.refreshSignal.set(this.refreshSignal() + 1);
+        this.language = this.auth.language();
         this.logger.info(this.auth.getSession(this.name), this.name, `daisytest header - session activated`);
         // this.message.info(this.name +` testmesssage`);
       } else {
@@ -153,7 +187,7 @@ export class HeaderComponent {
         const session = this.auth.getSession(this.name);
         const userId = session?.userId ?? 0;
         const nop = await this.auth.newSessionUser(userId, this.name);
-        this.refreshSignal.set(1);
+        this.refreshSignal.set(this.refreshSignal() + 1);
         this.message.info(this.name +` session restarted`);
         this.logger.info(this.auth.getSession(this.name), this.name, `session restarted`);
         this.router.navigate(['../restart'], { relativeTo: this.route.parent });
@@ -201,16 +235,47 @@ export class HeaderComponent {
     if (paramString && paramString !== '') {
       params = JSON.parse(paramString);
     }
-    const session = this.auth.getSession(this.name);
-    // component calendar will be activated by show eventId
-    if (params && Number(params['eventId']) >= 0) {
-      this.eventId = Number(params['eventId']);
-      this.isShowEvent = true;
-      this.calendarLoadCounter++;
+    // here we decide if we are in admin mode
+    const appString = sessionStorage.getItem('appType');
+    let app: App;
+    switch (appString) {
+      case 'server':
+        // in the moment we do not allow server app
+        // app = App.server;
+        app = App.local;
+        break;
+      case 'local':
+        app = App.local;
+        break;
+      case 'admin':
+        app = App.admin;
+        break;
+      default:
+        const session = this.auth.getSession(this.name);
+        app = session?.app ?? 0;
+        // if session had no app or session.app was 0 we anyway set app to loacl
+        app = app > 0 ? app : App.local;
+        break;
     }
+    // here we define user type and set session.app ...
+    await this.userService.setUserType(app,  this.name);
+    const session = this.auth.getSession(this.name);
+    if (session && (session.app === App.server || session.app === App.local)) {
+      // component calendar will be activated by show eventId
+      if (params && Number(params['eventId']) >= 0) {
+        this.eventId = Number(params['eventId']);
+        this.isShowEvent = true;
+        this.calendarLoadCounter++;
+      }
+    }
+
+    this.app = session?.app ?? App.local;
+
     this.userId = session?.userId ?? 0;
     this.userName = session?.userName ?? '';
+
     // params are deleted from session storage - they are processed only at first call ....
+    sessionStorage.removeItem('appType');
     sessionStorage.removeItem('appParams');
   }
 
@@ -240,130 +305,148 @@ export class HeaderComponent {
    */
    private async buildRouterMenu() {
 
-    // not necessary - buildRouterMenu is only called by sessionActivate ...
-    // if (!this.auth.isSessionActive()) { await this.sessionActivate() };
     this.routerMenu = MenuFactory.empty();
     this.routerMenu.text = 'main_choice';
 
     const session = this.auth.getSession(this.name);
-    let item = MenuItemFactory.empty();
 
-    item.hasIconLeft = true;
-    item.iconClassLeft = 'fas fa-info';
-    item.text = 'status';
-    item.link = 'status';
-    this.routerMenu.items.push(item);
+    if (session) {
 
-    item = MenuItemFactory.empty();
-    item.hasIconLeft = true;
-    item.iconClassLeft = 'far fa-file-image'
-    item.text = 'chronicle';
-    item.link = 'chronicle';
-    this.routerMenu.items.push(item);
+      let item = MenuItemFactory.empty();
 
-    // TODO check if we have a document provider login ...
-    if (true) {
-      item = MenuItemFactory.empty();
       item.hasIconLeft = true;
-      item.iconClassLeft = 'far fa-file text-lg bg-error'
-      item.text = 'documents';
-      item.description = 'show the documents';
-      item.link = 'document';
+      item.iconClassLeft = 'fas fa-info';
+      item.text = 'status';
+      item.link = 'status';
       this.routerMenu.items.push(item);
+
+      if (session.app === App.admin) {
+        // TODO check if we have a document provider login ...
+        if (true) {
+          item = MenuItemFactory.empty();
+          item.hasIconLeft = true;
+          item.iconClassLeft = 'far fa-file text-lg bg-error'
+          item.text = 'documents';
+          item.description = 'show the documents';
+          item.link = 'document';
+          this.routerMenu.items.push(item);
+        }
+
+        // configuration can be set for every user and also admin.
+        // if not set, fixed options from assets are relevant ...
+
+        item = MenuItemFactory.empty();
+        item.hasIconLeft = true;
+        item.iconClassLeft = 'fas fa-cog'
+        item.text = 'configuration';
+        item.link = 'configuration';
+        this.routerMenu.items.push(item);
+
+        // admin function show log
+
+        item = MenuItemFactory.empty();
+        item.hasIconLeft = true;
+        item.iconClassLeft = 'fas fa-list'
+        item.text = 'show_log';
+        item.link = 'showLog';
+        this.routerMenu.items.push(item);
+
+      }
+
+      if (session.app !== App.admin) {
+
+        item = MenuItemFactory.empty();
+        item.hasIconLeft = true;
+        item.iconClassLeft = 'far fa-file-image'
+        item.text = 'chronicle';
+        item.link = 'chronicle';
+        this.routerMenu.items.push(item);
+
+        item = MenuItemFactory.empty();
+        item.hasIconLeft = true;
+        item.iconClassLeft = 'far fa-calendar-days';
+        item.text = 'calendar';
+        item.link = 'calendar';
+        this.routerMenu.items.push(item);
+
+
+        item = MenuItemFactory.empty();
+        item.hasIconLeft = true;
+        item.iconClassLeft = 'fas fa-list'
+        item.text = 'event_list';
+        item.link = 'event';
+        this.routerMenu.items.push(item);
+
+        item = MenuItemFactory.empty();
+        item.hasIconLeft = true;
+        item.iconClassLeft = 'fas fa-user'
+        item.text = 'contacts';
+        item.link = 'contact';
+        this.routerMenu.items.push(item);
+
+        item = MenuItemFactory.empty();
+        item.text = 'import';
+        item.hasIconLeft = true;
+        item.iconClassLeft = 'fas fa-file-import';
+        let subMenu = MenuFactory.empty();
+        let subItem = MenuItemFactory.empty();
+
+        subItem = MenuItemFactory.empty();
+        subItem.text = 'calendar_import';
+        subItem.link = 'calendarImport';
+        subItem.hasIconLeft = true;
+        subItem.iconClassLeft = 'fas fa-file-import';
+        subMenu.items.push(subItem);
+
+        subItem = MenuItemFactory.empty();
+        subItem.text = 'contact_import';
+        subItem.link = 'contactImport';
+        subItem.hasIconLeft = true;
+        subItem.iconClassLeft = 'fas fa-file-import';
+        subMenu.items.push(subItem);
+
+
+        item.hasSubMenu = true;
+        item.subMenu = subMenu;
+        item.isSubMenuLeft = true;
+        this.routerMenu.items.push(item);
+
+        item = MenuItemFactory.empty();
+        item.text = 'export';
+        item.hasIconLeft = true;
+        item.iconClassLeft = 'fas fa-file-export';
+        subMenu = MenuFactory.empty();
+
+        subItem = MenuItemFactory.empty();
+        subItem.text = 'contactsExport'
+        subItem.link = 'contactExport';
+        subItem.hasIconLeft = true;
+        subItem.iconClassLeft = 'fas fa-file-export';
+        subMenu.items.push(subItem);
+
+        subItem = MenuItemFactory.empty();
+        subItem.text = 'calendar_export'
+        subItem.link = 'calendarExport';
+        subItem.hasIconLeft = true;
+        subItem.iconClassLeft = 'fas fa-file-export';
+        subMenu.items.push(subItem);
+
+        item.hasSubMenu = true;
+        item.subMenu = subMenu;
+        this.routerMenu.items.push(item);
+
+        // configuration can be set for every user ....
+        // if not set, fixed options from assets are relevant ...
+
+        item = MenuItemFactory.empty();
+        item.hasIconLeft = true;
+        item.iconClassLeft = 'fas fa-cog'
+        item.text = 'configuration';
+        item.link = 'configuration';
+        this.routerMenu.items.push(item);
+      }
+
     }
-
-    item = MenuItemFactory.empty();
-    item.hasIconLeft = true;
-    item.iconClassLeft = '<i class="fa-solid fa-calendar-days"></i>';
-    item.text = 'work_day_calendar';
-    item.link = 'work-day';
-    item.hasLabelRight = true;
-    item.labelClassRight = 'badge badge-soft badge-error';
-    item.labelTextRight = 'Datenverlust!';
-    this.routerMenu.items.push(item);
-
-
-    item = MenuItemFactory.empty();
-    item.hasIconLeft = true;
-    item.iconClassLeft = 'fas fa-list'
-    item.text = 'event_list';
-    item.link = 'work';
-    this.routerMenu.items.push(item);
-
-    item = MenuItemFactory.empty();
-    item.hasIconLeft = true;
-    item.iconClassLeft = 'fas fa-user'
-    item.text = 'contacts';
-    item.link = 'contact';
-    this.routerMenu.items.push(item);
-
-    item = MenuItemFactory.empty();
-    item.text = 'import';
-    item.hasIconLeft = true;
-    item.iconClassLeft = 'fas fa-file-import';
-    let subMenu = MenuFactory.empty();
-    let subItem = MenuItemFactory.empty();
-
-    subItem = MenuItemFactory.empty();
-    subItem.text = 'calendar_import';
-    subItem.link = 'calendarImport';
-    subItem.hasIconLeft = true;
-    subItem.iconClassLeft = 'fas fa-file-import';
-    subMenu.items.push(subItem);
-
-    subItem = MenuItemFactory.empty();
-    subItem.text = 'contact_import';
-    subItem.link = 'contactImport';
-    subItem.hasIconLeft = true;
-    subItem.iconClassLeft = 'fas fa-file-import';
-    subMenu.items.push(subItem);
-
-
-    item.hasSubMenu = true;
-    item.subMenu = subMenu;
-    item.isSubMenuLeft = true;
-    this.routerMenu.items.push(item);
-
-    item = MenuItemFactory.empty();
-    item.text = 'export';
-    item.hasIconLeft = true;
-    item.iconClassLeft = 'fas fa-file-export';
-    subMenu = MenuFactory.empty();
-
-    subItem = MenuItemFactory.empty();
-    subItem.text = 'contactsExport'
-    subItem.link = 'customerExport';
-    subItem.hasIconLeft = true;
-    subItem.iconClassLeft = 'fas fa-file-export';
-    subMenu.items.push(subItem);
-
-    subItem = MenuItemFactory.empty();
-    subItem.text = 'calendar_export'
-    subItem.link = 'calendarExport';
-    subItem.hasIconLeft = true;
-    subItem.iconClassLeft = 'fas fa-file-export';
-    subMenu.items.push(subItem);
-
-    item.hasSubMenu = true;
-    item.subMenu = subMenu;
-    this.routerMenu.items.push(item);
-
-
-  // admin functions - configuration, show log are avaiable anyway
-
-    item = MenuItemFactory.empty();
-    item.hasIconLeft = true;
-    item.iconClassLeft = 'fas fa-cog'
-    item.text = 'configuration';
-    item.link = 'configuration';
-    this.routerMenu.items.push(item);
-
-    item = MenuItemFactory.empty();
-    item.hasIconLeft = true;
-    item.iconClassLeft = 'fas fa-list'
-    item.text = 'show_log';
-    item.link = 'showLog';
-    this.routerMenu.items.push(item);
 
   }
 
@@ -405,7 +488,7 @@ export class HeaderComponent {
       this.formerComponent = component;
       this.router.navigate([component], { relativeTo: this.route });
     }
-    this.refreshSignal.set(1);
+    this.refreshSignal.set(this.refreshSignal() + 1);
   }
 
 
@@ -420,7 +503,7 @@ export class HeaderComponent {
 
   }
 
-  
+
 
   /**
    * showPopup()
@@ -442,7 +525,7 @@ export class HeaderComponent {
     }
 
     this.isPopupPositive = isPositiveConfirmed ?? true;
-    
+
     if (confirm) {
       this.popupConfirmText = confirm;
     } else {
@@ -454,6 +537,30 @@ export class HeaderComponent {
       this.closePopup();
     }, duration);
   }
+
+   /** ------------------------ listener  ------------------------- */
+
+  // disable all clickable menus if clicked elsewhere
+
+  @HostListener('window:click', ['$event.target'])
+  onClick(target: any) {
+    // console.log(this.name + ' : You clicked on: ', target);
+    // console.log(this.name + ' : target.id: ', target.id);
+    if (target &&  (target.id === 'dropdownItem' || target.id === 'dropdownSpan' || target.id === 'dropdownIcon'
+      ||  target.id === 'menu'
+      ||  target.id === 'item' ||  target.id === 'itemText' ||  target.id === 'itemDescription' ||  target.id === 'itemIcon' ||  target.id === 'itemLabel')) {
+      // console.log(this.name + ': click id is: ', target.id);
+      // console.log(this.name, ': parent id is: ', target.parentElement.id);
+    } else {
+      // we collapse routerMenu and reset all submenus
+      if (this.routerMenu) {
+        this.routerMenu.isVisible.set(false);
+        this.setSubMenusInvisble(this.routerMenu);
+      }
+      // console.log(this.name, ': You clicked on other target: ', target);
+    }
+  }
+
 
 
   /** --------------------------  public methods -------------------------------------------- */
@@ -479,15 +586,15 @@ export class HeaderComponent {
    *
   */
 
-  public showRouterMenu(event: Event): void {
+  public showRouterMenu(event?: Event): void {
     // Verhindere das Standardverhalten des `<summary>`-Elements
-    event.preventDefault();
-    if (this.routerMenu.isVisible) {
-      this.routerMenu.isVisible = false;
+    event?.preventDefault();
+    if (this.routerMenu.isVisible()) {
+      this.routerMenu.isVisible.set(false);
     } else {
       // we show menu if we have items
       if (this.routerMenu.items.length > 0) {
-        this.routerMenu.isVisible = true;
+        this.routerMenu.isVisible.set(true);
       }
     }
   }
@@ -501,7 +608,7 @@ export class HeaderComponent {
     if (menu?.items?.length > 0) {
       for (const item of menu.items) {
         if (item.hasSubMenu && item.subMenu) {
-          item.subMenu.isVisible = false;
+          item.subMenu.isVisible.set(false);
           this.setSubMenusInvisble(item.subMenu);
         }
       }
@@ -515,7 +622,7 @@ export class HeaderComponent {
    */
   public async routerMenuLink(link: string) {
     this.selectComponent(link);
-    this.routerMenu.isVisible = false;
+    this.routerMenu.isVisible.set(false);
     this.setSubMenusInvisble(this.routerMenu);
   }
 
@@ -557,6 +664,7 @@ export class HeaderComponent {
       this.userName = session?.userName ?? '';
       // other user starts again with default menu ...
       this.formerComponent = undefined;
+      this.refreshSignal.set(this.refreshSignal() + 1);
     } else {
       alert('user selection not successull)');;
     }
@@ -574,6 +682,12 @@ export class HeaderComponent {
     const session = this.auth.getSession(this.name);
     this.userId = session?.userId ?? 0;
     this.userName = session?.userName ?? '';
+    if (this.formerComponent) {
+      this.selectComponent(this.formerComponent);
+    } else {
+      let undefinedComponent!: string;
+      this.selectComponent(undefinedComponent);
+    }
   }
 
   /** ------------------------------ calendar ------------------------- */

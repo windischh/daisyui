@@ -1,4 +1,4 @@
-import { DatePipe, NgClass, SlicePipe } from '@angular/common';
+import { DatePipe, SlicePipe } from '@angular/common';
 import { Component, HostListener, Inject, LOCALE_ID, signal, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -22,18 +22,19 @@ import { PaginatorComponent } from '../paginator/paginator';
 
 @Component({
   selector: 'dsy-show-log',
-  imports: [FormsModule, AngularMyDatePickerModule, NgClass, PaginatorComponent, SlicePipe, DatePipe],
+  imports: [FormsModule, AngularMyDatePickerModule, PaginatorComponent, SlicePipe, DatePipe],
   templateUrl: './show-log.html',
   styleUrl: './show-log.css',
 })
 export class ShowLogComponent {
 
-  
+
   public name = 'ShowLogComponent';
 
 
   // publishedLogs are the various published logs (console, localStorage, webServer,...)
-  publishedLogs: Array<string> = [];
+  logPublisher : string = '';
+  logPublisherChoices: Array<IChoice> = [];
 
   // signal value   0 - no data loaded   1 - data loded
   public logsReadySignal = signal(0);
@@ -134,7 +135,7 @@ export class ShowLogComponent {
       this.initChoices();
       this.addDpOptions();
       // get parameters
-      await this.getLogParameters();
+      this.getLogParameters();
       this.isParametersSet = true;
       await this.getLogs();
     } else {
@@ -232,9 +233,15 @@ export class ShowLogComponent {
     }
   }
 
-  private async getLogParameters() {
-    this.publishedLogs = this.logger.logs();
-    // fwe set dateTo on today
+  private getLogParameters() {
+    const publishedLogs = this.logger.logs().filter(_ => !_.toLowerCase().includes('api') && !_.toLowerCase().includes('console') && !_.toLowerCase().includes('directory'));
+    let value = 0;
+    for (const publisher of publishedLogs) {
+      this.logPublisherChoices.push({value: value.toString(), text: publisher, isSelected: value === 0});
+      value++;
+    }
+    this.logPublisher = this.logPublisherChoices.filter(_ => _.isSelected)[0].text;
+    // we set dateTo on today
     const today = GlobalFunctions.getStartOfDay(new Date()) ?? new Date();
     this.dateTo = today;
   }
@@ -247,8 +254,8 @@ export class ShowLogComponent {
     this.logsReadySignal.set(0);
     this.logsUnfiltered = [];
     this.dateFrom = GlobalFunctions.addDays(this.dateTo, -Number(this.reviewTime));
-    // all logs in date interval
-    this.logsUnfiltered = await this.logger.getLogsRange(session, this.dateFrom,
+    // all logs in date interval from selectes publisher
+    this.logsUnfiltered = await this.logger.getLogsRange(this.logPublisher, session, this.dateFrom,
       GlobalFunctions.addDays(this.dateTo, 1), this.name);
     this.filterLogs();
   }
@@ -292,6 +299,20 @@ export class ShowLogComponent {
 
 
   /** ------------------------  public methods --------------------------------------------------- */
+
+
+  selectLogPublisher(event: any): void {
+    this.logPublisherChoices.forEach(_ => {
+      if (_.value === event.target.value) {
+        _.isSelected = true;
+      } else {
+        _.isSelected = false;
+      }
+    });
+    this.logPublisher = this.logPublisherChoices.filter(_ => _.isSelected)[0].text;
+    this.getLogs();
+  }
+
 
   async clearLog(publishedLog: string) {
     if (confirm(this.auth.txt['clear_log'] + '?')) {

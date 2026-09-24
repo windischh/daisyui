@@ -1,8 +1,8 @@
 @if (messageService.messages().length > 0) {
-  <div class="fixed bottom-0 left-0 w-full p-4">
+  <div class="left-0 w-full p-4">
     <div class="flex justify-between">
-      <div class="badge badge-outline badge-info">Messages </div>
-      <button  class="btn btn-sm btn-outline btn-info"
+      <div class="badge badge-outline badge-primary">Messages </div>
+      <button  class="btn btn-sm btn-outline btn-primary"
         (click)="messageService.clear()">
         <i class="fas fa-trash-can"></i>
         clear

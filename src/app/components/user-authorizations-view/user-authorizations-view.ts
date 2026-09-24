@@ -23,7 +23,7 @@ export class UserAuthorizationsViewComponent {
 
   @Output() updateUser = new EventEmitter<User>();
 
-  issueProviderType: typeof ProviderType = ProviderType;
+  providerType: typeof ProviderType = ProviderType;
 
   constructor() { }
 

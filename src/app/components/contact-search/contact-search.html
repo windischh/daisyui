@@ -1,16 +1,15 @@
-<!-- ATTENTION  [ngClass] is used to set css behaviour - in this case via semantic ui -->
-<div class="ui search"  [ngClass]="{ loading: isLoading }">
-  <div class="ui fluid icon input">
-    <input (keyup)="keyup.emit(searchTerm.value)" #searchTerm class="prompt" type="text" placeholder="{{auth.txt['search']}}... ">
-    <i class="search icon"></i>
-  </div>
-  <div class="results transition" [ngClass]="{ visible: foundContacts.length }">
-    @for (contact of foundContacts; track contact) {
-      <a href (click)="selectContact(contact); false" class="result">
-        <div class="content">
-          <div class="title" id="searchContent" >{{ contact.displayNr }}  {{ contact.name }}  {{ contact.plz === 0 ? '' : contact.plz}} {{ contact.city }}</div>
-        </div>
-      </a>
-    }
-  </div>
+<!-- ATTENTION  [ngClass] is used to set css behaviour - in this case via daisyUI -->
+<div class="join w-full">
+  <input (keyup)="findContacts(searchTerm.value)" #searchTerm type="text" placeholder="{{auth.txt['search']}}... " class="input input-sm join-item w-full">
+  <button class="btn btn-sm join-item" type="button" id="searchContent"  (click)="findContacts(searchTerm.value)">
+    <i class="fas fa-search"></i>
+  </button>
 </div>
+<div class="dropdown-content absolute z-1 shadow bg-base-100 rounded-box p-2 w-full mt-2" [ngClass]="{ hidden: !foundContacts.length }">
+  @for (contact of foundContacts; track contact) {
+    <a href (click)="selectContact(contact); false">
+      <div class="text" id="searchContent" >{{ contact.displayNr }}  {{ contact.displayName }}  {{ contact.plz === 0 ? '' : contact.plz}} {{ contact.city }}</div>
+    </a>
+  }
+</div>
+

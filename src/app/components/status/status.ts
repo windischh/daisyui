@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, Inject, LOCALE_ID, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
@@ -8,6 +8,7 @@ import { Language } from '../../_enums/language.enum';
 import { IChoice } from '../../_interfaces/i-choice';
 
 import { AuthenticationService } from '../../_services/authentication.service';
+import { App } from '../../_enums/app.enum';
 
 
 @Component({
@@ -25,7 +26,12 @@ public name = 'StatusComponent';
 
   public session!: Session | null;
 
-  constructor(private route: ActivatedRoute,
+  // refresh signal triggers change detection
+  // signal value   0 - not ready  > 0 ready
+  public refreshSignal = signal(0);
+
+  constructor(@Inject(LOCALE_ID) public locale: string,
+    private route: ActivatedRoute,
     private router: Router,
     public auth: AuthenticationService) { }
 
@@ -36,17 +42,22 @@ public name = 'StatusComponent';
   // we do not activate session because we want to show last status ..
   private async sessionUse() {
     this.session = this.auth.getSession(this.name);
-    this.modeChoices = [
-      {text: 'admin', value: 'admin', isSelected: false},
-      {text: 'server - user', value: 'server', isSelected: true},
-      {text: 'local -user', value: 'local', isSelected: false}
-    ];
-    this.languageChoices = Object.keys(Language)
-    .filter((k: any) => typeof Language[k] === 'number' && Number(Language[k]) > 0)
-    .map(_ => {
-      const enumStringType: { [key: string]: any } = Language;
-      return {value: enumStringType[_] as string, text: _, isSelected: Number(enumStringType[_]) === this.session?.language };
-    });
+    if (this.session) {
+      this.modeChoices = [
+        {text: 'admin', value: 'admin', isSelected: this.session.app === App.admin},
+        // no change to server mode
+        // {text: 'server - user', value: 'server', isSelected: true},
+        {text: 'local -user', value: 'local', isSelected: this.session.app === App.local}
+      ];
+      this.languageChoices = Object.keys(Language)
+      .filter((k: any) => typeof Language[k] === 'number' && Number(Language[k]) > 0)
+      .map(_ => {
+        const enumStringType: { [key: string]: any } = Language;
+        return {value: enumStringType[_] as string, text: _, isSelected: Number(enumStringType[_]) === this.session?.language };
+      });
+    }
+
+    this.refreshSignal.set(this.refreshSignal() + 1);
   }
 
   /** ------------------------  public methods --------------------------------------------------- */
@@ -64,7 +75,7 @@ public name = 'StatusComponent';
    * @param event - id of selection choices
    */
   public async selectLanguage(event: any)  {
-    this.languageChoices.forEach(async _ => {
+    for await (const _ of this.languageChoices) {
       if (Number(_.value) === Number(event.target.value)) {
         _.isSelected = true;
         await this.auth.changeLanguage(Number(_.value), this.name);
@@ -72,7 +83,8 @@ public name = 'StatusComponent';
       } else {
         _.isSelected = false;
       }
-    });
+    }
+    this.refreshSignal.set(this.refreshSignal() + 1);
   }
 
 }

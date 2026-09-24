@@ -108,11 +108,7 @@ private async sessionActivate() {
   if (session && isSessionActive) {
     this.sessionForViews  = session;
     this.loadDbTexts();
-    // contact create for service level contact (contactss are not maintained here ...) or security lavel is not admin
-    this.isCreate = this.sessionForViews.serviceLevel.contact !== 1 || this.sessionForViews.securityLevel.maint < 2 ? false : this.isCreate;
-    // contact maint for service level contact (only contacts are maintained here ...) or security lavel is not maint
-    this.isMaint = this.sessionForViews.serviceLevel.contact !== 1 || this.sessionForViews.securityLevel.maint < 1 ? false : this.isMaint;
-    await this.getContacts();
+    this.getContacts();
   } else {
     // session could not be activated - duration exhausted
     this.message.info(this.name +` session must be restarted`);
@@ -143,15 +139,6 @@ private loadDbTexts(): void {
     // we take also disabled contacts - filtering is done by list-view
     if (contacts?.length > 0) {
       for (const contact of contacts) {
-        if (session && session.serviceLevel?.contact > 1) {
-          //  we build displayName only if war not in contacts mode
-          let displayName = contact.companyName;
-          const lastBlank = contact.companyName.trim().lastIndexOf(' ');
-          if (lastBlank >= 0) {
-            displayName = contact.companyName.trim().substr(lastBlank).trim() + ', ' + contact.companyName.trim().substr(0, lastBlank).trim();
-          }
-          contact.displayName = displayName;
-        }
         // we build style with color
         const style = StyleFactory.getBgColorStyle(contact.contactColor);
         contact.style = style;
@@ -197,7 +184,7 @@ private loadDbTexts(): void {
   }
 
   // if update is triggered in (leading) list, here we activate form-view
-  public async maintContact(i: number) {
+  public maintContact(i: number) {
     this.formAction = 'maint';
     this.contact = this.contacts[i];
     const session = this.auth.getSession(this.name);
@@ -216,12 +203,12 @@ private loadDbTexts(): void {
       // const isDeleteable = this.contactService.isContactDeleteable(contactId, this.name);
       let isDeleteable = true;
       if (isDeleteable) {
-        if (confirm(contact.type === 2 ? (session.serviceLevel.contact < 2 ? this.auth.txt['contact_disable'] + '?' : this.auth.txt['contact_disable'] + '?'): this.auth.txt['provider_disable'] + '?')) {
+        if (confirm(this.auth.txt['contact_disable'] + '?')) {
           const isDisabled = this.contactService.setContactDisabled(contact.contactId, this.name);
           if (isDisabled) {
             this.getContacts();
           } else {
-            alert('possible etag error - file reload');
+            alert('local storage error - file reload');
             this.getContacts();
           }
         }
@@ -236,12 +223,12 @@ private loadDbTexts(): void {
     const contact = this.contacts[i];
     const session = this.auth.getSession(this.name);
     if (session && contact && contact.contactId > 0) {
-      if (confirm(contact.type === 2 ? (session.serviceLevel.contact < 2 ? this.auth.txt['contact_enable'] + '?' : this.auth.txt['contact_enable'] + '?') : this.auth.txt['provider_enable'] + '?')) {
+      if (confirm(this.auth.txt['contact_enable'] + '?')) {
         const isEnabled = this.contactService.setContactStatus(contact.contactId, 0, this.name);
         if (isEnabled) {
           this.getContacts();
         } else {
-          alert('possible etag error - file reload');
+          alert('storage error - file reload');
           this.getContacts();
         }
       }
@@ -252,16 +239,13 @@ private loadDbTexts(): void {
     let contact = this.contacts[i];
     // we build a contact at server if contact has no contactId yet
     if (contact && contact.contactId === 0) {
-      // we assure type at fixed contacts
-      const type = 2;
-      contact.type = type;
       const newId = this.contactService.setContact(contact, this.name);
       if (newId > 0) {
         contact = this.contactService.getContact(newId, this.name) ?? contact;
       } else if (newId === 0) {
         alert('communication error');
       } else if (newId === -1) {
-        alert('etag error - file was updated by another user');
+        alert('storage error');
         this.getContacts();
       }
     }
@@ -272,9 +256,9 @@ private loadDbTexts(): void {
   /** ------------------------------ contact-form-view ------------------------- */
 
   // contact data were entered in form-view, we proceed the updates here
-  public async contactUpdate(contact: Contact) {
-    if (contact && contact.companyName !== '' && contact.contactId > 0) {
-      const updatedId = await this.contactService.setContact(contact, this.name);
+  public contactUpdate(contact: Contact) {
+    if (contact && contact.displayName !== '' && contact.contactId > 0) {
+      const updatedId = this.contactService.setContact(contact, this.name);
       if (updatedId > 0) {
         // with getContact we get updated contact ...
         this.contact = this.contactService.getContact(updatedId, this.name) ?? this.contact;
@@ -282,22 +266,22 @@ private loadDbTexts(): void {
       } else if (updatedId === 0) {
         alert('communication error');
       } else if (updatedId === -1) {
-        alert('etag error - file was updated by another user');
-        await this.closeContactForm();
+        alert('storage error');
+        this.closeContactForm();
       }
     }
   }
 
 
   // contact was created in form-view, we proceed the updates here
-  public async contactCreate(contact: Contact) {
+  public contactCreate(contact: Contact) {
     let isCreated = false;
     let contactId: number;
-    if (contact && contact.companyName !== '') {
+    if (contact && contact.displayName !== '') {
       const session = this.auth.getSession(this.name);
       contact.contactId = 0;
-      contact.type = 2;
-      contactId = await this.contactService.setContact(contact, this.name);
+      contact.type = 1;
+      contactId = this.contactService.setContact(contact, this.name);
       if (contactId > 0) {
         // we set this.contact to the created (or cloned) contact
         this.contact = this.contactService.getContact(contactId, this.name) ?? this.contact;
@@ -308,27 +292,27 @@ private loadDbTexts(): void {
       } else if (contactId === 0) {
         alert('communication error');
       } else if (contactId === -1) {
-        alert('etag error - file was updated by another user');
+        alert('storage error');
       }
       if (!isCreated) {
         // should not happen
         this.contact = ContactFactory.empty();
         const op = 'contact create';
-        const message = 'contact: ' + contact.companyName + ' not created';
+        const message = 'contact: ' + contact.displayName + ' not created';
         this.logger.error(this.auth.getSession(this.name), this.name, `${op} failed: ${message}`);
         this.message.show(this.name + `: ${op} failed: ${message}`);
-        await this.closeContactForm();
+        this.closeContactForm();
       }
     }
   }
 
-  public async closeContactForm() {
+  public closeContactForm() {
     if (this.contactComponentUsage === 'form') {
       // nothing - in the moment  this component is selected only by routing, there is no close action ....
       // (in case of mandant; where the usage is 'form', we do not allow close [Symbol]..)
     } else {
       this.isShowForm = false;
-      await this.getContacts();
+      this.getContacts();
       this.isShowList = true;
       this.formAction = '';
     }

@@ -1,39 +1,34 @@
-<br>
 @if (txt && contacttxt) {
-  <div class="ui grid">
-    <div class="row">
-      <div class="three wide column">
-      </div>
-      <div class="ten wide column">
+  <div class="container mx-auto p-4">
+    <div class="flex items-start gap-4">
+      <div class="flex-1 w-15"></div>
+      <div class="flex-none text-center">
         @if (isNew) {
-          <h2 class="ui center aligned header">  {{this.contact.type === 4 ? txt['companyData'] : this.contact.type === 3 ? (session.serviceLevel.contact < 2 ? txt['provider'] : txt['supplier']) : session.serviceLevel.contact < 2 ? txt['contact']  : txt['contact'] }} {{this.contact.type === 4 ? '' : txt['insert']}} </h2>
+          <h1 class="text-2xl md:text-3xl font-bold">  {{this.contact.type === 4 ? txt['companyData'] : this.contact.type === 3 ? (session.serviceLevel.contact < 2 ? txt['provider'] : txt['supplier']) : session.serviceLevel.contact < 2 ? txt['contact']  : txt['contact'] }} {{this.contact.type === 4 ? '' : txt['insert']}} </h1>
         }
         @if (isClone) {
-          <h2 class="ui center aligned header">  {{this.contact.type === 3 ? (session.serviceLevel.contact < 2 ? txt['provider'] : txt['supplier']) : session.serviceLevel.contact < 2 ? txt['contact']  : txt['contact'] }} {{txt['clone']}} </h2>
+          <h1 class="text-2xl md:text-3xl font-bold">  {{this.contact.type === 3 ? (session.serviceLevel.contact < 2 ? txt['provider'] : txt['supplier']) : session.serviceLevel.contact < 2 ? txt['contact']  : txt['contact'] }} {{txt['clone']}} </h1>
         }
-        <!-- be careful - we can not use isUpdate here, because isUpdate is the swith for changing between display and update mode !!!-->
         @if (!(isNew || isClone) && isMaint) {
-          <h2 class="ui center aligned header"> {{this.contact.type === 4 ? txt['companyData'] : this.contact.type === 3 ? (session.serviceLevel.contact < 2 ? txt['provider'] : txt['supplier']) : session.serviceLevel.contact < 2 ? txt['contact']  : txt['contact'] }} {{txt['update']}} </h2>
+          <h1 class="text-2xl md:text-3xl font-bold"> {{this.contact.type === 4 ? txt['companyData'] : this.contact.type === 3 ? (session.serviceLevel.contact < 2 ? txt['provider'] : txt['supplier']) : session.serviceLevel.contact < 2 ? txt['contact']  : txt['contact'] }} {{txt['update']}} </h1>
         }
         @if (!isMaint && !isNew && !isClone) {
-          <h2 class="ui center aligned header"> {{this.contact.type === 4 ? txt['companyData'] : this.contact.type === 3 ? (session.serviceLevel.contact < 2 ? txt['provider'] : txt['supplier']) : session.serviceLevel.contact < 2 ? txt['contact']  : txt['contact'] }} {{txt['show']}} </h2>
+          <h1 class="text-2xl md:text-3xl font-bold"> {{this.contact.type === 4 ? txt['companyData'] : this.contact.type === 3 ? (session.serviceLevel.contact < 2 ? txt['provider'] : txt['supplier']) : session.serviceLevel.contact < 2 ? txt['contact']  : txt['contact'] }} {{txt['show']}} </h1>
         }
       </div>
-      <div class="two wide column">
-      </div>
-      <div class="right floated one wide column">
+      <div class="flex-1 w-16 flex justify-end">
         @if (this.contact.type !== 4) {
-          <button class="left floated ui tiny circular red icon button"
-            [attr.data-tooltip]="txt['close']" data-position="bottom center" data-inverted=""
+          <button class="btn btn-sm btn-circle btn-error text-primary-content"
+            [attr.data-tip]="txt['close']" data-position="bottom"
             (click)="return()">
-            <i class="times icon"></i>
+            <i class="fas fa-times"></i>
           </button>
         }
       </div>
     </div>
   </div>
 }
-<div class="ui divider"></div>
+<div class="divider"></div>
 
 <!-- FORM starts here                    -->
 
@@ -41,100 +36,85 @@
   (ngSubmit)="submitForm()">
 
   <!-- this place is used for tests: <p>contact objects: {{ intChoices | json }}</p> -->
-  <!-- GRID (no container - container would recalc width in a sub contact presentation, without
-  respecting pusher and reduced width!!)  -->
+  <!-- GRID Container  -->
   @if (txt && contacttxt) {
-    <div class="ui grid">
+    <div class="container mx-auto p-4">
       <!-- -UPDATE trigger BUTTONs  uniqueId  -->
-      @if (this.contact) {
-        <div class="row">
-          <div class="four wide column">
-            <!-- update of uniqueId -->
-            @if (isMaint && !(isNew || isClone)) {
-              <button class="ui tiny circular yellow icon button"
-                type="button" [attr.data-tooltip]="txt['update']"
-                [disabled]="isUpdate()"
-                (click)="setUniqueId()">
-                <i class="arrow down icon"></i>
-              </button>
-            }
-            <!-- clone of uniqueId        -->
-            @if (this.contact.type !== 4 && isMaint && !(isNew || isClone)) {
-              <button class="ui tiny circular yellow icon button"
-                type="button" [attr.data-tooltip]="txt['clone']" data-inverted=""
-                [disabled]="isUpdate()"
-                (click)="setUniqueIdClone()">
-                <i class="arrow right icon"></i>
-              </button>
-            }
+      @if (this.contact && !isNew) {
+        <div class="flex gap-4 mb-4">
+          <div class="w-1/2">
+            <h4 class="text-lg md:text-xl font-semibold">{{contacttxt['contactNr']}}:</h4>
           </div>
-          <div class="two wide column">
-          </div>
-          <div class="four wide column">
-            <h4>{{contacttxt['contactNr']}}:</h4>
-          </div>
-          <div class="four wide column">
-            @if (this.contact.type !== 4) {
-              <div class="ui label" [ngStyle]="contactStyle">
-                {{this.contact.contactNr}}
-              </div>
-            }
-            @if (this.contact.type === 4) {
-              <div class="ui label">
-                {{txt['company']}}
-              </div>
-            }
-          </div>
-          <div class="two wide column">
+          <div class="w-1/2 flex justify-between">
+            <div class="badge" [ngStyle]="contactStyle">
+              {{this.contact.contactNr}}
+            </div>
+            <div>
+              <!-- update of uniqueId -->
+              @if (isMaint && !isClone) {
+                <button class="btn btn-sm btn-circle btn-warning text-primary-content"
+                  type="button" [attr.data-tip]="txt['update']"
+                  [disabled]="isUpdate()"
+                  (click)="setUniqueId()">
+                  <i class="fas fa-arrow-down"></i>
+                </button>
+                <button class="btn btn-sm btn-circle btn-warning text-primary-content"
+                  type="button" [attr.data-tip]="txt['clone']"
+                  [disabled]="isUpdate()"
+                  (click)="setUniqueIdClone()">
+                  <i class="fas fa-arrow-right"></i>
+                </button>
+              }
+            </div>
           </div>
         </div>
       }
       <!-- SHOW  uniqueId field -->
-      <div class="row">
-        <div class="six wide column">
-          <h3>{{contacttxt['name']}}:</h3>
+      <div class="flex gap-4 mb-4">
+        <div class="w-1/2">
+          <h4 class="text-lg md:text-xl font-semibold">{{contacttxt['displayName']}}:</h4>
         </div>
-        <div class="ten wide column">
-          <h3> {{this.contact.name}}</h3>
+        <div class="w-1/2">
+          <h4 class="text-lg md:text-xl font-semibold"> {{this.contact.displayName}}</h4>
         </div>
       </div>
       <!-- UPDATE uniqueId fields  -->
       @if ((isNew || isClone || isUpdateUniqueId)) {
-        <div class="row">
-          <div class="twelve wide column">
-            <div class="ui form">
+        <div class="flex gap-4 mb-4">
+          <div class="w-3/4">
+            <div class="form-control">
               <fieldset  formGroupName="uniqueId" >
                 @if ((isNew || isClone) && locale.substring(0, 2) === 'DE') {
-                  <legend class = "ui green label">{{contacttxt['name']}} {{txt['enter']}}:</legend>
+                  <legend class = "badge badge-success">{{contacttxt['displayName']}} {{txt['enter']}}:</legend>
                 }
                 @if ((isNew || isClone) && locale.substring(0, 2) !== 'DE') {
-                  <legend class = "ui green label">{{txt['enter']}} {{contacttxt['name']}}:</legend>
+                  <legend class = "badge badge-success">{{txt['enter']}} {{contacttxt['displayName']}}:</legend>
                 }
                 @if (isUpdateUniqueId) {
-                  <legend class = "ui green label">{{contacttxt['name']}} {{txt['update']}}:</legend>
+                  <legend class = "badge badge-success">{{contacttxt['displayName']}} {{txt['update']}}:</legend>
                 }
                 @if (this.contact.type !== 4 && (isNew || isClone || isContactNrChangeable)) {
-                  <div class="inline fields">
-                    <label for="contactNr" class="ui label">{{contacttxt['contactNr']}}:</label>
-                    <input placeholder="contactNr" id="contactNr" formControlName="contactNr">
+                  <div class="flex items-center gap-2 mb-2">
+                    <label for="contactNr" class="label">{{contacttxt['contactNr']}}:</label>
+                    <input placeholder="contactNr" id="contactNr" formControlName="contactNr" class="input input-bordered w-full">
                   </div>
                 }
                 @if ( errors['uniqueId.contactNr']) {
-                  <div class="ui negative message">
+                  <div class="alert alert-error">
                     {{ errors['uniqueId.contactNr'] }}
                   </div>
                 }
-                <div class="inline fields">
-                  <label for="name" class="ui label">{{contacttxt['name']}}:</label>
-                  <input placeholder="name" id="name" formControlName="name">
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="name" class="label">{{contacttxt['displayName']}}:</label>
+                  <input placeholder="name" id="name" formControlName="name" class="input input-bordered w-full">
                 </div>
                 @if ( errors['uniqueId.name']) {
-                  <div class="ui negative message">
+                  <div class="alert alert-error">
                     {{ errors['uniqueId.name'] }}
                   </div>
                 }
                 @if (errors['uniqueId']) {
-                  <div class="ui negative message">
+                  <div class="alert alert-error">
                     {{ errors['uniqueId']}}
                   </div>
                 }
@@ -143,438 +123,484 @@
           </div>
           <!-- BUTTONs uniqueId updating                -->
           @if (isUpdateUniqueId || isNew || isClone) {
-            <div class="four wide column">
-              <button class="ui tiny circular green icon button"
-                [attr.data-tooltip]="txt['submit']" data-position="top center"
+            <div class="w-1/4 flex gap-2">
+              <button class="btn btn-circle btn-sm btn-success text-primary-content"
+                [attr.data-tip]="txt['submit']" data-position="top"
                 [disabled]="!thisForm.valid"
                 type="submit">
-                <i class="check icon"></i>
+                <i class="fas fa-check"></i>
               </button>
-              <button class="ui tiny circular red icon button"
-                type="button" [attr.data-tooltip]="txt['cancel']" data-position="top center"
+              <button class="btn btn-sm btn-circle btn-error text-primary-content"
+                type="button" [attr.data-tip]="txt['cancel']" data-position="top"
                 [disabled]="isNew || isClone"
                 (click)="cancelUpdates()">
-                <i class="times icon"></i>
+                <i class="fas fa-times"></i>
               </button>
             </div>
           }
         </div>
       }
-      <div class="ui divider"></div>
-      <!-- here we show contact segment  in case of personal planning-->
-      @if (session.serviceLevel.contact < 2) {
-        <ng-container *ngTemplateOutlet="contact"></ng-container>
-      }
-      <!-- -SHOW  contact header segment with UPDATE trigger BUTTON header -->
-      <div class="row">
-        <div class="eight wide column">
-          <div class="ui segment">
-            <h4>
-              <span>{{txt['company']}}</span>
-              @if (isMaint && !(isNew || isClone)) {
-                <button class="right floated ui tiny circular yellow icon button"
-                  type="button" [attr.data-tooltip]="txt['update']"
+      <div class="divider"></div>
+      <!-- -SHOW   contact segment  -->
+      <div class="flex gap-4 mb-4">
+        <div class="w-2/3">
+          <div class="card bg-base-100 shadow-md p-4">
+            <h5 class="card-title flex justify-between">
+              <span>{{txt['contact_data'] }}</span>
+              <!-- button for update of contact   -->
+              @if (isMaint) {
+                <button class="btn btn-sm btn-circle btn-warning text-primary-content"
+                  type="button" [attr.data-tip]="txt['update'] "
                   [disabled]="isUpdate()"
-                  (click)="setHdr()">
-                  <i class="arrow down icon"></i>
+                  (click)="setContact()">
+                  <i class="fas fa-arrow-down"></i>
                 </button>
               }
-            </h4>
+            </h5>
           </div>
         </div>
       </div>
-      <!-- -UPDATE contact  header  -->
-      @if (isUpdateHdr) {
-        <div class="row">
-          <div class="twelve wide column">
-            <div class="ui form">
-              <fieldset  formGroupName="hdrGroup">
-                <legend class = "ui green label">{{txt['company'] }} {{txt['field'] }} {{txt['update'] }}</legend>
-                <div class="one inline fields">
-                  <label for="longName" class="ui label">{{contacttxt['longName']}}</label>
-                  <input id="longName" formControlName="longName">
+      <!-- -UPDATE contact  -->
+      @if (isUpdateContact) {
+        <div class="flex gap-4 mb-4">
+          <div class="w-3/4">
+            <div class="form-control">
+              <fieldset  formGroupName="contactGroup">
+                <legend class = "badge badge-success">  {{txt['contact'] }} {{txt['field'] }} {{txt['update'] }}</legend>
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="contactSalutation" class="label">{{contacttxt['contactSalutation'] }}</label>
+                  <input id="contactSalutation" formControlName="contactSalutation" class="input input-bordered w-full">
                 </div>
-                <div class="one inline fields">
-                  <label for="nameScnd" class="ui label">{{contacttxt['nameScnd'] }}</label>
-                  <input id="nameScnd" formControlName="nameScnd">
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="contactFirstName" class="label">{{contacttxt['contactFirstName'] }}</label>
+                  <input id="contactFirstName" formControlName="contactFirstName" class="input input-bordered w-full">
                 </div>
-                <div class="one inline fields">
-                  <label for="street" class="ui label">{{contacttxt['street'] }}</label>
-                  <input id="street" formControlName="street">
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="contactName" class="label">{{contacttxt['contactName'] }}</label>
+                  <input id="contactName" formControlName="contactName" class="input input-bordered w-full">
                 </div>
-                <div class="one inline fields">
-                  <label for="city" class="ui label">{{contacttxt['city'] }}</label>
-                  <input id="city" formControlName="city">
+                
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="contactEmail" class="label">{{contacttxt['contactEmail'] }}</label>
+                  <input id="contactEmail" formControlName="contactEmail" class="input input-bordered w-full">
                 </div>
-                <div class="inline fields">
-                  <label for="plz" class="ui label">{{contacttxt['plz'] }}</label>
-                  <input class="two wide field" id="plz" formControlName="plz">
-                </div>
-                @if ( errors['hdrGroup.plz'] ) {
-                  <div class="ui negative message">
-                    {{ errors['hdrGroup.plz'] }}
+                @if ( errors['contactGroup.contactEmail'] ) {
+                  <div class="alert alert-error">
+                    {{ errors['contactGroup.contactEmail'] }}
                   </div>
                 }
-                <div class="one inline fields">
-                  <label for="country" class="ui label">{{contacttxt['country'] }}</label>
-                  <input id="country" formControlName="country">
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="contactTel" class="label">{{contacttxt['contactTel'] }}</label>
+                  <input id="contactTel" formControlName="contactTel" class="input input-bordered w-full">
                 </div>
-                @if ( errors['hdrGroup.country'] ) {
-                  <div class="ui negative message">
-                    {{ errors['hdrGroup.country'] }}
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="contactTelScnd" class="label">{{contacttxt['contactTelScnd'] }}</label>
+                  <input id="contactTelScnd" formControlName="contactTelScnd" class="input input-bordered w-full">
+                </div>
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="contactStreet" class="label">{{contacttxt['contactStreet'] }}</label>
+                  <input id="contactStreet" formControlName="contactStreet" class="input input-bordered w-full">
+                </div>
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="contactCity" class="label">{{contacttxt['contactCity'] }}</label>
+                  <input id="contactCity" formControlName="contactCity" class="input input-bordered w-full">
+                </div>
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="contactPlz" class="label">{{contacttxt['contactPlz'] }}</label>
+                  <input class="input input-bordered w-32" id="contactPlz" formControlName="contactPlz">
+                </div>
+                @if ( errors['contactGroup.contactPlz'] ) {
+                  <div class="alert alert-error">
+                    {{ errors['contactGroup.contactPlz'] }}
                   </div>
                 }
-                <div class="one inline fields">
-                  <label for="website" class="ui label">{{contacttxt['website'] }}</label>
-                  <input id="website" formControlName="website">
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="contactCountry" class="label">{{contacttxt['contactCountry'] }}</label>
+                  <input id="contactCountry" formControlName="contactCountry" class="input input-bordered w-full">
                 </div>
-                <div class="one inline fields">
-                  <label for="contactType" class="ui label">{{contacttxt['contactType'] }}</label>
-                  <input class="ui checkbox" type="checkbox" [checked]="this.contact.contactType === 1" id="contactType" formControlName="contactType">
+                @if ( errors['contactGroup.contactCountry'] ) {
+                  <div class="alert alert-error">
+                    {{ errors['contactGroup.contactCountry'] }}
+                  </div>
+                }
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="contactBirthdayString" class="label">{{contacttxt['contactBirthday'] }}</label>
+                  <input type="text" placeholder="dd.mm.yyyy" id="contactBirthdayString" formControlName="contactBirthdayString" class="input input-bordered w-full">
                 </div>
-                <div class="one inline fields">
-                  <label for="contactColor" class="ui label"
-                  [attr.data-tooltip]="txt['enter_color'] " data-position="bottom center">{{contacttxt['contactColor'] }}</label>
-                  <input id="contactColor" formControlName="contactColor">
-                </div>
-                @if ( errors['hdrGroup.contactColor'] ) {
-                  <div class="ui negative message">
-                    {{ errors['hdrGroup.contactColor'] }}
+                @if (errors['contactGroup.contactBirthdayString']) {
+                  <div class="alert alert-error">
+                    {{ errors['contactGroup.contactBirthdayString'] }}
                   </div>
                 }
               </fieldset>
             </div>
           </div>
-          <!-- BUTTONs contact header updating                -->
-          <div class="four wide column">
-            <button class="ui tiny circular green icon button"
-              [attr.data-tooltip]="txt['submit']" data-position="top center"
+          <!-- BUTTONs contact updating                -->
+          <div class="w-1/4 flex gap-2">
+            <button class="btn btn-sm btn-circle btn-success text-primary-content"
+              [attr.data-tip]="txt['submit'] " data-position="top"
               [disabled]="!thisForm.valid"
               type="submit">
-              <i class="check icon"></i>
+              <i class="fas fa-check"></i>
             </button>
-            <button class="ui tiny circular red icon button"
-              [attr.data-tooltip]="txt['cancel']" data-position="top center"
-              type="button" (click)="cancelUpdates()">
-              <i class="times icon"></i>
+            <button class="btn btn-sm  btn-circle btn-error text-primary-content"
+              type="button" [attr.data-tip]="txt['cancel'] " data-position="top"
+              (click)="cancelUpdates()">
+              <i class="fas fa-times"></i>
             </button>
           </div>
         </div>
       }
-      <!-- -SHOW  contact header  -->
-      <div class="row">
-        <div class="fourteen wide column">
-          <table class="ui very basic table">
-            <tbody>
-              <tr>
-                <td class="two wide"><h4>{{contacttxt['longName'] }}:</h4></td>
-                <td><h4>{{this.contact.longName}}</h4></td>
-              </tr>
-              <tr>
-                <td class="two wide"><h4>{{contacttxt['nameScnd'] }}:</h4></td>
-                <td><h4>{{this.contact.nameScnd}}</h4></td>
-              </tr>
-              <tr>
-                <td class="two wide"><h4>{{contacttxt['street'] }}:</h4></td>
-                <td><h4>{{this.contact.street}}</h4></td>
-              </tr>
-              <tr>
-                <td class="two wide"><h4>{{contacttxt['city'] }}:</h4></td>
-                <td><h4>{{this.contact.city}}</h4></td>
-              </tr>
-              <tr>
-                <td class="two wide"><h4>{{contacttxt['plz'] }}:</h4></td>
-                <td><h4>{{this.contact.plz === 0 ? '' : this.contact.plz}}</h4></td>
-              </tr>
-              <tr>
-                <td class="two wide"><h4>{{contacttxt['country'] }}:</h4></td>
-                <td><h4>{{this.contact.country}}</h4></td>
-              </tr>
-              <tr>
-                <td class="two wide"><h4>{{contacttxt['website'] }}:</h4></td>
-                <td><h4>{{this.contact.website}}</h4></td>
-              </tr>
-              <tr>
-                <td class="two wide"><h4>{{contacttxt['contactType'] }}:</h4></td>
-                <td>
-                  <input class="ui checkbox" type="checkbox" [checked]="this.contact.contactType === 1" disabled>
-                </td>
-              </tr>
-              <tr>
-                <td class="two wide"><h4>{{contacttxt['contactColor'] }}:</h4></td>
-                <td><h4>{{this.contact.contactColor}}</h4></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <!-- here we show contact segment  in case of company planning-->
-      @if (session.serviceLevel.contact >= 2) {
-        <ng-container *ngTemplateOutlet="contact"></ng-container>
-      }
-      <ng-template #contact>
-        <!-- -SHOW   contact segment  -->
-        <div class="row">
-          <div class="eight wide column">
-            <div class="ui segment">
-              <h4>
-                <span>{{txt['contact_data'] }}</span>
-                <!-- button for update of contact   -->
-                @if (isMaint) {
-                  <button class="right floated ui tiny circular yellow icon button"
-                    type="button" [attr.data-tooltip]="txt['update'] "
-                    [disabled]="isUpdate()"
-                    (click)="setContact()">
-                    <i class="arrow down icon"></i>
-                  </button>
-                }
-              </h4>
-            </div>
-          </div>
-        </div>
-        <!-- -UPDATE contact  -->
-        @if (isUpdateContact) {
-          <div class="row">
-            <div class="twelve wide column">
-              <div class="ui form">
-                <fieldset  formGroupName="contactGroup">
-                  <legend class = "ui green label">  {{txt['contact'] }} {{txt['field'] }} {{txt['update'] }}</legend>
-                  <div class="one inline fields">
-                    <label for="contactSalutation" class="ui label">{{contacttxt['contactSalutation'] }}</label>
-                    <input id="contactSalutation" formControlName="contactSalutation">
-                  </div>
-                  <div class="one inline fields">
-                    <label for="contactFirstName" class="ui label">{{contacttxt['contactFirstName'] }}</label>
-                    <input id="contactFirstName" formControlName="contactFirstName">
-                  </div>
-                  <div class="one inline fields">
-                    <label for="contactName" class="ui label">{{contacttxt['contactName'] }}</label>
-                    <input id="contactName" formControlName="contactName">
-                  </div>
-                  <div class="one inline fields">
-                    <label for="contactFunction" class="ui label">{{contacttxt['contactFunction'] }}</label>
-                    <input id="contactFunction" formControlName="contactFunction">
-                  </div>
-                  <div class="one inline fields">
-                    <label for="contactEmail" class="ui label">{{contacttxt['contactEmail'] }}</label>
-                    <input id="contactEmail" formControlName="contactEmail">
-                  </div>
-                  @if ( errors['contactGroup.contactEmail'] ) {
-                    <div class="ui negative message">
-                      {{ errors['contactGroup.contactEmail'] }}
-                    </div>
-                  }
-                  <div class="one inline fields">
-                    <label for="contactEmailScnd" class="ui label">{{contacttxt['contactEmailScnd'] }}</label>
-                    <input id="contactEmailScnd" formControlName="contactEmailScnd">
-                  </div>
-                  @if ( errors['contactGroup.contactEmailScnd'] ) {
-                    <div class="ui negative message">
-                      {{ errors['contactGroup.contactEmailScnd'] }}
-                    </div>
-                  }
-                  <div class="one inline fields">
-                    <label for="contactTel" class="ui label">{{contacttxt['contactTel'] }}</label>
-                    <input id="contactTel" formControlName="contactTel">
-                  </div>
-                  <div class="one inline fields">
-                    <label for="contactTelScnd" class="ui label">{{contacttxt['contactTelScnd'] }}</label>
-                    <input id="contactTelScnd" formControlName="contactTelScnd">
-                  </div>
-                  <div class="one inline fields">
-                    <label for="contactBirthdayString" class="ui label">{{contacttxt['contactBirthday'] }}</label>
-                    <input type="text" placeholder="dd.mm.yyyy" id="contactBirthdayString" formControlName="contactBirthdayString">
-                  </div>
-                  @if (errors['contactGroup.contactBirthdayString']) {
-                    <div class="ui negative message">
-                      {{ errors['contactGroup.contactBirthdayString'] }}
-                    </div>
-                  }
-                </fieldset>
-              </div>
-            </div>
-            <!-- BUTTONs contact updating                -->
-            <div class="four wide column">
-              <button class="ui tiny circular green icon button"
-                [attr.data-tooltip]="txt['submit'] " data-position="top center"
-                [disabled]="!thisForm.valid"
-                type="submit">
-                <i class="check icon"></i>
-              </button>
-              <button class="ui tiny circular red icon button"
-                type="button" [attr.data-tooltip]="txt['cancel'] " data-position="top center"
-                (click)="cancelUpdates()">
-                <i class="times icon"></i>
-              </button>
-            </div>
-          </div>
-        }
-        <!-- -SHOW   contact  -->
-        <div class="row">
-          <div class="fourteen wide column">
-            <table class="ui very basic table">
+      <!-- -SHOW   contact  -->
+      <div class="flex gap-4 mb-4">
+        <div class="w-7/12">
+          <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
               <tbody>
                 <tr>
-                  <td class="two wide"><h4>{{contacttxt['contactSalutation'] }}:</h4></td>
-                  <td><h4>{{this.contact.contactSalutation}}</h4></td>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['contactSalutation'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.contactSalutation}}</h5></td>
                 </tr>
                 <tr>
-                  <td class="two wide"><h4>{{contacttxt['contactFirstName'] }}:</h4></td>
-                  <td><h4>{{this.contact.contactFirstName}}</h4></td>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['contactFirstName'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.contactFirstName}}</h5></td>
                 </tr>
                 <tr>
-                  <td class="two wide"><h4>{{contacttxt['contactName'] }}:</h4></td>
-                  <td><h4>{{this.contact.contactName}}</h4></td>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['contactName'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.contactName}}</h5></td>
                 </tr>
                 <tr>
-                  <td class="two wide"><h4>{{contacttxt['contactFunction'] }}:</h4></td>
-                  <td><h4>{{this.contact.contactFunction}}</h4></td>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['contactEmail'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.contactEmail}}</h5></td>
                 </tr>
                 <tr>
-                  <td class="two wide"><h4>{{contacttxt['contactEmail'] }}:</h4></td>
-                  <td><h4>{{this.contact.contactEmail}}</h4></td>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['contactTel'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.contactTel}}</h5></td>
                 </tr>
                 <tr>
-                  <td class="two wide"><h4>{{contacttxt['contactEmailScnd'] }}:</h4></td>
-                  <td><h4>{{this.contact.contactEmailScnd}}</h4></td>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['contactTelScnd'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.contactTelScnd}}</h5></td>
                 </tr>
                 <tr>
-                  <td class="two wide"><h4>{{contacttxt['contactTel'] }}:</h4></td>
-                  <td><h4>{{this.contact.contactTel}}</h4></td>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['contactStreet'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.contactStreet}}</h5></td>
                 </tr>
                 <tr>
-                  <td class="two wide"><h4>{{contacttxt['contactTelScnd'] }}:</h4></td>
-                  <td><h4>{{this.contact.contactTelScnd}}</h4></td>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['contactCity'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.contactCity}}</h5></td>
+                </tr>
+                <tr>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['contactPlz'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.contactPlz === 0 ? '' : this.contact.contactPlz}}</h5></td>
+                </tr>
+                <tr>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['contactCountry'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.contactCountry}}</h5></td>
                 </tr>
                 <!-- at serviceLevel 0 - personal - we show contact birthday anyway-->
                 @if (this.contact.contactBirthday || session.serviceLevel.contact < 2) {
                   <tr>
-                    <td class="two wide"><h4>{{contacttxt['contactBirthday'] }}:</h4></td>
-                    <td><h4>{{this.contact.contactBirthday|date:'dd.MM.yyyy'}}</h4></td>
+                    <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['contactBirthday'] }}:</h5></td>
+                    <td><h5 class="font-semibold">{{this.contact.contactBirthday|date:'dd.MM.yyyy'}}</h5></td>
                   </tr>
                 }
               </tbody>
             </table>
           </div>
         </div>
-      </ng-template>
+      </div>
+      <!-- -SHOW  contact header segment with UPDATE trigger BUTTON header -->
+      <div class="flex gap-4 mb-4">
+        <div class="w-2/3">
+          <div class="card bg-base-100 shadow-md p-4">
+            <h5 class="card-title flex justify-between">
+              <span>{{txt['company']}}</span>
+              @if (isMaint && !(isNew || isClone)) {
+                <button class="btn btn-sm btn-circle btn-warning text-primary-content"
+                  type="button" [attr.data-tip]="txt['update']"
+                  [disabled]="isUpdate()"
+                  (click)="setHdr()">
+                  <i class="fas fa-arrow-down"></i>
+                </button>
+              }
+            </h5>
+          </div>
+        </div>
+      </div>
+      <!-- -UPDATE contact  header  -->
+      @if (isUpdateHdr) {
+        <div class="flex gap-4 mb-4">
+          <div class="w-3/4">
+            <div class="form-control">
+              <fieldset  formGroupName="hdrGroup">
+                <legend class = "badge badge-success"> {{txt['company'] }} {{txt['field'] }} {{txt['update'] }}</legend>
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="companyName" class="label">{{contacttxt['companyName']}}</label>
+                  <input id="companyName" formControlName="companyName" class="input input-bordered w-full">
+                </div>
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="nameScnd" class="label">{{contacttxt['nameScnd'] }}</label>
+                  <input id="nameScnd" formControlName="nameScnd" class="input input-bordered w-full">
+                </div>
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="contactFunction" class="label">{{contacttxt['contactFunction'] }}</label>
+                  <input id="contactFunction" formControlName="contactFunction" class="input input-bordered w-full">
+                </div>
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="companyEmail" class="label">{{contacttxt['companyEmail'] }}</label>
+                  <input id="companyEmail" formControlName="companyEmail" class="input input-bordered w-full">
+                </div>
+                @if ( errors['contactGroup.companyEmail'] ) {
+                  <div class="alert alert-error">
+                    {{ errors['contactGroup.companyEmail'] }}
+                  </div>
+                }
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="companyTel" class="label">{{contacttxt['companyTel'] }}</label>
+                  <input id="companyTel" formControlName="companyTel" class="input input-bordered w-full">
+                </div>
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="street" class="label">{{contacttxt['street'] }}</label>
+                  <input id="street" formControlName="street" class="input input-bordered w-full">
+                </div>
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="city" class="label">{{contacttxt['city'] }}</label>
+                  <input id="city" formControlName="city" class="input input-bordered w-full">
+                </div>
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="plz" class="label">{{contacttxt['plz'] }}</label>
+                  <input class="input input-bordered w-32" id="plz" formControlName="plz">
+                </div>
+                @if ( errors['hdrGroup.plz'] ) {
+                  <div class="alert alert-error">
+                    {{ errors['hdrGroup.plz'] }}
+                  </div>
+                }
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="country" class="label">{{contacttxt['country'] }}</label>
+                  <input id="country" formControlName="country" class="input input-bordered w-full">
+                </div>
+                @if ( errors['hdrGroup.country'] ) {
+                  <div class="alert alert-error">
+                    {{ errors['hdrGroup.country'] }}
+                  </div>
+                }
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="website" class="label">{{contacttxt['website'] }}</label>
+                  <input id="website" formControlName="website" class="input input-bordered w-full">
+                </div>
+                 <div class="flex items-center gap-2 mb-2">
+                  <label for="companyUid" class="label">{{contacttxt['companyUid'] }}</label>
+                  <input id="companyUid" formControlName="companyUid" class="input input-bordered w-full">
+                </div>
+              </fieldset>
+            </div>
+          </div>
+          <!-- BUTTONs contact header updating                -->
+          <div class="w-1/4 flex gap-2">
+            <button class="btn btn-sm btn-circle btn-success text-primary-content"
+              [attr.data-tip]="txt['submit']" data-position="top"
+              [disabled]="!thisForm.valid"
+              type="submit">
+              <i class="fas fa-check"></i>
+            </button>
+            <button class="btn btn-sm btn-circle btn-error text-primary-content"
+              [attr.data-tip]="txt['cancel']" data-position="top"
+              type="button" (click)="cancelUpdates()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      }
+      <!-- -SHOW  contact header  -->
+      <div class="flex gap-4 mb-4">
+        <div class="w-7/12">
+          <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
+              <tbody>
+                <tr>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['companyName'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.companyName}}</h5></td>
+                </tr>
+                <tr>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['nameScnd'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.nameScnd}}</h5></td>
+                </tr>
+                <tr>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['contactFunction'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.contactFunction}}</h5></td>
+                </tr>
+                <tr>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['companyEmail'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.companyEmail}}</h5></td>
+                </tr>
+                <tr>
+                    <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['companyTel'] }}:</h5></td>
+                    <td><h5 class="font-semibold">{{this.contact.companyTel}}</h5></td>
+                  </tr>
+                <tr>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['street'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.street}}</h5></td>
+                </tr>
+                <tr>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['city'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.city}}</h5></td>
+                </tr>
+                <tr>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['plz'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.plz === 0 ? '' : this.contact.plz}}</h5></td>
+                </tr>
+                <tr>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['country'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.country}}</h5></td>
+                </tr>
+                <tr>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['website'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.website}}</h5></td>
+                </tr>
+                <tr>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['companyUid'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.companyUid}}</h5></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
       <!-- -SHOW  contact footer  segment -->
-      <div class="row">
-        <div class="eight wide column">
-          <div class="ui segment">
-            <h4>
+      <div class="flex gap-4 mb-4">
+        <div class="w-2/3">
+          <div class="card bg-base-100 shadow-md p-4">
+            <h5 class="card-title flex justify-between">
               <span>{{txt['ftr_data'] }}</span>
               <!-- button for update of footer   -->
               @if (isMaint) {
-                <button class="right floated ui tiny circular yellow icon button"
-                  type="button" [attr.data-tooltip]="txt['update'] "
+                <button class="btn btn-sm  btn-circle btn-warning text-primary-content"
+                  type="button" [attr.data-tip]="txt['update'] "
                   [disabled]="isUpdate()"
                   (click)="setFtr()">
-                  <i class="arrow down icon"></i>
+                  <i class="fas fa-arrow-down"></i>
                 </button>
               }
-            </h4>
+            </h5>
           </div>
         </div>
       </div>
       <!-- -UPDATE contact footer  -->
       @if (isUpdateFtr) {
-        <div class="row">
-          <div class="twelve wide column">
-            <div class="ui form">
+        <div class="flex gap-4 mb-4">
+          <div class="w-3/4">
+            <div class="form-control">
               <fieldset  formGroupName="ftrGroup">
-                <legend class = "ui green label">  {{txt['ftr_data'] }} {{txt['field'] }} {{txt['update'] }}</legend>
-                @if (session.serviceLevel.contact >= 2) {
-                  <div class="one inline fields">
-                    <label for="uid" class="ui label">{{contacttxt['uid'] }}</label>
-                    <input id="uid" formControlName="uid">
-                  </div>
-                  <div class="one inline fields">
-                    <label for="iban" class="ui label">{{contacttxt['iban'] }}</label>
-                    <input id="iban" formControlName="iban">
-                  </div>
-                  <div class="one inline fields">
-                    <label for="ibanScnd" class="ui label">{{contacttxt['ibanScnd'] }}</label>
-                    <input id="ibanScnd" formControlName="ibanScnd">
-                  </div>
-                  <div class="one inline fields">
-                    <label for="paymentInfo" class="ui label">{{contacttxt['paymentInfo'] }}</label>
-                    <input id="paymentInfo" formControlName="paymentInfo">
-                  </div>
-                  <div class="one inline fields">
-                    <label for="paymentInfoScnd" class="ui label">{{contacttxt['paymentInfoScnd'] }}</label>
-                    <input id="paymentInfoScnd" formControlName="paymentInfoScnd">
+                <legend class = "badge badge-success">  {{txt['ftr_data'] }} {{txt['field'] }} {{txt['update'] }}</legend>
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="contactColor" class="label"
+                  [attr.data-tip]="txt['enter_color'] " data-position="bottom">{{contacttxt['contactColor'] }}</label>
+                  <input id="contactColor" formControlName="contactColor" class="input input-bordered w-full">
+                </div>
+                @if ( errors['ftrGroup.contactColor'] ) {
+                  <div class="alert alert-error">
+                    {{ errors['ftrGroup.contactColor'] }}
                   </div>
                 }
-                <div class="one inline fields">
-                  <label for="externalId" class="ui label">{{contacttxt['externalId']}}</label>
-                  <input id="externalId" formControlName="externalId">
-                </div>
-                <div class="one inline fields">
-                  <label for="note" class="ui label">{{contacttxt['note']}}</label>
-                  <textarea id="note" formControlName="note" rows="2"></textarea>
+                @if (session.serviceLevel.contact >= 2) {
+                  #<div class="flex items-center gap-2 mb-2">
+                    <label for="contactType" class="label">{{contacttxt['contactType'] }}</label>
+                    <input class="checkbox" type="checkbox" [checked]="this.contact.contactType === 1" id="contactType" formControlName="contactType">
+                  </div>
+                  <div class="flex items-center gap-2 mb-2">
+                    <label for="iban" class="label">{{contacttxt['iban'] }}</label>
+                    <input id="iban" formControlName="iban" class="input input-bordered w-full">
+                  </div>
+                  <div class="flex items-center gap-2 mb-2">
+                    <label for="ibanScnd" class="label">{{contacttxt['ibanScnd'] }}</label>
+                    <input id="ibanScnd" formControlName="ibanScnd" class="input input-bordered w-full">
+                  </div>
+                  <div class="flex items-center gap-2 mb-2">
+                    <label for="paymentInfo" class="label">{{contacttxt['paymentInfo'] }}</label>
+                    <input id="paymentInfo" formControlName="paymentInfo" class="input input-bordered w-full">
+                  </div>
+                  <div class="flex items-center gap-2 mb-2">
+                    <label for="paymentInfoScnd" class="label">{{contacttxt['paymentInfoScnd'] }}</label>
+                    <input id="paymentInfoScnd" formControlName="paymentInfoScnd" class="input input-bordered w-full">
+                  </div>
+                  <div class="flex items-center gap-2 mb-2">
+                    <label for="externalId" class="label">{{contacttxt['externalId']}}</label>
+                    <input id="externalId" formControlName="externalId" class="input input-bordered w-full">
+                  </div>
+                }
+                <div class="flex items-center gap-2 mb-2">
+                  <label for="companyNote" class="label">{{contacttxt['companyNote']}}</label>
+                  <textarea id="companyNote" formControlName="companyNote" rows="2" class="textarea textarea-bordered w-full"></textarea>
                 </div>
               </fieldset>
             </div>
           </div>
           <!-- BUTTONs contact footer updating                -->
-          <div class="four wide column">
-            <button class="ui tiny circular green icon button"
-              [attr.data-tooltip]="txt['submit'] " data-position="top center"
+          <div class="w-1/4 flex gap-2">
+            <button class="btn btn-sm btn-circle  btn-success text-primary-content"
+              [attr.data-tip]="txt['submit'] " data-position="top"
               [disabled]="!thisForm.valid"
               type="submit">
-              <i class="check icon"></i>
+              <i class="fas fa-check"></i>
             </button>
-            <button class="ui tiny circular red icon button"
-              type="button" [attr.data-tooltip]="txt['cancel'] " data-position="top center"
+            <button class="btn btn-sm btn-circle  btn-error text-primary-content"
+              type="button" [attr.data-tip]="txt['cancel'] " data-position="top"
               (click)="cancelUpdates()">
-              <i class="times icon"></i>
+              <i class="fas fa-times"></i>
             </button>
           </div>
         </div>
       }
       <!-- -SHOW  contact footer  -->
-      <div class="row">
-        <div class="fourteen wide column">
-          <table class="ui very basic table">
-            <tbody>
-              @if (session.serviceLevel.contact >= 2) {
+      <div class="flex gap-4 mb-4">
+        <div class="w-7/12">
+          <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
+              <tbody>
                 <tr>
-                  <td class="two wide"><h4>{{contacttxt['uid'] }}:</h4></td>
-                  <td><h4>{{this.contact.uid}}</h4></td>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['contactColor'] }}:</h5></td>
+                  <td><h5 class="font-semibold">{{this.contact.contactColor}}</h5></td>
                 </tr>
+                @if (session.serviceLevel.contact >= 2) {
+                  <tr>
+                    <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['contactType'] }}:</h5></td>
+                    <td>
+                      <input class="checkbox" type="checkbox" [checked]="this.contact.contactType === 1" disabled>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['iban'] }}:</h5></td>
+                    <td><h5 class="font-semibold">{{this.contact.iban}}</h5></td>
+                  </tr>
+                  <tr>
+                    <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['ibanScnd'] }}:</h5></td>
+                    <td><h5 class="font-semibold">{{this.contact.ibanScnd}}</h5></td>
+                  </tr>
+                  <tr>
+                    <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['paymentInfo'] }}:</h5></td>
+                    <td><h5 class="font-semibold">{{this.contact.paymentInfo}}</h5></td>
+                  </tr>
+                  <tr>
+                    <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['paymentInfoScnd'] }}:</h5></td>
+                    <td><h5 class="font-semibold">{{this.contact.paymentInfoScnd}}</h5></td>
+                  </tr>
+                  <tr>
+                    <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['externalId'] }}:</h5></td>
+                    <td><h5 class="font-semibold">{{this.contact.externalId}}</h5></td>
+                  </tr>
+                }
                 <tr>
-                  <td class="two wide"><h4>{{contacttxt['iban'] }}:</h4></td>
-                  <td><h4>{{this.contact.iban}}</h4></td>
+                  <td class="w-1/6"><h5 class="font-semibold">{{contacttxt['companyNote'] }}:</h5></td>
+                  <td><small><pre>{{this.contact.companyNote}}</pre></small></td>
                 </tr>
-                <tr>
-                  <td class="two wide"><h4>{{contacttxt['ibanScnd'] }}:</h4></td>
-                  <td><h4>{{this.contact.ibanScnd}}</h4></td>
-                </tr>
-                <tr>
-                  <td class="two wide"><h4>{{contacttxt['paymentInfo'] }}:</h4></td>
-                  <td><h4>{{this.contact.paymentInfo}}</h4></td>
-                </tr>
-                <tr>
-                  <td class="two wide"><h4>{{contacttxt['paymentInfoScnd'] }}:</h4></td>
-                  <td><h4>{{this.contact.paymentInfoScnd}}</h4></td>
-                </tr>
-              }
-              <tr>
-                <td class="two wide"><h4>{{contacttxt['externalId'] }}:</h4></td>
-                <td><h4>{{this.contact.externalId}}</h4></td>
-              </tr>
-              <tr>
-                <td class="two wide"><h4>{{contacttxt['note'] }}:</h4></td>
-                <td><small><pre>{{this.contact.note}}</pre></small></td>
-              </tr>
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
       <!-- end of GRID Container  -->
     </div>
   }
 </form>
-<div class="ui divider"></div>
 

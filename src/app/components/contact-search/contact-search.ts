@@ -26,7 +26,7 @@ export class ContactSearchComponent implements OnInit {
 
   @Output() contactSelected = new EventEmitter<Contact>();
 
-  keyup = new EventEmitter<string>();
+  // keyup = new EventEmitter<string>();
 
   constructor(
     private contactService: ContactService,
@@ -34,6 +34,7 @@ export class ContactSearchComponent implements OnInit {
     public auth: AuthenticationService) { }
 
   ngOnInit() {
+    /*
     this.keyup
     .pipe(
       debounceTime(500),
@@ -47,7 +48,13 @@ export class ContactSearchComponent implements OnInit {
       tap(() => this.isLoading = false),
       )
     .subscribe (contacts => this.foundContacts = contacts);
+    */
   }
+
+  findContacts(searchTerm: string) {
+    this.foundContacts = this.contactService.searchContacts(searchTerm, this.name);
+  }
+
 
   selectContact(contact: Contact) {
     this.contactSelected.emit(contact);

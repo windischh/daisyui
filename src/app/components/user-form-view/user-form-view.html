@@ -1,36 +1,36 @@
-
-
-<div class="ui grid container">
-  <div class="three column row">
-    <div class="column">
-      @if (user?.userName !== '') {
-        <button class="left floated ui tiny teal labeled icon button"
-          [attr.data-tooltip]="txt['list']" data-inverted="" data-testid="user-form-return"
-          (click)="return()">return
-          <i class="arrow up icon"></i>
+<div class="container mx-auto p-4">
+  <div class="flex items-center gap-4">
+    <div class="flex-1">
+    </div>
+    <div class="flex-1 text-center">
+      @if (isNew || isClone) {
+        <h3 class="text-xl md:text-2xl">  {{usertxt['className']}} {{txt['insert']}} </h3>
+      }
+      @if (!(isNew || isClone) && isMaint) {
+        <h3 class="text-xl md:text-2xl"> {{usertxt['className']}} {{txt['update']}} </h3>
+      }
+      @if (!isMaint && !isNew && !isClone) {
+        <h3 class="text-xl md:text-2xl"> {{usertxt['className']}} {{txt['show']}} </h3>
+      }
+    </div>
+    <div class="flex-1 flex justify-end">
+       @if (user?.userName !== '') {
+        <button class="btn btn-outline btn-info tooltip tooltip-bottom tooltip-accent"
+          [attr.data-tip]="txt['level_up']" data-testid="user-form-return"
+          (click)="return()">
+          <i class="fas fa-arrow-up mr-2"></i>return
         </button>
       }
     </div>
-    <div class="column">
-      @if (isNew || isClone) {
-        <h2>  {{usertxt['className']}} {{txt['insert']}} </h2>
-      }
-      @if (!(isNew || isClone) && isMaint) {
-        <h2> {{usertxt['className']}} {{txt['update']}} </h2>
-      }
-      @if (!isMaint && !isNew && !isClone) {
-        <h2> {{usertxt['className']}} {{txt['show']}} </h2>
-      }
-    </div>
-    <div class="column">
-    </div>
   </div>
 </div>
-<div class="ui divider"></div>
+<div class="divider"></div>
+
 
 <!--
-<div *ngIf="!issue" class="ui active inverted dimmer">
-  <div class="ui large issue loader">Daten werden geladen...</div>
+<div *ngIf="!issue" class="flex items-center justify-center p-4">
+  <div class="loading loading-spinner loading-lg"></div>
+  <span class="ml-4">Daten werden geladen...</span>
 </div>
 -->
 
@@ -39,67 +39,67 @@
 <form [formGroup] = "thisForm"
   (ngSubmit)="submitForm()">
   <!-- this place is used for tests: <p>user objects: {{ intChoices | json }}</p> -->
-  <!-- GRID Container  -->
-  <div class="ui grid container">
+  <!-- Container  -->
+  <div class="container mx-auto p-4">
     <!-- -UPDATE trigger BUTTONs  uniqueId  -->
     @if (isMaint) {
-      <div class="row">
-        <div class="four wide column">
+      <div class="flex gap-4 mb-4">
+        <div class="w-1/4">
           <!-- update of uniqueId -->
           @if (!(isNew || isClone)) {
-            <button class="ui tiny circular yellow icon button"
-              type="button" [attr.data-tooltip]="txt['update']" data-inverted=""
+            <button class="btn btn-circle btn-sm btn-warning text-base-100"
+              type="button" [attr.data-tip]="txt['update']"
               [disabled]="isUpdate()"
               (click)="setUniqueId()">
-              <i class="arrow down icon"></i>
+              <i class="fas fa-arrow-down"></i>
             </button>
           }
           <!-- clone of uniqueId
-          <button class="ui tiny circular yellow icon button" *ngIf="!(isNew || isClone)"
-            [attr.data-tooltip]="txt['clone']" data-inverted=""
+          <button class="btn btn-circle btn-sm btn-warning" *ngIf="!(isNew || isClone)"
+            [attr.data-tip]="txt['clone']" data-position="bottom"
             [disabled]="isUpdate()"
             (click)="setUniqueIdClone()">
-            <i class="arrow right icon"></i>
+            <i class="fas fa-arrow-right"></i>
           </button>
           -->
         </div>
       </div>
     }
     <!-- SHOW  uniqueId fields  -->
-    <div class="row">
-      <div class="six wide column">
+    <div class="flex gap-4 mb-4">
+      <div class="w-1/2">
         <h3>{{usertxt['userName']}}:</h3>
       </div>
-      <div class="ten wide column">
+      <div class="w-1/2">
         <h3> {{user?.userName}}</h3>
       </div>
     </div>
     <!-- UPDATE uniqueId fields  -->
     @if ((isNew || isClone || isUpdateUniqueId)) {
-      <div class="row">
-        <div class="twelve wide column">
-          <div class="ui form">
+      <div class="flex gap-4 mb-4">
+        <div class="w-3/4">
+          <div class="form-control">
             <fieldset  formGroupName="uniqueId" >
               @if (isNew  && locale === 'DE') {
-                <legend class = "ui green label">{{usertxt['userName']}} {{txt['enter']}}:</legend>
+                <legend class = "badge badge-success">{{usertxt['userName']}} {{txt['enter']}}:</legend>
               }
               @if (isNew  && locale !== 'DE') {
-                <legend class = "ui green label">{{txt['enter']}} {{usertxt['userName']}}:</legend>
+                <legend class = "badge badge-success">{{txt['enter']}} {{usertxt['userName']}}:</legend>
               }
               @if (isUpdateUniqueId) {
-                <legend class = "ui green label">{{usertxt['userName']}} {{txt['update']}}:</legend>
+                <legend class = "badge badge-success">{{usertxt['userName']}} {{txt['update']}}:</legend>
               }
-              <div class="inline fields">
-                <label for="userName" class="ui label">{{usertxt['userName']}}:</label>
-                <input placeholder="userName" id="userName" formControlName="userName">
+              <div class="flex items-center gap-2">
+                <label for="userName" class="label">{{usertxt['userName']}}:</label>
+                <input placeholder="userName" id="userName" formControlName="userName" class="input input-bordered w-full">
               </div>
               @if ( errors['uniqueId.userName']) {
-                <div class="ui negative message">
+                <div class="alert alert-error mt-2">
                   {{ errors['uniqueId.userName'] }}
                 </div>
               }
               @if (errors['uniqueId']) {
-                <div class="ui negative message">
+                <div class="alert alert-error mt-2">
                   {{ errors['uniqueId']}}
                 </div>
               }
@@ -108,101 +108,110 @@
         </div>
         <!-- BUTTONs uniqueId updating                -->
         @if (isUpdateUniqueId || isNew || isClone) {
-          <div class="four wide column">
-            <button class="ui tiny circular green icon button"
-              [attr.data-tooltip]="txt['submit']" data-position="top center" data-testid="user-header-submit"
+          <div class="w-1/4 flex gap-2">
+            <button class="btn btn-circle btn-sm btn-success text-primary-content"
+              [attr.data-tip]="txt['submit']" data-position="top"
               [disabled]="!thisForm.valid"
               type="submit">
-              <i class="check icon"></i>
+              <i class="fas fa-check"></i>
             </button>
-            <button class="ui tiny circular red icon button"
-              type="button" [attr.data-tooltip]="txt['cancel']" data-position="top center"
+            <button class="btn btn-circle btn-sm btn-error text-primary-content"
+              type="button" [attr.data-tip]="txt['cancel']" data-position="top"
               [disabled]="isNew"
               (click)="cancelUpdates()">
-              <i class="times icon"></i>
+              <i class="fas fa-times"></i>
             </button>
           </div>
         }
       </div>
     }
-    <div class="ui divider"></div>
+
     <!-- -UPDATE trigger BUTTONs user header  -->
+    <!-- we have no user header
+    <div class="divider"></div>
     @if (isMaint && user?.userName !== '') {
-      <div class="row">
-        <div class="two wide column">
-          <button class="ui tiny circular yellow icon button"
-            type="button" [attr.data-tooltip]="txt['update']" data-inverted=""
+      <div class="flex gap-4 mb-4">
+        <div class="w-1/6">
+          <button class="btn btn-circle btn-sm btn-warning text-primary-content"
+            type="button" [attr.data-tip]="txt['update']"
             [disabled]="isUpdate()"
             (click)="setHeader()">
-            <i class="arrow down icon"></i>
+            <i class="fas fa-arrow-down"></i>
           </button>
         </div>
       </div>
     }
+    -->
     <!-- -SHOW  user header  -->
-    <div class="row">
-      <div class="fourteen wide column">
-        <table class="ui very basic table">
+    <!-- we have no user header
+     <div class="flex gap-4 mb-4">
+      <div class="w-7/12">
+        <table class="table table-zebra w-full">
           <tbody>
              <tr>
-              <!-- no header data ....-->
              </tr>
           </tbody>
         </table>
       </div>
     </div>
+    -->
+
     <!-- -UPDATE issue hdr  -->
     @if (isUpdateHdr) {
-      <div class="row">
-        <div class="twelve wide column">
-          <div class="ui form">
+      <div class="flex gap-4 mb-4">
+        <div class="w-3/4">
+          <div class="form-control">
             <fieldset  formGroupName="hdrGroup">
               <!-- no header data ....-->
-              <legend class = "ui green label">{{usertxt['className']}} {{txt['field']}} {{txt['update']}} </legend>
-              <div class="inline fields">
+              <legend class = "badge badge-success">{{usertxt['className']}} {{txt['field']}} {{txt['update']}} </legend>
+              <div class="flex items-center gap-2">
                 <!-- no header data ....-->
               </div>
             </fieldset>
           </div>
         </div>
-        <!-- BUTTONs issue header updating                -->
-        <div class="four wide column">
+        <!-- BUTTONs user header updating                -->
+        <div class="w-1/4 flex gap-2">
           @if (isUpdateHdr) {
-            <button class="ui tiny circular green icon button"
-              [attr.data-tooltip]="txt['submit']" data-position="top center"
+            <button class="btn btn-circle btn-sm btn-success text-primary-content"
+              [attr.data-tip]="txt['submit']" data-position="top"
               [disabled]="!thisForm.valid"
               type="submit">
-              <i class="check icon"></i>
+              <i class="fas fa-check"></i>
             </button>
           }
           @if (isUpdateHdr) {
-            <button class="ui tiny circular red icon button"
-              type="button" [attr.data-tooltip]="txt['cancel']" data-position="top center"
+            <button class="btn btn-circle btn-sm btn-error text-primary-content"
+              type="button" [attr.data-tip]="txt['cancel']" data-position="top"
               (click)="cancelUpdates()">
-              <i class="times icon"></i>
+              <i class="fas fa-times"></i>
             </button>
           }
         </div>
       </div>
     }
-    <div class="ui divider"></div>
-    <!-- -UPDATE trigger BUTTONs  issue footer  -->
+
+    <!-- -UPDATE trigger BUTTONs  user footer  -->
+    <!-- we have no user footer
+    <div class="divider"></div>
     @if (isMaint && user?.userName !== '') {
-      <div class="row">
-        <div class="two wide column">
-          <button class="ui tiny circular yellow icon button"
-            type="button" [attr.data-tooltip]="txt['update']" data-inverted=""
+      <div class="flex gap-4 mb-4">
+        <div class="w-1/6">
+          <button class="btn btn-circle btn-sm btn-warning text-primary-content"
+            type="button" [attr.data-tip]="txt['update']"
             [disabled]="isUpdate()"
             (click)="setFooter()">
-            <i class="arrow down icon"></i>
+            <i class="fas fa-arrow-down"></i>
           </button>
         </div>
       </div>
     }
-    <!-- -SHOW  issue footer  -->
-    <div class="row">
-      <div class="fourteen wide column">
-        <table class="ui very basic table">
+    -->
+    <!-- -SHOW  user footer  -->
+    <!-- we have no user footer
+    <div class="flex gap-4 mb-4">
+      <div class="w-7/12">
+        <table class="table table-zebra w-full">
           <tbody>
             <tr>
             </tr>
@@ -210,39 +219,40 @@
         </table>
       </div>
     </div>
-    <!-- -UPDATE  issue footer   -->
+    -->
+    <!-- -UPDATE  user footer   -->
     @if (isUpdateFtr) {
-      <div class="row">
-        <div class="twelve wide column">
-          <div class="ui form">
+      <div class="flex gap-4 mb-4">
+        <div class="w-3/4">
+          <div class="form-control">
             <fieldset  formGroupName="ftrGroup">
-              <legend class = "ui green label">{{usertxt['className']}} {{txt['field']}} {{txt['update']}} </legend>
-              <div class="inline fields">
+              <legend class = "badge badge-success">{{usertxt['className']}} {{txt['field']}} {{txt['update']}} </legend>
+              <div class="flex items-center gap-2">
               </div>
             </fieldset>
           </div>
         </div>
         <!-- BUTTONs  issue footer  updating                -->
-        <div class="four wide column">
+        <div class="w-1/4 flex gap-2">
           @if (isUpdateFtr) {
-            <button class="ui tiny circular green icon button"
-              [attr.data-tooltip]="txt['submit']" data-position="top center"
+            <button class="btn btn-circle btn-sm btn-success text-primary-content"
+              [attr.data-tip]="txt['submit']" data-position="top"
               [disabled]="!thisForm.valid"
               type="submit">
-              <i class="check icon"></i>
+              <i class="fas fa-check"></i>
             </button>
           }
           @if (isUpdateFtr) {
-            <button class="ui tiny circular red icon button"
-              [attr.data-tooltip]="txt['cancel']" data-position="top center"
+            <button class="btn btn-circle btn-sm btn-error text-primary-content"
+              type="button" [attr.data-tip]="txt['cancel']" data-position="top"
               (click)="cancelUpdates()">
-              <i class="times icon"></i>
+              <i class="fas fa-times"></i>
             </button>
           }
         </div>
       </div>
     }
-    <!-- end of GRID Container  -->
+    <!-- end of Container  -->
   </div>
 </form>
 

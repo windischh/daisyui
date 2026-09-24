@@ -18,7 +18,7 @@
 }
 
 <!-- option-list is shown if there are options or option may be created -->
-@if (refreshSignal() === 1 && auth && sessionForViews && configurationOptions && isShowList) {
+@if (refreshSignal() > 0 && auth && sessionForViews && configurationOptions && isShowList) {
   <dsy-configuration-list-view
     [session]="sessionForViews"
     [areas]="areas"

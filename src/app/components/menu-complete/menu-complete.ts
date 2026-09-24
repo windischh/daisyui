@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output, signal } from '@angular/core';
 import { Menu } from '../../_db/menu';
 import { NgClass, NgTemplateOutlet } from '@angular/common';
 
@@ -35,6 +35,7 @@ constructor() { }
    /** ------------------------ listener  ------------------------- */
 
   // disable all clickable menus if clicked elsewhere
+
   @HostListener('window:click', ['$event.target'])
   onClick(target: any) {
     // console.log(this.name:, ': You clicked on: `, target);
@@ -59,18 +60,18 @@ constructor() { }
   public showMenu(i: number, event: Event): void {
     // Verhindere das Standardverhalten des `<summary>`-Elements
     event.preventDefault();
-    if (this.menu?.items[i]?.subMenu?.isVisible) {
-      this.menu.items[i].subMenu.isVisible = false;
+    if (this.menu?.items[i]?.subMenu?.isVisible()) {
+      this.menu.items[i].subMenu.isVisible = signal(false);
     } else {
       if (this.menu?.items[i]?.subMenu) {
         // we habe a valid submenu if it has items ...
         if (this.menu.items[i].subMenu.items?.length > 0) {
           this.menu.items.forEach(_ => {
             if (_.subMenu) {
-              _.subMenu.isVisible = false;
+              _.subMenu.isVisible.set(false);
             }
           });
-          this.menu.items[i].subMenu.isVisible = true;
+          this.menu.items[i].subMenu.isVisible.set(true);
         }
       }
     }

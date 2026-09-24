@@ -96,10 +96,9 @@ export class ContactListViewComponent {
         return {...rest, contactIx};
       });
       if (this.contactFilter.length > 0) {
-        this.filteredContacts = this.filteredContacts.filter(_ => _.companyName?.includes(this.contactFilter)
-        ||  _.displayName?.includes(this.contactFilter)
+        this.filteredContacts = this.filteredContacts.filter(_ => _.displayName?.includes(this.contactFilter)
         || _.contactNr?.toString().startsWith(this.contactFilter)
-        || _.longName?.startsWith(this.contactFilter));
+        || _.companyName?.startsWith(this.contactFilter));
       }
       // if isShowDisabled is set true, we show only the disabled
       if (this.isShowDisabled) {
@@ -129,19 +128,19 @@ export class ContactListViewComponent {
             break;
           // name ASC
           case 3:
-            this.filteredContacts.sort((a, b) => a.companyName  <  b.companyName ? -1 : 0);
+            this.filteredContacts.sort((a, b) => a.displayName  <  b.displayName ? -1 : 0);
             break;
           // name DESC
           case 4:
-            this.filteredContacts.sort((a, b) =>  b.companyName < a.companyName  ? -1 : 0);
-            break;
-            // displayName ASC
-          case 5:
-            this.filteredContacts.sort((a, b) => a.displayName  <  b.displayName ? -1 : 0);
-            break;
-          // displayName DESC
-          case 6:
             this.filteredContacts.sort((a, b) =>  b.displayName < a.displayName  ? -1 : 0);
+            break;
+            // companyName ASC
+          case 5:
+             this.filteredContacts.sort((a, b) => a.companyName  <  b.companyName ? -1 : 0);
+            break;
+            // companyName DESC
+          case 6:
+            this.filteredContacts.sort((a, b) =>  b.companyName < a.companyName  ? -1 : 0);
             break;
           default:
             this.filteredContacts.sort((a, b) => a.contactNr - b.contactNr);
@@ -151,7 +150,7 @@ export class ContactListViewComponent {
         // paginator - this paginator has names
         this.selectedPage = 1;
         // without nr if we sort on names ....
-        this.names = this.filteredContacts.map(_ => (this.sortDirection <= 2 ? _.contactNr.toString() + ' ' : '') + _.companyName);
+        this.names = this.filteredContacts.map(_ => (this.sortDirection <= 2 ? _.contactNr.toString() + ' ' : '') + _.displayName);
         // paginator - set total records - after setting names, total triggers paginator refresh
         this.total = this.filteredContacts.length;
         this.limit = this.total > 1000 ? 20 : 10;

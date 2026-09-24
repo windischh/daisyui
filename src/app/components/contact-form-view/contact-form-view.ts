@@ -21,7 +21,7 @@ import { ErrorMessage } from '../../_validators/error-message';
   selector: 'dsy-contact-form-view',
   templateUrl: './contact-form-view.html',
   styleUrl: './contact-form-view.css',
-  imports: [ReactiveFormsModule, NgStyle, NgTemplateOutlet, DatePipe]
+  imports: [ReactiveFormsModule, NgStyle, DatePipe]
 })
 export class ContactFormViewComponent {
 
@@ -126,14 +126,28 @@ export class ContactFormViewComponent {
       + ' ' + this.txt['must_not_be_greater_than'] + ' ' + MAX_CONTACT_NR),
       new ErrorMessage('uniqueId.contactNr', 'pattern', this.contacttxt['contactNr']
       + ' ' + this.txt['must_be_numeric']),
-      new ErrorMessage('uniqueId.name', 'required',  this.contacttxt['name']
+      new ErrorMessage('uniqueId.name', 'required',  this.contacttxt['displayName']
       + ' ' + this.txt['must_be_entered']),
       // new ErrorMessage('uniqueId.name', 'minlength', this.contacttxt['name']
       // + ' ' + this.txt['must_have_at_least'] + ' 1 ' + this.txt['positions']),
-      new ErrorMessage('uniqueId.name', 'maxlength', this.contacttxt['name']
+      new ErrorMessage('uniqueId.name', 'maxlength', this.contacttxt['displayName']
       + ' ' + this.txt['must_have_not_more'] + ' 120 ' + this.txt['positions_conatining']),
-      new ErrorMessage('uniqueId', 'contactExists',  (this.session.serviceLevel.contact < 2 ? this.txt['contact'] : this.txt['contact']) + ' '  + this.txt['with']
+      new ErrorMessage('uniqueId', 'contactNrExists',  this.txt['contact'] + ' '  + this.txt['with']
       + ' ' + this.contacttxt['contactNr'] + ' ' + this.txt['already_exists']),
+      new ErrorMessage('contactGroup.contactEmail', 'email', this.contacttxt['contactEmail']
+      + ' ' + this.txt['must_be_entered_correctly']),
+      new ErrorMessage('contactGroup.contactPlz', 'pattern', this.contacttxt['plz']
+      + ' ' + this.txt['must_be_numeric']),
+      new ErrorMessage('contactGroup.contactPlz',  'min', this.contacttxt['plz']
+      + ' ' + this.txt['must_be_greater_than'] + ' 1000 ' ),
+      new ErrorMessage('contactGroup.contactPlz',  'max', this.contacttxt['plz']
+      + ' ' + this.txt['must_not_be_greater_than'] + ' 99999 ' ),
+      new ErrorMessage('contactGroup.contactCountry', 'minlength', this.contacttxt['country']
+      + ' ' + this.txt['must_have_at_least'] + ' 2 ' + this.txt['digits_containing']),
+      new ErrorMessage('contactGroup.contactCountry', 'maxlength', this.contacttxt['country']
+      + ' ' + this.txt['must_have_not_more'] + ' 2 ' + this.txt['digits_containing']),
+      new ErrorMessage('hdrGroup.companyEmail', 'email', this.contacttxt['companyEmail']
+      + ' ' + this.txt['must_be_entered_correctly']),
       // new ErrorMessage('hdrGroup.plz', 'required', this.contacttxt['plz']
       // + ' ' + this.txt['must_be_entered']),
       new ErrorMessage('hdrGroup.plz', 'pattern', this.contacttxt['plz']
@@ -150,14 +164,10 @@ export class ContactFormViewComponent {
       + ' ' + this.txt['must_have_at_least'] + ' 2 ' + this.txt['digits_containing']),
       new ErrorMessage('hdrGroup.country', 'maxlength', this.contacttxt['country']
       + ' ' + this.txt['must_have_not_more'] + ' 2 ' + this.txt['digits_containing']),
-      new ErrorMessage('hdrGroup.contactColor', 'pattern', this.contacttxt['contactColor']
+      new ErrorMessage('ftrGroup.contactColor', 'pattern', this.contacttxt['contactColor']
       + ' ' + this.txt['must_be_numeric']),
-      new ErrorMessage('hdrGroup.contactColor',  'max', this.contacttxt['contactColor']
+      new ErrorMessage('ftrGroup.contactColor',  'max', this.contacttxt['contactColor']
       + ' ' + this.txt['must_not_be_greater_than'] + ' 99 ' ),
-      new ErrorMessage('contactGroup.contactEmail', 'email', this.contacttxt['contactEmail']
-      + ' ' + this.txt['must_be_entered_correctly']),
-      new ErrorMessage('contactGroup.contactEmailScnd', 'email', this.contacttxt['contactEmailScnd']
-      + ' ' + this.txt['must_be_entered_correctly']),
       new ErrorMessage('contactGroup.contactBirthdayString', 'pattern', this.contacttxt['contactBirthday']
       + ' ' + this.txt['must_be_numeric']),
       new ErrorMessage('contactGroup.contactBirthdayString', 'wrongDate',  this.contacttxt['contactBirthday']
@@ -178,17 +188,18 @@ export class ContactFormViewComponent {
    *
    */
   private async initUniqueIdForm() {
+    const lastContactNr = this.contactService.getMaxContactNr(this.name);
     let cloneName = '';
     if (this.isClone) {
       // we search for last contact which has been cloned from this contact
-      const latestCopy = await this.contactService.getContactLatestClone(this.contact.companyName, this.name);
+      const latestCopy = this.contactService.getContactLatestClone(this.contact.displayName, this.name);
       if (latestCopy) {
-        cloneName  = latestCopy.companyName + ' (copy)';
+        cloneName  = latestCopy.displayName + ' (copy)';
       }
     }
     this.thisForm = this.fb.group({
       uniqueId: this.fb.group({
-        contactNr: [(this.isNew || this.isClone) ? '' : this.contact.contactNr, [
+        contactNr: [(this.isNew || this.isClone) ? lastContactNr + 1 : this.contact.contactNr, [
           Validators.required,
           // Validators.minLength(1),
           // Validators.maxLength(6),
@@ -196,17 +207,16 @@ export class ContactFormViewComponent {
           // we do not check this by input type="number", because then Length validators would not work
           Validators.pattern('^[0-9]*$')
         ]],
-        name: [this.isNew ? '' : this.isClone ? cloneName : this.contact.companyName, [
+        name: [this.isNew ? '' : this.isClone ? cloneName : this.contact.displayName, [
           Validators.required,
           // Validators.minLength(1),
           Validators.maxLength(120)
         ]]
       },
       {
-        // securityLevel.maint must be >= 1 and serviceLevel.contact >= 1 to create contacts
-        validator:  ContactValidators.contactNrExists(this.contactService,
-          // in case of new contact we get empty contact record as this.contact
-          this.session.serviceLevel.contact, this.session.securityLevel.maint, 0)
+        validator:  [
+          ContactValidators.contactNrExists(this.contactService, this.contact.contactNr)
+        ]
       })
     });
 
@@ -232,22 +242,50 @@ export class ContactFormViewComponent {
           // we do not check this by input type="number", because then Length validators would not work
           Validators.pattern('^[0-9]*$')
         ]],
-        name: [this.contact.companyName, [
+        name: [this.contact.displayName, [
           Validators.required,
           // Validators.minLength(1),
           Validators.maxLength(120)
         ]]
       },
       {
-        // securityLevel.maint must be >= 1 and serviceLevel.contact >= 1 to create contacts
         validator:  [
-          ContactValidators.contactNrExists(this.contactService,
-            this.session.serviceLevel.contact, this.session.securityLevel.maint, this.contact.contactNr)
+          ContactValidators.contactNrExists(this.contactService, this.contact.contactNr)
           ]
       }),
+      contactGroup: this.fb.group({
+        contactSalutation: this.contact.contactSalutation,
+        contactFirstName: this.contact.contactFirstName,
+        contactName: this.contact.contactName,
+        contactEmail: [this.contact.contactEmail, [Validators.email]],
+        contactTel: this.contact.contactTel,
+        contactTelScnd: this.contact.contactTelScnd,
+        contactStreet: this.contact.contactStreet,
+        contactCity: this.contact.contactCity,
+        contactPlz: [this.contact.contactPlz === 0 ? '' : this.contact.contactPlz, [
+          Validators.pattern('^[0-9]*$'),
+          Validators.min(1000),
+          Validators.max(99999)
+          // TODO group Validator, together with country Validators and checking against plz data
+          ]
+        ],
+        contactCountry: [this.contact.contactCountry, [
+          Validators.minLength(2),
+          Validators.maxLength(2)
+          ]
+        ],
+        contactBirthdayString: [this.contact.contactBirthday ? formatDate(this.contact.contactBirthday, 'd.MM.yyyy', this.locale): '', [
+          Validators.pattern('^[0-9.]*$'),
+          CommonValidators.parseDate(false)
+          ]
+        ]
+      }),
       hdrGroup: this.fb.group({
-        longName: this.contact.longName,
+        companyName: this.contact.companyName,
         nameScnd: this.contact.nameScnd,
+        contactFunction: this.contact.contactFunction,
+        companyEmail: [this.contact.companyEmail, [Validators.email]],
+        companyTel: this.contact.companyTel,
         street: this.contact.street,
         city: this.contact.city,
         plz: [this.contact.plz === 0 ? '' : this.contact.plz, [
@@ -263,39 +301,25 @@ export class ContactFormViewComponent {
           ]
         ],
         website: this.contact.website,
+        companyUid: this.contact.companyUid
+      }),
+      ftrGroup: this.fb.group({
         contactType: this.contact.contactType === 1 ? true : false,
         contactColor: [this.contact.contactColor, [
           Validators.pattern('^[0-9]*$'),
           Validators.max(99)
           ]
-        ]
-      }),
-      contactGroup: this.fb.group({
-        contactSalutation: this.contact.contactSalutation,
-        contactFirstName: this.contact.contactFirstName,
-        contactName: this.contact.contactName,
-        contactFunction: this.contact.contactFunction,
-        contactEmail: [this.contact.contactEmail, [Validators.email]],
-        contactEmailScnd: [this.contact.contactEmailScnd, [Validators.email]],
-        contactTel: this.contact.contactTel,
-        contactTelScnd: this.contact.contactTelScnd,
-        contactBirthdayString: [this.contact.contactBirthday ? formatDate(this.contact.contactBirthday, 'd.MM.yyyy', this.locale): '', [
-          Validators.pattern('^[0-9.]*$'),
-          CommonValidators.parseDate(false)
-          ]
-        ]
-      }),
-      ftrGroup: this.fb.group({
-        uid: this.contact.companyUid,
+        ],
         iban: this.contact.iban,
         ibanScnd: this.contact.ibanScnd,
         paymentInfo: this.contact.paymentInfo,
         paymentInfoScnd: this.contact.paymentInfoScnd,
         externalId: this.contact.externalId,
-        note: this.contact.companyNote
+        companyNote: this.contact.companyNote
       })
     });
 
+    // console.log('thisForm valid: ', this.thisForm.valid);
     this.thisForm.statusChanges.subscribe(() => this.updateErrorMessages());
     this.isShowBody = true;
   }
@@ -359,61 +383,65 @@ public async setFtr() {
       case this.isNew || this.isClone:
         this.contact = ContactFactory.empty();
         this.contact.contactNr = Number(this.thisForm.value.uniqueId.contactNr);
-        this.contact.companyName = this.thisForm.value.uniqueId.name;
+        this.contact.displayName = this.thisForm.value.uniqueId.name;
         this.contact.contactColor = ((this.contact.contactNr % 10) * 10 + Math.round(this.contact.contactNr / 10) % 10).toString();
         this.contactStyle = StyleFactory.getBgColorStyle(this.contact.contactColor);
-        this.contact.companyName = this.thisForm.value.uniqueId.name;
-        const lastBlank = this.contact.companyName.trim().lastIndexOf(' ');
-        if (this.session.serviceLevel.contact < 2 && lastBlank > 0) {
-          this.contact.contactFirstName = this.contact.companyName.trim().substring(0, lastBlank).trim();
-          this.contact.contactName = this.contact.companyName.trim().substring(lastBlank).trim();
+        const lastBlank = this.contact.displayName.trim().lastIndexOf(' ');
+        if (lastBlank > 0) {
+          this.contact.contactName = this.contact.displayName.trim().substring(0, lastBlank).trim();
+          this.contact.contactFirstName = this.contact.displayName.trim().substring(lastBlank).trim();
         }
         this.newContact.emit(this.contact);
         this.isMaint = true;
         break;
-      case this.isUpdateUniqueId && this.thisForm.value.uniqueId.contactName !== '':
+      case this.isUpdateUniqueId && this.thisForm.value.uniqueId.name !== '':
         this.contact.contactNr = Number(this.thisForm.value.uniqueId.contactNr);
-        this.contact.companyName = this.thisForm.value.uniqueId.name;
+        this.contact.displayName = this.thisForm.value.uniqueId.name;
         this.updateContact.emit(this.contact);
         break;
-      case this.isUpdateHdr:
+      case this.isUpdateContact:
+        this.contact.contactSalutation = this.thisForm.value.contactGroup.contactSalutation;
+        // we do NOT rebuild displayName from changed name and first name ....
+        this.contact.contactName = this.thisForm.value.contactGroup.contactName;
+        this.contact.contactFirstName = this.thisForm.value.contactGroup.contactFirstName;
+        this.contact.contactEmail = this.thisForm.value.contactGroup.contactEmail;
+        this.contact.contactTel = this.thisForm.value.contactGroup.contactTel;
+        this.contact.contactTelScnd = this.thisForm.value.contactGroup.contactTelScnd;
+        this.contact.contactStreet = this.thisForm.value.contactGroup.contactStreet;
+        this.contact.contactCity = this.thisForm.value.contactGroup.contactCity;
+        this.contact.contactPlz = Number(this.thisForm.value.contactGroup.contactPlz);
+        this.contact.contactCountry = this.thisForm.value.contactGroup.contactCountry;
+        this.contact.contactBirthday = GlobalFunctions.parseDMYtoDate(this.thisForm.value.contactGroup.contactBirthdayString);
+        this.updateContact.emit(this.contact);
+        break;
+        case this.isUpdateHdr:
         // Contact exists on server & Hdr fields are updated => mandant update
-        this.contact.longName = this.thisForm.value.hdrGroup.longName;
+        this.contact.companyName = this.thisForm.value.hdrGroup.companyName;
         this.contact.nameScnd = this.thisForm.value.hdrGroup.nameScnd;
+        this.contact.contactFunction = this.thisForm.value.hdrGroup.contactFunction;
+        this.contact.companyEmail = this.thisForm.value.hdrGroup.companyEmail;
+        this.contact.companyTel = this.thisForm.value.hdrGroup.companyTel;
         this.contact.street = this.thisForm.value.hdrGroup.street;
         this.contact.city = this.thisForm.value.hdrGroup.city;
         this.contact.plz = Number(this.thisForm.value.hdrGroup.plz);
         this.contact.country = this.thisForm.value.hdrGroup.country;
         this.contact.website = this.thisForm.value.hdrGroup.website;
+        this.contact.companyUid = this.thisForm.value.hdrGroup.companyUid;
         // contact in the moment gets always language of the mandant
         this.contact.language = Number(this.session.language);
-        this.contact.contactType = this.thisForm.value.hdrGroup.contactType ? 1 : 0;
-        this.contact.companyUid = this.contact.contactType === 0 ? this.contact.companyUid : '';
-        // if user sets the color empty, we use default ....
-        this.contact.contactColor = this.thisForm.value.hdrGroup.contactColor  === '' ? ((this.contact.contactNr % 10) * 10 + Math.round(this.contact.contactNr / 10) % 10).toString() : this.thisForm.value.hdrGroup.contactColor;
-        this.contactStyle = StyleFactory.getBgColorStyle(this.contact.contactColor);
-        this.updateContact.emit(this.contact);
-        break;
-      case this.isUpdateContact:
-        this.contact.contactSalutation = this.thisForm.value.contactGroup.contactSalutation;
-        this.contact.contactName = this.thisForm.value.contactGroup.contactName;
-        this.contact.contactFirstName = this.thisForm.value.contactGroup.contactFirstName;
-        this.contact.contactFunction = this.thisForm.value.contactGroup.contactFunction;
-        this.contact.contactEmail = this.thisForm.value.contactGroup.contactEmail;
-        this.contact.contactEmailScnd = this.thisForm.value.contactGroup.contactEmailScnd;
-        this.contact.contactTel = this.thisForm.value.contactGroup.contactTel;
-        this.contact.contactTelScnd = this.thisForm.value.contactGroup.contactTelScnd;
-        this.contact.contactBirthday = GlobalFunctions.parseDMYtoDate(this.thisForm.value.contactGroup.contactBirthdayString);
         this.updateContact.emit(this.contact);
         break;
       case this.isUpdateFtr:
-        this.contact.companyUid = this.contact.contactType === 0 ? this.thisForm.value.ftrGroup.uid : '';
+        this.contact.contactType = this.thisForm.value.ftrGroup.contactType ? 1 : 0;
+        // if user sets the color empty, we use default ....
+        this.contact.contactColor = this.thisForm.value.ftrGroup.contactColor  === '' ? ((this.contact.contactNr % 10) * 10 + Math.round(this.contact.contactNr / 10) % 10).toString() : this.thisForm.value.ftrGroup.contactColor;
+        this.contactStyle = StyleFactory.getBgColorStyle(this.contact.contactColor);
         this.contact.iban = this.thisForm.value.ftrGroup.iban;
         this.contact.ibanScnd = this.thisForm.value.ftrGroup.ibanScnd;
         this.contact.paymentInfo = this.thisForm.value.ftrGroup.paymentInfo;
         this.contact.paymentInfoScnd = this.thisForm.value.ftrGroup.paymentInfoScnd;
         this.contact.externalId = this.thisForm.value.ftrGroup.externalId;
-        this.contact.companyNote = this.thisForm.value.ftrGroup.note;
+        this.contact.companyNote = this.thisForm.value.ftrGroup.companyNote;
         this.updateContact.emit(this.contact);
         break;
       default:

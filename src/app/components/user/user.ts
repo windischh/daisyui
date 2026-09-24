@@ -48,7 +48,6 @@ export class UserComponent {
   @Input({required: true}) isCreate!: boolean;
 
   @Output() userSelect = new EventEmitter<number>();
-  @Output() userSetLink = new EventEmitter<number>();
   @Output() userUpdated = new EventEmitter<number>();
   @Output() userClose = new EventEmitter();
 
@@ -142,18 +141,19 @@ constructor(@Inject(LOCALE_ID) public locale: string,
     const users = this.userService.getUsers(this.name);
     const session = this.auth.getSession(this.name);
     if (this.isCreate) {
-      this.users = users.filter(_ => _.type > 0  && _.status < 9 );
+      // we do not show admin user in users list
+      this.users = users.filter(_ => _.type > 0  && _.type < 3 && _.status < 9 );
     } else {
       // isCreate is trigger to see other users - if it is not true, we see only actual user
       this.users = this.user ? [this.user] : [];
     }
-
     for (let user of this.users) {
       for (let authorization of user.authorizations) {
         const provider = this.providerService.getProvider(user.userId, authorization.providerId, this.name);
         if (provider) {
-          authorization['issueProviderName'] = provider.providerName;
-          authorization['issueProviderType'] = provider.type;
+          authorization.providerDataUrl = provider.providerUrl;
+          authorization.providerDocumentsUrl = provider.providerDocumentsUrl;
+          authorization.providerType = provider.type;
         }
       }
     }
@@ -187,9 +187,6 @@ constructor(@Inject(LOCALE_ID) public locale: string,
     this.userSelect.emit(userId);
   }
 
-  public setLinkedUser(userId: number) {
-    this.userSetLink.emit(userId);
-  }
 
   public showUser(userId: number) {
     this.formAction = 'show';
@@ -205,11 +202,6 @@ constructor(@Inject(LOCALE_ID) public locale: string,
     this.isShowForm = true;
   }
 
-  // disable is not possible if user has
-  // - not exported current issues
-  // - not exported current works
-  // - not stored works at issue provider ...
-  // is checked by userService
   public disableUser(userId: number) {
     if (userId > 0) {
       if (this.userService.isUserDeleteable(userId, this.name)) {

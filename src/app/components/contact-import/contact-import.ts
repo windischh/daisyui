@@ -17,6 +17,7 @@ import { AuthenticationService } from '../../_services/authentication.service';
 
 import { PaginatorComponent } from '../paginator/paginator';
 import { ISortElement } from '../../_interfaces/i-sort-element';
+import { CELL, WORK } from '../../_globals/constants';
 
 /**
  * this is a contact card (.vcf) import
@@ -41,62 +42,64 @@ export class ContactImportComponent implements OnInit {
   public name = 'ContactImportComponent';
 
   // refresh signal triggers change detection
-  // signal value   0 - no data loaded   1 - data loaded
+  // signal value   0 - no data loaded   > 1 - data loaded
   public refreshCounterSignal = signal(0);
-  public resetableSignal = signal(0);
+  public resetableSignal = signal(false);
 
   // we need session in html template
   session!: Session;
-
 
   // fileString contails file as string
   fileString!: string;
   fileSize!: number;
 
   // imported contactss from file system (step 1)
-  sourceContacts!: Array<Contact>;
+  sourceContacts: Array<Contact> = [];
   // sorted and checked contacts (step 2)
   checkedContacts!: Array<Contact>;
   // contacts for import (step 3)
   importContacts!: Array<Contact>;
 
+  // first contactNr of imported contacts
+  startContactNr = 1;
+  // imports with name+firstName which already exists will be accepted and will overwrite existing db
+  isOverwriteExisting = true;
 
   // contactss according to import step 1- 3 as base for showContacts
   contacts!: Array<Contact>;
   // shown contacts
   shownContacts: Array<Contact> = [];
-  // first contactNr of imported contacts
-  startContactNr = 1;
 
 
-  custtxt: { [key: string]: string } = {};
+  contacttxt: { [key: string]: string } = {};
 
-  // we got at least 1 valid vcf file
-  validVcfFileSignal = signal(0);
+  // true of we got at least 1 valid vcf file (and at least 1 contact to import ...)
+  validVcfFileSignal = signal(false);
+  // error catched in fetch rquest
   error: any;
+
+  // status of import: 0 - no source contacts 1- - source contacts, unchecked 2- checked source contacts
+  //  3 - ready for import 4 = import finished
+  importReadySignal = signal(0);
 
   encodedUri!: string;
   fileName!: string;
   fileType!: string;
   extendedFileName!: string;
 
-  recordCount!: number;
   errorCount!: number;
-  accepted!: number;
-  rejected!: number;
-  noDuplicates!: number;
-  duplicates!: number;
+  acceptedCount!: number;
+  notAcceptedCount!: number;
+  duplicatesCount!: number;
+  newEntriesCount!: number;
+  overwritesCount!: number;
+  rejectedCount!: number;
   importCount = 0;
 
   isUpdateFileName = false;
   isUpdateFileType = false;
   isUpdateExtendedFileName = false;
   isUploadDirectory = false;
-
-  sourceReadySignal = signal(0);
-  sourceCheckedSignal = signal(0);
-  importReadySignal = signal(0);
-  importFinishedSignal = signal(0);
 
   isShowRemarked = false;
 
@@ -145,7 +148,7 @@ export class ContactImportComponent implements OnInit {
     // default language according to application internal language coding (language enum)
     const language = session?.language ? session.language : GlobalFunctions.getDefaultLanguage(this.locale);
     const contact = ContactFactory.empty(); // just for dbtxt
-    this.custtxt = GlobalFunctions.objText(contact,
+    this.contacttxt = GlobalFunctions.objText(contact,
       'Contact', this.auth.systemTexts, language,  this.name);
   }
 
@@ -155,12 +158,16 @@ export class ContactImportComponent implements OnInit {
     this.selectedPage = 1;
     if (contacts?.length >= 0)  {
       this.contacts = contacts.filter(_ => this.isShowRemarked ? (_.type < 0 || _.status > 0) : true);
-      // without nr if we sort on names ....
-      this.names = this.contacts.map(_ => _.companyName.substring(0, 12));
-      // paginator - set total records - after setting names, total triggers paginator refresh
-      this.total = this.contacts.length;
-      this.limit = this.total > 1000 ? 20 : 10;
-      this.shownContacts = this.contacts.filter((_, ix) => ix >= ((this.selectedPage - 1) * this.limit) && ix < (this.selectedPage * this.limit));
+      if (this.contacts.length > 0) {
+        // without nr if we sort on names ....
+        this.names = this.contacts.map(_ => _.displayName?.substring(0, 12));
+        // paginator - set total records - after setting names, total triggers paginator refresh
+        this.total = this.contacts.length;
+        this.limit = this.total > 1000 ? 20 : 10;
+        this.shownContacts = this.contacts.filter((_, ix) => ix >= ((this.selectedPage - 1) * this.limit) && ix < (this.selectedPage * this.limit));
+      } else {
+        this.shownContacts = [];
+      }
     }
 
   }
@@ -174,21 +181,19 @@ export class ContactImportComponent implements OnInit {
     this.fileName = '*';
     this.fileType = 'vcf';
     this.extendedFileName = '';
-    this.validVcfFileSignal.set(0);
+    this.validVcfFileSignal.set(false);
     this.error = undefined;
     this.isUpdateExtendedFileName = false;
     this.isUpdateFileName = false;
     this.isUpdateFileType = false;
     this.isUploadDirectory = false;
 
-    this.sourceReadySignal.set(0);
-    this.sourceCheckedSignal.set(0);
     this.importReadySignal.set(0);
-    this.importFinishedSignal.set(0);
 
     this.isShowRemarked = false;
 
-    this.resetableSignal.set(0);
+    this.resetableSignal.set(false);
+    this.startContactNr = this.contactService.getMaxContactNr(this.name) + 1;
   }
 
   // we accept more thany one contacts file
@@ -197,7 +202,7 @@ export class ContactImportComponent implements OnInit {
     if (files === undefined || files?.length === 0) {
       // no op
     } else  {
-      this.validVcfFileSignal.set(1);
+      this.validVcfFileSignal.set(true);
       this.fileString = '';
       this.fileSize = 0;
       for (let index = 0; index < files.length; index++) {
@@ -206,11 +211,11 @@ export class ContactImportComponent implements OnInit {
         const fileString = await this.fetch.getReadRequest(files[index])
         .catch((error: any) : any => {
           this.error = error;
-          this.validVcfFileSignal.set(0);
-          this.resetableSignal.set(1);
+          this.validVcfFileSignal.set(false);
+          this.resetableSignal.set(true);
           return null;
         });
-        if (this.validVcfFileSignal() === 1) {
+        if (this.validVcfFileSignal()) {
           try {
             // here we could use an external vcf checker ...
             const isVcfHeader = fileString.toUpperCase().startsWith('BEGIN:VCARD');
@@ -220,10 +225,9 @@ export class ContactImportComponent implements OnInit {
           } catch (error) {
             //Error - vcf file is not okay
             this.error = files[index].name + ': ' + error;
-            this.validVcfFileSignal.set(0);
-            this.resetableSignal.set(1);
+            this.validVcfFileSignal.set(false);
           }
-          if (this.validVcfFileSignal() === 1) {
+          if (this.validVcfFileSignal()) {
             // console.log('fileString: ', fileString);
             this.fileSize += files[index].size;
             this.fileString += fileString;
@@ -231,7 +235,8 @@ export class ContactImportComponent implements OnInit {
         }
 
       }
-      if (this.validVcfFileSignal() === 1) {
+      this.resetableSignal.set(true);
+      if (this.validVcfFileSignal()) {
         // first (or only) and last file name is remembered ...
         this.extendedFileName = files[0].name + (files.length > 1 ? (' - ' + files[files.length - 1 ].name) : '');
       }
@@ -250,7 +255,7 @@ export class ContactImportComponent implements OnInit {
   updateFileName(name: string) {
     this.fileName = name;
     this.isUpdateFileName = false;
-    this.resetableSignal.set(1);
+    this.resetableSignal.set(true);
   }
 
   setUpdateFileType() {
@@ -260,7 +265,7 @@ export class ContactImportComponent implements OnInit {
   updateFileType(type: string) {
     this.fileType = type === '' ? '*' : type;
     this.isUpdateFileType = false;
-    this.resetableSignal.set(1);
+    this.resetableSignal.set(true);
   }
 
   public setUploadDirectory(event: any): void {
@@ -269,85 +274,134 @@ export class ContactImportComponent implements OnInit {
 
   // step 1
   public prepareImport(nr: string) {
+    this.refreshCounterSignal.set(0);
     this.startContactNr = Number(nr);
-    this.validVcfFileSignal.set(0);
-    this.recordCount = 0;
+    let nextContactNr = this.startContactNr;
+    this.sourceContacts = [];
     this.errorCount = 0;
+    this.notAcceptedCount = 0;
+    this.rejectedCount = 0;
     // here we parse data and getcontacts
     const vcfContacts = VcfFunctions.vcfToJson(this.fileString);
-    let contactNr = this.startContactNr;
-    if (vcfContacts && vcfContacts?.length > 0) {
-      this.sourceContacts = [];
+    if (vcfContacts && vcfContacts?.length > 0) {  
       for (const vcfContact of vcfContacts) {
         let contact = ContactFactory.empty();
         contact.message = '';
         if (vcfContact.formattedName && vcfContact.formattedName !== '') {
-          contact.displayName = vcfContact.formattedName;
+          // is used only of name and first name are empty ....
+          contact.displayName = vcfContact.formattedName ?? '';
         } else {
           contact.status += 1;
           contact.message += 'formatted name missing ';
         }
         if (vcfContact.name && vcfContact.name?.value !== '') {
-          contact.contactName = vcfContact.name.elementArray[0];
-          contact.contactFirstName = vcfContact.name.elementArray[1];
-          contact.contactSalutation = vcfContact.name.elementArray[3];
-          contact.nameScnd = vcfContact.name.elementArray[2];
-          contact.companyName = (contact.contactName !== '' ? contact.contactName + ' ' : '') + contact.contactFirstName;
-          if(contact.contactName === '') {
+          contact.contactName = vcfContact.name.elementArray[0] ?? ``;
+          contact.contactFirstName = vcfContact.name.elementArray[1] ?? '';
+          contact.contactSalutation = vcfContact.name.elementArray[3] ?? '';
+          contact.nameScnd = vcfContact.name.elementArray[2] ?? '';
+          const displayName = (contact.contactName !== '' ? contact.contactName + ' ' : '') + contact.contactFirstName;
+          if(displayName === '') {
             contact.status += 1;
             contact.message += 'name missing ';
+          } else {
+            contact.displayName = displayName;
           }
         } else {
           contact.status = 9;
-          contact.message += 'no name entries - rejected ';
+          contact.message += 'no names - rejected ';
         }
-        if (vcfContact.address?.length > 0 && vcfContact.address[0].elementArray?.length > 0) {
-          contact.street = vcfContact.address[0].elementArray[2];
-          contact.city = vcfContact.address[0].elementArray[3];
-          const plz: string = vcfContact.address[0].elementArray[5].toString();
-          contact.plz = Number(plz.startsWith('A-') ? plz.substring(2) : plz);
-          contact.country = vcfContact.address[0].elementArray[6];
-        }
-        if (vcfContact.address?.length > 1) {
+        // we have at least 1 adress ...
+        if (vcfContact.address?.length > 0) {
+          // check TYPE of adress elements if we have a WORK type
+          const workIndex = vcfContact.address.findIndex((_ : any) => _.type.toString().toUpperCase().includes(WORK));
+          for (let index = 0; index < vcfContact.address?.length; index++) {
+            const element = vcfContact.address[index];
+            if (index === workIndex || (index === 1 && workIndex < 0)) {
+              contact.street = element.elementArray[2] ?? '';
+              contact.city = element.elementArray[3] ?? '';
+              const plz: string = element.elementArray[5]?.toString() ?? '';
+              contact.plz = Number(plz.startsWith('A-') ? plz.substring(2) : plz);
+              contact.country = element.elementArray[6] ?? '';
+            } else if ((index === 0) || (index === 1 && workIndex === 0)) {
+              contact.contactStreet = element.elementArray[2] ?? '';
+              contact.contactCity = element.elementArray[3] ?? '';
+              const plz: string = element.elementArray[5]?.toString() ?? ``;
+              contact.contactPlz = Number(plz.startsWith('A-') ? plz.substring(2) : plz);
+              contact.contactCountry = element.elementArray[6] ?? '';
+            }
+          }
+          if (vcfContact.address?.length > 2) {
+            contact.status += 1;
+            contact.message += 'more than 2 address ';
+          }
+        } else {
           contact.status += 1;
-          contact.message += 'more than 1 address records ';
+          contact.message += 'no address ';
         }
+        // we have at least 1 email  ...
         if (vcfContact.email?.length > 0) {
-          contact.contactEmail = vcfContact.email[0].value;
-          if (vcfContact.email?.length > 1) {
-            contact.contactEmailScnd = vcfContact.email[1].value;
-            if (vcfContact.email?.length > 2) {
-              contact.status += 1;
-              contact.message += 'more than 2 email records ';
+          // check TYPE of email  elements if we have a WORK type
+          const workIndex = vcfContact.email.findIndex((_ : any) => _.type.toString().toUpperCase().includes(WORK));
+          for (let index = 0; index < vcfContact.email?.length; index++) {
+            const element = vcfContact.email[index];
+            if (index === workIndex || (index === 1 && workIndex < 0)) {
+             contact.companyEmail = element.value ?? '';
+            } else if ((index === 0) || (index === 1 && workIndex === 0)) {
+             contact.contactEmail = element.value ?? '';
             }
           }
+          if (vcfContact.email?.length > 2) {
+            contact.status += 1;
+            contact.message += 'more than 2 emails ';
+          }
         }
+        // we have at least 1 tel  ...
         if (vcfContact.tel?.length > 0) {
-          contact.contactTel = vcfContact.tel[0].value;
-          if (vcfContact.tel?.length > 1) {
-            contact.contactTelScnd = vcfContact.tel[1].value;
-            if (vcfContact.tel.length > 2) {
-              contact.status += 1;
-              contact.message += 'more than 2 tel records ';
+          // check TYPE of tel elements if we have a WORK type
+          const cellIndex = vcfContact.tel.findIndex((_ : any) => _.type.toString().toUpperCase().includes(CELL));
+          const workIndex = vcfContact.tel.findIndex((_ : any, idx: number) => _.type.toString().toUpperCase().includes(WORK) && idx !== cellIndex);
+          for (let index = 0; index < vcfContact.tel?.length; index++) {
+            const element = vcfContact.tel[index];
+            if (index === cellIndex || (index === 0 && cellIndex < 0)) {
+             contact.contactTel = element.value ?? '';
+            } else if (index === workIndex || (index === 1 && workIndex < 0)) {
+             contact.companyTel = element.value ?? '';
+            } else if ((index < 2 && cellIndex > 0 && workIndex > 0) || index === 2 ) {
+             contact.contactTelScnd = element.value ?? '';
             }
           }
+          if (vcfContact.tel?.length > 3) {
+            contact.status += 1;
+            contact.message += 'more than 3 tel ';
+          }
+        } else {
+          contact.status += 1;
+          contact.message += 'no tel ';
         }
-
-        contact.contactFunction = vcfContact.title;
+        
+        contact.contactFunction = vcfContact.title ?? '';
+        // console.log('birthday', vcfContact.birthday);
+        // contact.contactBirthday = GlobalFunctions.parseYMDtoDate(vcfContact.birthday);
+        // vcfContact.birthday is already converted in Date object
         contact.contactBirthday = vcfContact.birthday;
 
-        contact.longName = vcfContact.organization;
-        contact.website = vcfContact.url;
-        contact.companyUid = vcfContact.uid;
-        contact.companyNote = vcfContact.note;
-        contact.contactNr = contactNr;
-        contact.type = 2;
+        // longname of company is to be set manual ....
+        // contact.longName = vcfContact.organization;
+        contact.companyName = vcfContact.organization ?? '';
+        contact.website = vcfContact.url ?? '';
+        contact.companyUid = vcfContact.uid ?? '';
+        contact.companyNote = vcfContact.note ?? '';
+        // we have no vcf field for contactNr - we build numbers ascending ...
+        contact.contactNr = nextContactNr;
+        nextContactNr++;
+        contact.type = 1;
 
-        // contact fields are excat the imported values !!!
+        // these contact fields are excat the imported values !!!
         contact.name = vcfContact.name;
         contact.formattedName = vcfContact.formattedName;
         contact.nickName = vcfContact.nickName;
         contact.email = vcfContact.email;
+        contact.tel = vcfContact.tel;
         contact.address = vcfContact.address;
         contact.organization = vcfContact.organization;
         contact.title = vcfContact.title;
@@ -365,7 +419,6 @@ export class ContactImportComponent implements OnInit {
           contact.message += 'undefined vcard key: ' + contact.undefinedKey.map(_  => _.key).toString();
         }
         this.sourceContacts.push(contact);
-        contactNr++
       }
       if (this.sourceContacts.length > 0) {
         /* test the paginator
@@ -378,66 +431,82 @@ export class ContactImportComponent implements OnInit {
         // sort according to options
         this.sourceContacts.sort(GlobalFunctions.sortFields(sortFields));
         this.prepareShownContacts(this.sourceContacts);
-
-        this.recordCount = this.sourceContacts.length;
         this.errorCount = this.sourceContacts.filter(_ => _.status >= 9).length;
-        this.rejected = 0;
-        this.validVcfFileSignal.set(1);
       }
     }
-    this.sourceReadySignal.set(1);
-    this.resetableSignal.set(1);
+    if (this.sourceContacts?.length > 0) {
+      this.importReadySignal.set(1);
+      this.resetableSignal.set(true);
+    } else {
+      this.validVcfFileSignal.set(false);
+    }
+    this.refreshCounterSignal.set( this.refreshCounterSignal() + 1);
+
   }
 
   public toggleRemarked(event: any): void  {
     this.isShowRemarked = event.target.checked;
-    this.prepareShownContacts(this.importReadySignal() === 1 ? this.importContacts : this.sourceCheckedSignal() === 1 ? this.checkedContacts : this.sourceContacts);
+    this.prepareShownContacts(this.importReadySignal() === 3 ? this.importContacts : this.importReadySignal() === 2 ? this.checkedContacts : this.sourceContacts);
   }
 
   // step 1 => step 2
   // we check source contacts if no overlap in source and build checked contacts
   // this.sourceContacts MUST be sorted on formatted name  ASC
   public setImportSourceChecked() {
+    this.notAcceptedCount = 0;
+    this.acceptedCount = 0;
+    this.duplicatesCount = 0;
     // we build contacts which must be not overlapping
     this.checkedContacts = [];
     const validContacts = this.sourceContacts.filter (_ => _.status < 9);
-    for (let contact of validContacts) {
-      contact.message = '';
-      if (this.sourceContacts.filter(cust => cust.contactName === contact.contactName
-        && cust.contactFirstName === contact.contactFirstName
-        && cust.contactNr !== contact.contactNr
+    for (const validContact of validContacts) {
+      // contact.message = '';
+      let contact = GlobalFunctions.clone(validContact);
+      if (this.sourceContacts.filter(cont => cont.contactName === contact.contactName
+        && cont.contactFirstName === contact.contactFirstName
+        && cont.contactNr !== contact.contactNr
         ).length > 0) {
         contact.message += 'duplicate name and duplicate first name ';
         contact.status += 9;
-      } else  if (this.sourceContacts.filter(cust => cust.contactName === contact.contactName
-        && cust.contactFirstName !== contact.contactFirstName
-        && cust.contactNr !== contact.contactNr
+        this.duplicatesCount++;
+      } else  if (this.sourceContacts.filter(cont => cont.contactName === contact.contactName
+        && cont.contactFirstName !== contact.contactFirstName
+        && cont.contactNr !== contact.contactNr
         ).length > 0) {
         contact.message += 'duplicate name ';
         contact.status += 1;
+        this.duplicatesCount++;
       }
       // rejected contacts are taken to show them, rejected at start of nesxt step cause of status ...
       this.checkedContacts.push(GlobalFunctions.clone(contact));
     }
-    this.accepted = this.checkedContacts.filter(_ => _.status > 0 && _.status < 9).length;
-    this.rejected = this.checkedContacts.filter(_ => _.status >= 9).length;
+    this.acceptedCount = this.checkedContacts.filter(_ => _.status > 0 && _.status < 9).length;
+    this.notAcceptedCount = this.checkedContacts.filter(_ => _.status >= 9).length;
     this.prepareShownContacts(this.checkedContacts);
-    this.sourceCheckedSignal.set(1);
+    this.importReadySignal.set(2);
   }
 
   // we go back from step 2 => step 1
   public resetImportSource() {
+    this.notAcceptedCount = 0;
+    this.acceptedCount = 0;
+    this.duplicatesCount = 0;
     this.prepareShownContacts(this.sourceContacts);
-    this.sourceCheckedSignal.set(0);
-    this.rejected = 0;
+    this.importReadySignal.set(1);
+  }
+
+   public toggleOverwrites(event: any): void  {
+    this.isOverwriteExisting = event.target.checked;
+    this.prepareShownContacts(this.importReadySignal() === 3 ? this.importContacts : this.importReadySignal() === 2 ? this.checkedContacts : this.sourceContacts);
   }
 
   // step 2 => step 3
-  // we check ipport (which is already source checked) on duplicates with existing contacts
-  public setImportDuplicates() {
+  // we check ipport (which is already source checked) on overwrites of existing contacts
+  public setImportOverwrites() {
     this.importContacts = [];
-    this.noDuplicates = 0;
-    this.duplicates = 0;
+    this.newEntriesCount = 0;
+    this.overwritesCount = 0;
+    this.rejectedCount = 0;
     const contacts = this.contactService.getContacts(this.name);
     // only contacts which are in a correct stream are treated
     const validContacts = this.checkedContacts.filter (_ => _.status < 9);
@@ -446,27 +515,33 @@ export class ContactImportComponent implements OnInit {
       importContact.status = 0;
       importContact.message = '';
       if (contacts.filter(legacyContact => legacyContact.status < 9
-        && (legacyContact.companyName.startsWith(importContact.name)
-        || (legacyContact.contactFirstName.startsWith(importContact.contactName) && legacyContact.contactFirstName.startsWith(importContact.contactFirstName)))).length > 0) {
-        importContact.message = 'duplicate contact exists in db ';
-        importContact.status += 9;
-        this.duplicates++;
+        && (legacyContact.displayName.startsWith(importContact.name)
+        || (legacyContact.contactName.startsWith(importContact.contactName) && legacyContact.contactFirstName.startsWith(importContact.contactFirstName)))).length > 0) {
+        importContact.message = 'contact exists in db ';
+        if (this.isOverwriteExisting) {
+          importContact.status = 1;
+          this.overwritesCount++;
+        } else {
+          importContact.status = 9;
+          this.rejectedCount++;
+        }
+        importContact.status = this.isOverwriteExisting ? 1 : 9;
       } else {
-        this.noDuplicates++;
+        this.newEntriesCount++;
       }
-      // rejected contacts are taken to show them, rejected at start of nesxt step cause of status ...
       this.importContacts.push(importContact);
     }
     this.prepareShownContacts(this.importContacts);
-    this.importReadySignal.set(1);
+    this.importReadySignal.set(3);
   }
 
    // we go back from step 3 => step 2
-  public resetImportDuplicates() {
+  public resetImportOverwrites() {
+    this.newEntriesCount = 0;
+    this.overwritesCount = 0;
+    this.rejectedCount = 0;
     this.prepareShownContacts(this.checkedContacts);
-    this.noDuplicates = 0;
-    this.duplicates = 0;
-    this.importReadySignal.set(0);
+    this.importReadySignal.set(2);
   }
 
   // import data from step 3
@@ -474,25 +549,39 @@ export class ContactImportComponent implements OnInit {
     let operation = 'import contacts';
     let message = '';
    
-    this.resetImportDuplicates();
-    this.setImportDuplicates();
+    this.resetImportOverwrites();
+    this.setImportOverwrites();
     // now we store  contacts
     const isUpdate = true;
 
     let importContacts = this.importContacts.filter(_ =>  _.status < 9);
     for (let contact of importContacts) {
-      // TODO there is no import id in the moment
-      // contact.importId  = contact.contactId;
       contact.contactId = 0;
       contact.status = 0;
+      if (this.startContactNr === 0) {
+        contact.contactNr = 0;
+      }
+      // contact color isset in service
+      // contact.contactColor = ((contact.contactNr % 10) * 10 + Math.round(contact.contactNr / 10) % 10).toString();
     }
 
     this.importCount = importContacts.length;
     if (this.importCount > 0) {
       // here we put imported contactss to legacy contactss
-      const isCreated = this.contactService.createContacts(importContacts,  this.name);
-      if (isCreated) {
-        message = this.auth.txt['records_imported'] + ': ' + this.importCount;
+      // in the moment we have no contactNr in vcf import 
+      const createdContacts = this.contactService.createContacts(importContacts, false, this.startContactNr, this.name);
+      // console.log('createdContacts: ', createdContacts);
+      if (createdContacts && createdContacts.length > 0 ) {
+        message = this.auth.txt['records_imported'] + ': ' + createdContacts.length;
+        if (createdContacts.length === importContacts.length) {
+          for (let index = 0; index < importContacts.length; index++) {
+            importContacts[index].contactNr = createdContacts[index].nr;
+            importContacts[index].style = createdContacts[index].style;
+            importContacts[index].message = createdContacts[index].message;
+          }
+        } else {
+          message = 'system error - difference in length of imported records';
+        }
       } else {
         message = 'error - no confirmation for imported contacts';
         this.importCount = 0;
@@ -508,8 +597,8 @@ export class ContactImportComponent implements OnInit {
       this.logger.info(this.auth.getSession(this.name), this.name, `${operation} successfull: ${message}`);
       this.message.show(this.name + `: ${operation} successfull: ${message}`);
     }
-
-    this.importFinishedSignal.set(1);
+    this.prepareShownContacts(this.importContacts);
+    this.importReadySignal.set(4);
   }
 
   // paginator - set params for actual page

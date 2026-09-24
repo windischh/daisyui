@@ -1,47 +1,46 @@
 
-<br>
 @if (session && txt && contacttxt) {
-  <div class="ui grid container">
-    <div class="row">
-      <div class="five wide column">
+  <div class="container mx-auto p-4">
+    <div class="flex items-start gap-4 ">
+      <div class="flex-1 min-w-32">
         <!-- we do not reset filter when leaving the filter entry ...
         (blur)="setFilter(filterTerm.value); filterTerm.value='' " -->
-        <div class="ui tiny action input">
+        <div class="join w-full">
           <input (keyup.enter)="setFilter(filterTerm.value)" #filterTerm
-            type="text" placeholder="{{txt['filter'] }}... " data-testid="contact-filter">
+            type="text" placeholder="{{txt['filter'] }}... " data-testid="contact-filter" class="input input-sm join-item">
             @if (contactFilter === '') {
-              <button class="ui small green icon button"
-                type="button" (click)="setFilter(filterTerm.value)"
-                [attr.data-tooltip]="txt['set']  + ' ' + txt['filter'] " data-position="bottom center"
+              <button class="btn btn-sm btn-success text-primary-content join-item" type="button" (click)="setFilter(filterTerm.value)"
+                [attr.data-tip]="txt['set']  + ' ' + txt['filter'] " data-position="bottom"
                 data-testid="contact-filter-enter">
-                <i class="check icon"></i>
+                <i class="fas fa-check"></i>
               </button>
             }
             @if (contactFilter !== '') {
-              <button class="ui small red icon button"
-                type="button" (click)="filterTerm.value=''; setFilter(filterTerm.value)"
-                [attr.data-tooltip]="txt['reset']  + ' ' + txt['filter'] " data-position="bottom center">
-                <i class="times icon"></i>
+              <button class="btn btn-sm btn-error text-primary-content join-item" type="button" (click)="filterTerm.value=''; setFilter(filterTerm.value)"
+                [attr.data-tip]="txt['reset']  + ' ' + txt['filter'] " data-position="bottom">
+                <i class="fas fa-times"></i>
               </button>
             }
         </div>
-        <div class="ui checkbox">
-          <input type="checkbox" [checked]="isShowDisabled" (change)="setShowDisabled($event)">
-          <label>{{txt['show_disabled'] }}</label>
+        <div class="form-control mt-2">
+          <label class="label cursor-pointer">
+            <input type="checkbox" [checked]="isShowDisabled" (change)="setShowDisabled($event)" class="checkbox checkbox-sm">
+            <span class="label-text text-sm ml-2">{{txt['show_disabled'] }}</span>
+          </label>
         </div>
       </div>
-      <div class="seven wide column">
-        <h2 class="ui center aligned header">  {{session.serviceLevel.contact < 2 ? txt['contact']  : txt['contacts'] }} {{txt['list'] }}  </h2>
+      <div class="flex-1 ml-16 mr-16 text-center">
+        <h1 class="text-2xl md:text-3xl font-bold">  {{session.serviceLevel.contact < 2 ? txt['contact']  : txt['contacts'] }} {{txt['list'] }}  </h1>
       </div>
-      <div class="four wide column">
+      <div class="flex-1 min-w-32">
         <!-- integrated search component - selected contact is shown in -detail component -->
-        <dsy-contact-search (contactSelected)="showSearched($event)" class="column">
+        <dsy-contact-search (contactSelected)="showSearched($event)" class="w-full">
         </dsy-contact-search>
         <!-- no return because list is leading view ....
-        <button class="left floated ui tiny circular red icon button"
-          [attr.data-tooltip]="txt['close']" data-position="bottom center" data-inverted=""
+        <button class="btn btn-circle btn-sm btn-error"
+          [attr.data-tip]="txt['close']" data-position="bottom"
           (click)="return()">
-          <i class="times icon"></i>
+          <i class="fas fa-times"></i>
         </button>
         -->
       </div>
@@ -49,8 +48,9 @@
   </div>
 }
 <!-- if we await more than 100 records or use complex query we should activate data load dimmer
-<div *ngIf="!contacts" class="ui active inverted dimmer">
-  <div class="ui large text loader">{{txt['loading_data'] }}</div>
+<div *ngIf="!contacts" class="flex items-center justify-center p-4">
+  <div class="loading loading-spinner loading-lg"></div>
+  <span class="ml-4">{{txt['loading_data'] }}</span>
 </div>
 -->
 <!-- paginator selectedPage as ngModel (external selected page necessary for 2 parallel paginators...)-->
@@ -64,136 +64,161 @@
 }
 
 @if (contactsReadySignal() === 1 && session && txt && contacttxt) {
-  <table class="ui celled structured table">
-    <thead>
-      <tr>
-        <!-- // TODO <th class="four/five/... wide" -->
-        <th>{{contacttxt['contactNr']}}
-          @if (sortDirection === 1) {
-            <i class="link disabled angle up icon"></i>
-          }
-          @if (sortDirection !== 1) {
-            <i class="link angle up icon" (click)="sort(1)"></i>
-          }
-          @if (sortDirection === 2) {
-            <i class="link disabled angle down icon"></i>
-          }
-          @if (sortDirection !== 2) {
-            <i class="link angle down icon" (click)="sort(2)"></i>
-          }
-        </th>
-        <th>{{contacttxt['name']}}
-          @if (sortDirection === 3) {
-            <i class="link disabled angle up icon"></i>
-          }
-          @if (sortDirection !== 3) {
-            <i class="link angle up icon" (click)="sort(3)"></i>
-          }
-          @if (sortDirection === 4) {
-            <i class="link disabled angle down icon"></i>
-          }
-          @if (sortDirection !== 4) {
-            <i class="link angle down icon" (click)="sort(4)"></i>
-          }
-        </th>
-        <th>{{contacttxt['displayName']}}
-          @if (sortDirection === 5) {
-            <i class="link disabled angle up icon"></i>
-          }
-          @if (sortDirection !== 5) {
-            <i class="link angle up icon" (click)="sort(5)"></i>
-          }
-          @if (sortDirection === 6) {
-            <i class="link disabled angle down icon"></i>
-          }
-          @if (sortDirection !== 6) {
-            <i class="link angle down icon" (click)="sort(6)"></i>
-          }
-        </th>
-        <th>{{session.serviceLevel.contact < 2 ? txt['company'] : contacttxt['longName']}}</th>
-        <th>{{contacttxt['street']}}</th>
-        <th>{{contacttxt['plz']}}</th>
-        <th>{{contacttxt['city']}}</th>
-        <th class="two wide center aligned" colspan="2">{{txt['show'] + (isMaint ? ' / ' + txt['update'] : '')}}</th>
-        <th class="one wide center aligned">
-          @if (isCreate && !isShowDisabled) {
-            <button class="right floated ui tiny circular yellow icon button"
-              [attr.data-tooltip]="txt['insert']" data-inverted=""
-              (click)="insert()">
-              <i class="large plus icon"></i>
-            </button>
-          }
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (contact of shownContacts; track contact.contactId; let i = $index) {
+  <div class="overflow-x-auto p-4">
+    <table class="table table-zebra w-full">
+      <thead>
         <tr>
-          <td class="left aligned" >
-            <div class="ui label" [ngStyle]="contact.style">
-              {{contact.contactNr}}
-            </div>
-          </td>
-          <td class="left aligned" >
-            {{contact.contactName|slice:0:8}}
-          </td>
-          <td class="left aligned" >
-            {{contact.displayName|slice:0:30}}
-          </td>
-          <td class="left aligned">
-            {{contact.longName|slice:0:40}}
-          </td>
-          <td class="left aligned">
-            {{contact.street|slice:0:30}}
-          </td>
-          <td class="left aligned">
-            {{contact.plz === 0 ? '' : contact.plz}}
-          </td>
-          <td class="left aligned">
-            {{contact.city|slice:0:20}}
-          </td>
-          <td >
-            @if (!isShowDisabled) {
-              <button class="ui tiny circular teal icon button"
-                [attr.data-tooltip]="txt['show']"  data-inverted=""
-                (click)="show(i)">
-                <i class="arrow right icon"></i>
+          <th>{{contacttxt['contactNr']}}
+            @if (sortDirection === 1) {
+              <i class="fas fa-angle-up text-primary"></i>
+            }
+            @if (sortDirection !== 1) {
+              <i class="fas fa-angle-up cursor-pointer" (click)="sort(1)"></i>
+            }
+            @if (sortDirection === 2) {
+              <i class="fas fa-angle-down text-primary"></i>
+            }
+            @if (sortDirection !== 2) {
+              <i class="fas fa-angle-down cursor-pointer" (click)="sort(2)"></i>
+            }
+          </th>
+          <th>{{contacttxt['displayName']}}
+            @if (sortDirection === 3) {
+              <i class="fas fa-angle-up text-primary"></i>
+            }
+            @if (sortDirection !== 3) {
+              <i class="fas fa-angle-up cursor-pointer" (click)="sort(3)"></i>
+            }
+            @if (sortDirection === 4) {
+              <i class="fas fa-angle-down text-primary"></i>
+            }
+            @if (sortDirection !== 4) {
+              <i class="fas fa-angle-down cursor-pointer" (click)="sort(4)"></i>
+            }
+          </th>
+          <th>{{contacttxt['companyName']}}
+            @if (sortDirection === 5) {
+              <i class="fas fa-angle-up text-primary"></i>
+            }
+            @if (sortDirection !== 5) {
+              <i class="fas fa-angle-up cursor-pointer" (click)="sort(5)"></i>
+            }
+            @if (sortDirection === 6) {
+              <i class="fas fa-angle-down text-primary"></i>
+            }
+            @if (sortDirection !== 6) {
+              <i class="fas fa-angle-down cursor-pointer" (click)="sort(6)"></i>
+            }
+          </th>
+          <th>{{contacttxt['street']}}</th>
+          <th>{{contacttxt['plz']}}</th>
+          <th>{{contacttxt['city']}}</th>
+          <th class="text-center" colspan="2">{{txt['show'] + (isMaint ? ' / ' + txt['update'] : '')}}</th>
+          <th class="text-center">
+            @if (isCreate && !isShowDisabled) {
+              <button class="btn btn-sm btn-circle btn-warning text-primary-content"
+                [attr.data-tip]="txt['insert']" data-position="bottom"
+                (click)="insert()">
+                <i class="fas fa-plus"></i>
               </button>
             }
-          </td>
-          <td >
-            @if (isMaint && !isShowDisabled) {
-              <button class="ui tiny circular yellow icon button"
-                [attr.data-tooltip]="txt['update']" data-inverted=""
-                (click)="maint(i)">
-                <i class="arrow down icon"></i>
-              </button>
-            }
-          </td>
-          <td >
-            @if (isMaint && !isShowDisabled  && contact.contactId > 0) {
-              <button class="ui tiny circular gray icon button"
-                [attr.data-tooltip]="txt['disable']"
-                (click)="disable(i)">
-                <i class="trash alternate icon"></i>
-              </button>
-            }
-            @if (isMaint && isShowDisabled  && contact.contactId > 0 ) {
-              <button class="ui tiny circular green icon button"
-                [attr.data-tooltip]="txt['enable']"
-                (click)="enable(i)">
-                <i class="trash alternate icon"></i>
-              </button>
-            }
-          </td>
+          </th>
         </tr>
-      }
-    </tbody>
-  </table>
-  @if (contacts && contacts.length === 0) {
-    <br>
-    {{txt['no_records_to_show']}}
-  }
+      </thead>
+      <tbody>
+        @for (contact of shownContacts; track contact.contactId; let i = $index) {
+          <tr>
+            <td class="whitespace-nowrap">
+              <span class="badge" [ngStyle]="contact.style">
+                {{contact.contactNr}}
+              </span>
+            </td>
+            <td class="whitespace-nowrap">
+              {{contact.displayName|slice:0:30}}
+            </td>
+            <td class="whitespace-nowrap">
+              @if (!(contact.street !== '' || contact.plz > 0 || contact.city !== '')) {
+                {{contact.companyName|slice:0:40}}
+              }
+            </td>
+            <td class="whitespace-nowrap">
+              {{contact.contactStreet|slice:0:30}}
+            </td>
+            <td class="whitespace-nowrap">
+              {{contact.contactPlz === 0 ? '' : contact.contactPlz}}
+            </td>
+            <td class="whitespace-nowrap">
+              {{contact.contactCity|slice:0:20}}
+            </td>
+            <td class="text-center">
+              @if (!isShowDisabled) {
+                <button class="btn btn-sm btn-circle btn-info text-primary-content"
+                  [attr.data-tip]="txt['show']" data-position="bottom"
+                  (click)="show(i)">
+                  <i class="fas fa-arrow-right"></i>
+                </button>
+              }
+            </td>
+            <td class="text-center">
+              @if (isMaint && !isShowDisabled) {
+                <button class="btn btn-sm btn-circle btn-warning text-primary-content"
+                  [attr.data-tip]="txt['update']" data-position="bottom"
+                  (click)="maint(i)">
+                  <i class="fas fa-arrow-down"></i>
+                </button>
+              }
+            </td>
+            <td class="text-center">
+              @if (isMaint && !isShowDisabled  && contact.contactId > 0) {
+                <button class="btn btn-sm btn-circle btn-outline"
+                  [attr.data-tip]="txt['disable']" data-position="bottom"
+                  (click)="disable(i)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              }
+              @if (isMaint && isShowDisabled  && contact.contactId > 0 ) {
+                <button class="btn btn-sm btn-circle btn-success text-primary-content"
+                  [attr.data-tip]="txt['enable']" data-position="bottom"
+                  (click)="enable(i)">
+                  <i class="fas fa-trash-restore"></i>
+                </button>
+              }
+            </td>
+          </tr>
+          @if (contact.street !== '' || contact.plz > 0 || contact.city !== '') {
+            <tr>
+              <td>
+              </td>
+              <td>
+              </td>
+              <td class="whitespace-nowrap">
+                {{contact.companyName|slice:0:40}}
+              </td>
+              <td class="whitespace-nowrap">
+                {{contact.street|slice:0:30}}
+              </td>
+              <td class="whitespace-nowrap">
+                {{contact.plz === 0 ? '' : contact.plz}}
+              </td>
+              <td class="whitespace-nowrap">
+                {{contact.city|slice:0:20}}
+              </td>
+              <td>
+              </td>
+              <td>
+              </td>
+              <td>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+    @if (contacts && contacts.length === 0) {
+      <br>
+      {{txt['no_records_to_show']}}
+    }
+  </div>
 }
 <br>
 <!-- paginator selectedPage as ngModel -->

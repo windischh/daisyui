@@ -30,12 +30,12 @@
                 }
                 <div class="tooltip" [attr.data-tip]="it.description && it.description !== '' ? it.description : ''">
                   @if (it.hasSubMenu && it.subMenu) {
-                    <details class="dropdown" id="dropdownItem" [attr.open]="it.subMenu.isVisible ? true : undefined">
+                    <details class="dropdown" id="dropdownItem" [attr.open]="it.subMenu.isVisible() ? true : undefined">
                       <summary  id="dropdownSpan" class="btn" data-testid="submenu"
                       (click)="showMenu(i, $event)">
                         {{txt[it.text] && txt[it.text] !== '' ? txt[it.text] : it.text &&  it.text !== '' ? it.text : txt[it.subMenu.text] && txt[it.subMenu.text] !== '' ? txt[it.subMenu.text] : it.subMenu.text}}
                          <i class="fas fa-angle-down"
-                          [class.rotate-180]="it.subMenu.isVisible"></i>
+                          [class.rotate-180]="it.subMenu.isVisible()"></i>
                       </summary>
                       <!-- dsy -menu complete is our implemntation for a self containing (sub) menu
                       below an item
