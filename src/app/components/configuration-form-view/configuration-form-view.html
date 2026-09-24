@@ -19,7 +19,7 @@
         </h2>
       </div>
       <div class="right floated one wide column">
-        <button type="button" class="left floated ui tiny circular red icon button"
+        <button type="button" class="left floated ui tiny circular red icon button tooltip tooltip-bottom tooltip-primary"
           [attr.data-tooltip]="txt['close']" data-position="bottom center" data-inverted=""
           (click)="return()">
           <i class="times icon"></i>
@@ -41,7 +41,7 @@
           <div class="ui input">
             <input (keyup.enter)="setStyle(styleString.value); styleString.value=''"
               #styleString type="text" [placeholder]="txt['enter_a_number']">
-            <button class="ui small round yellow icon button"
+            <button class="ui small round yellow icon button tooltip tooltip-bottom tooltip-accent"
               type="button" (click)="setStyle(styleString.value)"
               [attr.data-tooltip]="txt['create_new_style']" data-position="bottom center">
               <i class="plus icon"></i>
@@ -88,7 +88,7 @@
             }
             <th class="two wide">
               @if (isMaint && !isStyle) {
-                <button type="button" class="ui tiny circular teal icon button"
+                <button type="button" class="ui tiny circular teal icon button tooltip tooltip-bottom tooltip-accent"
                   [disabled]="isUpdateOption"  [attr.data-tooltip]="txt['sort']" data-position="bottom center"
                   (click)="setSort()">
                   <i class="sort icon"></i>
@@ -138,7 +138,7 @@
                 }
                 <td>
                   @if (isMaint) {
-                    <button type="button" class="ui tiny circular yellow icon button"
+                    <button type="button" class="ui tiny circular yellow icon button tooltip tooltip-bottom tooltip-accent"
                       [disabled]="isUpdateOption"
                       [attr.data-tooltip]="txt['update']" data-position="bottom center"
                       (click)="setOption(i)">
@@ -149,7 +149,7 @@
                   a whole style (style header, o.optionGroup === 0) can be deleted if no option for this style
                   -->
                   @if (o.isDeleteable && o.optionId > 0) {
-                    <button type="button" class="ui tiny circular gray icon button"
+                    <button type="button" class="ui tiny circular gray icon button tooltip tooltip-bottom tooltip-accent"
                       [disabled]="isUpdateOption"
                       (click)="setDelete(i)" [attr.data-tooltip]="txt['delete']" data-position="bottom center">
                       <i class="trash alternate icon"></i>
@@ -289,12 +289,12 @@
                 </div>
                 </td>
                 <td>
-                  <button class="ui tiny circular green icon button"
+                  <button class="ui tiny circular green icon button tooltip tooltip-top tooltip-accent"
                     [disabled]="!thisForm.valid"
                     type="submit" [attr.data-tooltip]="txt['submit']" data-position="top center">
                     <i class="check icon"></i>
                   </button>
-                  <button type="button" class="ui tiny circular red icon button"
+                  <button type="button" class="ui tiny circular red icon button tooltip tooltip-top tooltip-accent"
                     [attr.data-tooltip]="txt['cancel']" data-position="top center"
                     (click)="cancelUpdates()">
                     <i class="times icon"></i>
@@ -319,7 +319,7 @@
             <td>
               <!-- we restrict adding options for admin users only, except it are style options and style options name record exists ...  -->
               @if ((isNew || isMaint) && ((isStyle && shownOptions && shownOptions.length > 0) || !isStyle)) {
-                <button type="button" class="ui tiny circular yellow icon button"
+                <button type="button" class="ui tiny circular yellow icon button tooltip tooltip-bottom tooltip-primary"
                   [disabled]="isUpdateOption"
                   (click)="addOption()" [attr.data-tooltip]="txt['insert']" data-inverted="" data-position="bottom center">
                   <i class="large plus icon"></i>

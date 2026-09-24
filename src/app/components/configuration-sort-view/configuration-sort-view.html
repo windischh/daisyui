@@ -35,13 +35,13 @@
             <th class="four wide">{{optiontxt['optionStringValue']}}</th>
             <th class="one wide">{{optiontxt['type']}}</th>
             <th class="four wide" colspan="2">
-              <button class="ui tiny circular green icon button"
+              <button class="ui tiny circular green icon button tooltip tooltip-top tooltip-accent"
                 [attr.data-tooltip]="txt['submit']" data-position="top center"
                 (click)="setUpdates()"
                 [disabled]="!isNewSorted">
                 <i class="check icon"></i>
               </button>
-              <button class="ui tiny circular red icon button"
+              <button class="ui tiny circular red icon button tooltip tooltip-top tooltip-accent"
                 [attr.data-tooltip]="txt['cancel']" data-position="top center"
                 (click)="cancelUpdates()">
                 <i class="times icon"></i>
@@ -56,7 +56,7 @@
               <td>
                 <div class="center aligned">
                   @if (i > 0) {
-                    <button class="ui tiny circular teal icon button"
+                    <button class="ui tiny circular teal icon button tooltip tooltip-bottom tooltip-accent"
                       [attr.data-tooltip]="txt['position_lower']" data-position="bottom center"
                       (click)="lowerOption(i)" >
                       <i class="arrow up icon"></i>
@@ -77,7 +77,7 @@
               <td>{{o.typeText}}</td>
               <td>
                 @if ((i < areaOptions.length - 1)) {
-                  <button class="ui tiny circular teal icon button"
+                  <button class="ui tiny circular teal icon button tooltip tooltip-bottom tooltip-accent"
                     [attr.data-tooltip]="txt['position_raise']" data-position="bottom center"
                     (click)="raiseOption(i)">
                     <i class="arrow down icon"></i>

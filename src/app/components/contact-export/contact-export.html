@@ -8,7 +8,7 @@
     </div>
     @if (resetSignal() === 1) {
       <div class="column">
-        <button class="ui tiny circular red icon button"
+        <button class="ui tiny circular red icon button tooltip tooltip-accent"
           [attr.data-tooltip]="auth.txt['reset']"
           (click)="resetExport()">
           <i class="times icon"></i>
@@ -29,14 +29,14 @@
       <div class="two wide column">
         <!-- open update area for extended file name ....  -->
         @if (readySignal() === 0 && !isUpdateExtendedFileName) {
-          <button class="ui tiny circular yellow icon button"
+          <button class="ui tiny circular yellow icon button tooltip tooltip-accent"
             [attr.data-tooltip]="auth.txt['fileName'] + ' ' + auth.txt['update']"
             (click)="setUpdateExtendedFileName()">
             <i class="arrow down icon"></i>
           </button>
         }
         @if (isUpdateExtendedFileName) {
-          <button class="ui tiny circular green icon button"
+          <button class="ui tiny circular green icon button tooltip tooltip-accent"
             [attr.data-tooltip]="auth.txt['fileName'] + ' ' + auth.txt['update']"
             [disabled]="isUpdateFileName || isUpdateFileType"
             (click)="setUpdateExtendedFileName()">
@@ -56,7 +56,7 @@
       </div>
       <div class="two wide column">
         @if (readySignal() === 0 && !isUpdateExtendedFileName) {
-          <button class="ui tiny circular green icon button"
+          <button class="ui tiny circular green icon button tooltip tooltip-accent"
             [attr.data-tooltip]="auth.txt['prepare_export']"
             (click)="prepareExport()">
             <i class="arrow right icon"></i>
@@ -64,7 +64,7 @@
         }
         <!-- design the a link as button is best possibility to use href ....  -->
         @if (readySignal() === 1 && finishedSignal() === 0 && recordCount > 0) {
-          <a class="ui tiny green button"
+          <a class="ui tiny green button tooltip tooltip-accent"
             [href]="encodedUri|safeResource"
             [attr.download]="extendedFileName"
             [attr.data-tooltip]="auth.txt['do_export']"
@@ -103,7 +103,7 @@
             <div class="ui fluid input">
               <input (keyup.enter)="updateFileName(name.value)"
                 #name [value]="fileName" type="text" [placeholder]="auth.txt['fileName'] + '  ...'">
-              <button class="ui tiny green icon button"
+              <button class="ui tiny green icon button tooltip tooltip-top tooltip-accent"
                 [attr.data-tooltip]="auth.txt['submit']" data-position="top center"
                 (click)="updateFileName(name.value)">
                 <i class="check icon"></i>
@@ -114,7 +114,7 @@
       </div>
       @if (readySignal() === 0 && !isUpdateFileName && !isUpdateFileType) {
         <div class="column">
-          <button class="ui tiny circular yellow icon button"
+          <button class="ui tiny circular yellow icon button tooltip tooltip-accent"
             [attr.data-tooltip]="auth.txt['fileName'] + ' ' + auth.txt['update']"
             (click)="setUpdateFileName()">
             <i class="arrow left icon"></i>
@@ -151,7 +151,7 @@
             <div class="ui fluid input">
               <input (keyup.enter)="updateFileType(type.value)"
                 #type [value]="fileType" type="text" [placeholder]="auth.txt['fileType'] + '  ...'">
-              <button class="ui tiny green icon button"
+              <button class="ui tiny green icon button tooltip tooltip-top tooltip-accent"
                 [attr.data-tooltip]="auth.txt['submit']" data-position="top center"
                 (click)="updateFileType(type.value)">
                 <i class="check icon"></i>
@@ -162,7 +162,7 @@
       </div>
       @if (readySignal() === 0 && !isUpdateFileName && !isUpdateFileType) {
         <div class="column">
-          <button class="ui tiny circular yellow icon button"
+          <button class="ui tiny circular yellow icon button tooltip tooltip-accent"
             [attr.data-tooltip]="auth.txt['fileType'] + ' ' + auth.txt['update']"
             (click)="setUpdateFileType()">
             <i class="arrow left icon"></i>

@@ -38,7 +38,7 @@
           @if (userName && userName !== '') {
             <a class=""
               (click)="userList()" data-testid="header-userlist">
-              <span
+              <span class="tooltip tooltip-left tooltip-primary"
                 [attr.data-tooltip]="auth.txt['show_user']" data-position="bottom left" data-inverted="">
                 {{auth.txt['user']}}: {{userName}}
               </span>

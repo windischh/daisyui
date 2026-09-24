@@ -15,13 +15,13 @@
         <!-- no line for client provider if we store work at server -->
         @if ((authorization.providerType === IssueProviderType.client && user.type === 1) || (authorization.providerId > 1)) {
           <tr>
-            <td class="left aligned" [attr.data-tooltip]="authorization.providerDataUrl">{{authorization['issueProviderName']}}</td>
+            <td class="left aligned tooltip tooltip-accent" [attr.data-tooltip]="authorization.providerDataUrl">{{authorization['issueProviderName']}}</td>
             <td class="column">{{authorization.login}}</td>
             <td class="left aligned">{{authorization.lastLoginSuccessful|date:'dd.MM.yyyy HH:mm'}}</td>
             <td class="left aligned">{{authorization.lastLoginRejected|date:'dd.MM.yyyy HH:mm'}}</td>
             <td>
               @if (authorization['issueProviderType'] !== issueProviderType.client && authorization.authorization !== '') {
-                <button class="ui tiny circular gray icon button"
+                <button class="ui tiny circular gray icon button tooltip tooltip-accent"
                   [attr.data-tooltip]="txt['reset'] + ' ' + txt['login']"
                   (click)="reset(i)">
                   <i class="trash alternate icon"></i>

@@ -23,7 +23,7 @@
       </div>
       <div class="right floated one wide column">
         @if (this.contact.type !== 4) {
-          <button class="left floated ui tiny circular red icon button"
+          <button class="left floated ui tiny circular red icon button tooltip tooltip-bottom tooltip-primary"
             [attr.data-tooltip]="txt['close']" data-position="bottom center" data-inverted=""
             (click)="return()">
             <i class="times icon"></i>
@@ -51,7 +51,7 @@
           <div class="four wide column">
             <!-- update of uniqueId -->
             @if (isMaint && !(isNew || isClone)) {
-              <button class="ui tiny circular yellow icon button"
+              <button class="ui tiny circular yellow icon button tooltip tooltip-accent"
                 type="button" [attr.data-tooltip]="txt['update']"
                 [disabled]="isUpdate()"
                 (click)="setUniqueId()">
@@ -60,7 +60,7 @@
             }
             <!-- clone of uniqueId        -->
             @if (this.contact.type !== 4 && isMaint && !(isNew || isClone)) {
-              <button class="ui tiny circular yellow icon button"
+              <button class="ui tiny circular yellow icon button tooltip tooltip-primary"
                 type="button" [attr.data-tooltip]="txt['clone']" data-inverted=""
                 [disabled]="isUpdate()"
                 (click)="setUniqueIdClone()">
@@ -144,13 +144,13 @@
           <!-- BUTTONs uniqueId updating                -->
           @if (isUpdateUniqueId || isNew || isClone) {
             <div class="four wide column">
-              <button class="ui tiny circular green icon button"
+              <button class="ui tiny circular green icon button tooltip tooltip-top tooltip-accent"
                 [attr.data-tooltip]="txt['submit']" data-position="top center"
                 [disabled]="!thisForm.valid"
                 type="submit">
                 <i class="check icon"></i>
               </button>
-              <button class="ui tiny circular red icon button"
+              <button class="ui tiny circular red icon button tooltip tooltip-top tooltip-accent"
                 type="button" [attr.data-tooltip]="txt['cancel']" data-position="top center"
                 [disabled]="isNew || isClone"
                 (click)="cancelUpdates()">
@@ -172,7 +172,7 @@
             <h4>
               <span>{{txt['company']}}</span>
               @if (isMaint && !(isNew || isClone)) {
-                <button class="right floated ui tiny circular yellow icon button"
+                <button class="right floated ui tiny circular yellow icon button tooltip tooltip-accent"
                   type="button" [attr.data-tooltip]="txt['update']"
                   [disabled]="isUpdate()"
                   (click)="setHdr()">
@@ -247,13 +247,13 @@
           </div>
           <!-- BUTTONs contact header updating                -->
           <div class="four wide column">
-            <button class="ui tiny circular green icon button"
+            <button class="ui tiny circular green icon button tooltip tooltip-top tooltip-accent"
               [attr.data-tooltip]="txt['submit']" data-position="top center"
               [disabled]="!thisForm.valid"
               type="submit">
               <i class="check icon"></i>
             </button>
-            <button class="ui tiny circular red icon button"
+            <button class="ui tiny circular red icon button tooltip tooltip-top tooltip-accent"
               [attr.data-tooltip]="txt['cancel']" data-position="top center"
               type="button" (click)="cancelUpdates()">
               <i class="times icon"></i>
@@ -321,7 +321,7 @@
                 <span>{{txt['contact_data'] }}</span>
                 <!-- button for update of contact   -->
                 @if (isMaint) {
-                  <button class="right floated ui tiny circular yellow icon button"
+                  <button class="right floated ui tiny circular yellow icon button tooltip tooltip-accent"
                     type="button" [attr.data-tooltip]="txt['update'] "
                     [disabled]="isUpdate()"
                     (click)="setContact()">
@@ -395,13 +395,13 @@
             </div>
             <!-- BUTTONs contact updating                -->
             <div class="four wide column">
-              <button class="ui tiny circular green icon button"
+              <button class="ui tiny circular green icon button tooltip tooltip-top tooltip-accent"
                 [attr.data-tooltip]="txt['submit'] " data-position="top center"
                 [disabled]="!thisForm.valid"
                 type="submit">
                 <i class="check icon"></i>
               </button>
-              <button class="ui tiny circular red icon button"
+              <button class="ui tiny circular red icon button tooltip tooltip-top tooltip-accent"
                 type="button" [attr.data-tooltip]="txt['cancel'] " data-position="top center"
                 (click)="cancelUpdates()">
                 <i class="times icon"></i>
@@ -466,7 +466,7 @@
               <span>{{txt['ftr_data'] }}</span>
               <!-- button for update of footer   -->
               @if (isMaint) {
-                <button class="right floated ui tiny circular yellow icon button"
+                <button class="right floated ui tiny circular yellow icon button tooltip tooltip-accent"
                   type="button" [attr.data-tooltip]="txt['update'] "
                   [disabled]="isUpdate()"
                   (click)="setFtr()">
@@ -519,13 +519,13 @@
           </div>
           <!-- BUTTONs contact footer updating                -->
           <div class="four wide column">
-            <button class="ui tiny circular green icon button"
+            <button class="ui tiny circular green icon button tooltip tooltip-top tooltip-accent"
               [attr.data-tooltip]="txt['submit'] " data-position="top center"
               [disabled]="!thisForm.valid"
               type="submit">
               <i class="check icon"></i>
             </button>
-            <button class="ui tiny circular red icon button"
+            <button class="ui tiny circular red icon button tooltip tooltip-top tooltip-accent"
               type="button" [attr.data-tooltip]="txt['cancel'] " data-position="top center"
               (click)="cancelUpdates()">
               <i class="times icon"></i>

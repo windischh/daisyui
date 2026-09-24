@@ -18,7 +18,7 @@
           }
         </select>
         <!-- no return because list is leading view ....
-        <button class="left floated ui tiny circular red icon button"
+        <button class="left floated ui tiny circular red icon button tooltip tooltip-bottom tooltip-primary"
           [attr.data-tooltip]="txt['close']" data-position="bottom center" data-inverted=""
           (click)="return()">
           <i class="times icon"></i>
@@ -38,7 +38,7 @@
         <th class="center aligned" colspan="2">{{txt['update']}}</th>
         <th>
           @if (isCreate) {
-            <button class="right floated ui tiny circular yellow icon button"
+            <button class="right floated ui tiny circular yellow icon button tooltip tooltip-primary"
               [attr.data-tooltip]="txt['insert']" data-inverted=""
               (click)="insert()">
               <i class="large plus icon"></i>
@@ -60,7 +60,7 @@
             {{area.styles|number:'1.0-0'}}
           </td>
           <td>
-            <button class="ui tiny circular teal icon button"
+            <button class="ui tiny circular teal icon button tooltip tooltip-primary"
               [attr.data-tooltip]="txt['show']" data-inverted=""
               (click)="show(i)">
               <i class="arrow right icon"></i>
@@ -68,7 +68,7 @@
           </td>
           <td>
             @if (isMaint) {
-              <button class="ui tiny circular yellow icon button"
+              <button class="ui tiny circular yellow icon button tooltip tooltip-primary"
                 [attr.data-tooltip]="txt['update']" data-inverted=""
                 (click)="maint(i)">
                 <i class="arrow down icon"></i>

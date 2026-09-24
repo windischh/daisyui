@@ -13,7 +13,7 @@
         </div>
       </div>
       <div class="one wide column">     <!-- date picker -->
-        <button type="button" class="ui small icon button" (click)="dp.toggleCalendar()"
+        <button type="button" class="ui small icon button tooltip tooltip-bottom tooltip-accent" (click)="dp.toggleCalendar()"
           [attr.data-tooltip]="auth.txt['select'] + ' ' + auth.txt['date']" data-position="bottom center">
           <i class="calendar alternate outline icon"></i>
         </button>
@@ -31,7 +31,7 @@
           <input  (keyup.enter)="setMandantFilter(mandantFilterTerm.value)"  #mandantFilterTerm  type="text"
             placeholder="{{auth.txt['filter']}} {{auth.txt['mandant']}}.... ">
           @if (mandantFilter !== '') {
-            <button class="ui mini red icon button"
+            <button class="ui mini red icon button tooltip tooltip-bottom tooltip-accent"
               type="button" (click)="mandantFilterTerm.value=''; setMandantFilter(mandantFilterTerm.value)"
               [attr.data-tooltip]="auth.txt['reset'] + ' ' + auth.txt['filter']" data-position="bottom center">
               <i class="times icon"></i>
@@ -44,7 +44,7 @@
           <input  (keyup.enter)="setUserFilter(userFilterTerm.value)"  #userFilterTerm  type="text"
             placeholder="{{auth.txt['filter']}} {{auth.txt['user']}}.... ">
           @if (userFilter !== '') {
-            <button class="ui mini red icon button"
+            <button class="ui mini red icon button tooltip tooltip-bottom tooltip-accent"
               type="button" (click)="userFilterTerm.value=''; setUserFilter(userFilterTerm.value)"
               [attr.data-tooltip]="auth.txt['reset'] + ' ' + auth.txt['filter']" data-position="bottom center">
               <i class="times icon"></i>
@@ -74,7 +74,7 @@
         @for (publishedLog of publishedLogs; track publishedLog) {
           <!--  each log which is defined in this environment - except webApi log - can be cleared .... -->
           @if (publishedLog !== 'webapi') {
-            <button class="ui tiny circular gray icon button"
+            <button class="ui tiny circular gray icon button tooltip tooltip-accent"
               [attr.data-tooltip]="auth.txt['clear_log'] + ': ' + publishedLog"
               (click)="clearLog(publishedLog)">
               <i class="trash alternate icon"></i>

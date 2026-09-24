@@ -10,7 +10,7 @@
           <input (keyup.enter)="setFilter(filterTerm.value)" #filterTerm
             type="text" placeholder="{{txt['filter'] }}... " data-testid="contact-filter">
             @if (contactFilter === '') {
-              <button class="ui small green icon button"
+              <button class="ui small green icon button tooltip tooltip-bottom tooltip-accent"
                 type="button" (click)="setFilter(filterTerm.value)"
                 [attr.data-tooltip]="txt['set']  + ' ' + txt['filter'] " data-position="bottom center"
                 data-testid="contact-filter-enter">
@@ -18,7 +18,7 @@
               </button>
             }
             @if (contactFilter !== '') {
-              <button class="ui small red icon button"
+              <button class="ui small red icon button tooltip tooltip-bottom tooltip-accent"
                 type="button" (click)="filterTerm.value=''; setFilter(filterTerm.value)"
                 [attr.data-tooltip]="txt['reset']  + ' ' + txt['filter'] " data-position="bottom center">
                 <i class="times icon"></i>
@@ -38,7 +38,7 @@
         <dsy-contact-search (contactSelected)="showSearched($event)" class="column">
         </dsy-contact-search>
         <!-- no return because list is leading view ....
-        <button class="left floated ui tiny circular red icon button"
+        <button class="left floated ui tiny circular red icon button tooltip tooltip-bottom tooltip-primary"
           [attr.data-tooltip]="txt['close']" data-position="bottom center" data-inverted=""
           (click)="return()">
           <i class="times icon"></i>
@@ -117,7 +117,7 @@
         <th class="two wide center aligned" colspan="2">{{txt['show'] + (isMaint ? ' / ' + txt['update'] : '')}}</th>
         <th class="one wide center aligned">
           @if (isCreate && !isShowDisabled) {
-            <button class="right floated ui tiny circular yellow icon button"
+            <button class="right floated ui tiny circular yellow icon button tooltip tooltip-primary"
               [attr.data-tooltip]="txt['insert']" data-inverted=""
               (click)="insert()">
               <i class="large plus icon"></i>
@@ -154,7 +154,7 @@
           </td>
           <td >
             @if (!isShowDisabled) {
-              <button class="ui tiny circular teal icon button"
+              <button class="ui tiny circular teal icon button tooltip tooltip-primary"
                 [attr.data-tooltip]="txt['show']"  data-inverted=""
                 (click)="show(i)">
                 <i class="arrow right icon"></i>
@@ -163,7 +163,7 @@
           </td>
           <td >
             @if (isMaint && !isShowDisabled) {
-              <button class="ui tiny circular yellow icon button"
+              <button class="ui tiny circular yellow icon button tooltip tooltip-primary"
                 [attr.data-tooltip]="txt['update']" data-inverted=""
                 (click)="maint(i)">
                 <i class="arrow down icon"></i>
@@ -172,14 +172,14 @@
           </td>
           <td >
             @if (isMaint && !isShowDisabled  && contact.contactId > 0) {
-              <button class="ui tiny circular gray icon button"
+              <button class="ui tiny circular gray icon button tooltip tooltip-accent"
                 [attr.data-tooltip]="txt['disable']"
                 (click)="disable(i)">
                 <i class="trash alternate icon"></i>
               </button>
             }
             @if (isMaint && isShowDisabled  && contact.contactId > 0 ) {
-              <button class="ui tiny circular green icon button"
+              <button class="ui tiny circular green icon button tooltip tooltip-accent"
                 [attr.data-tooltip]="txt['enable']"
                 (click)="enable(i)">
                 <i class="trash alternate icon"></i>

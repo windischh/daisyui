@@ -9,7 +9,7 @@
       @else {
         @if (it.isHeader && it.text) {
           <li class="menu-title text-lg">
-            <span class="tooltip" [attr.data-tip]="txt[it.description] && txt[it.description] !== '' ? txt[it.description] : ''">
+            <span class="tooltip tooltip-accent" [attr.data-tip]="txt[it.description] && txt[it.description] !== '' ? txt[it.description] : ''">
               {{txt[it.text] && txt[it.text] !== '' ? txt[it.text] : it.text}}
             </span>
           </li>
@@ -28,7 +28,7 @@
                   <i class="mr-2" id="itemIcon" [ngClass]="it.iconClassLeft"
                   (click)="it.hasSubMenu ? showMenu(i, $event) : link(it.link)"></i>
                 }
-                <div class="tooltip" [attr.data-tip]="it.description && it.description !== '' ? it.description : ''">
+                <div class="tooltip tooltip-accent" [attr.data-tip]="it.description && it.description !== '' ? it.description : ''">
                   @if (it.hasSubMenu && it.subMenu) {
                     <details class="dropdown" id="dropdownItem" [attr.open]="it.subMenu.isVisible ? true : undefined">
                       <summary  id="dropdownSpan" class="btn" data-testid="submenu"

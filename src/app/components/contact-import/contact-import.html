@@ -11,7 +11,7 @@
       </div>
       @if (resetableSignal() === 1) {
         <div class="column">
-          <button class="ui tiny circular red icon button"
+          <button class="ui tiny circular red icon button tooltip tooltip-accent"
             [attr.data-tooltip]="auth.txt['reset']"
             (click)="resetImport()">
             <i class="times icon"></i>
@@ -25,7 +25,7 @@
       <div class="two wide column">
         <!-- open update area for  file name ....  -->
         @if (sourceReadySignal() === 0 && !isUpdateFileType) {
-          <button class="ui tiny circular yellow icon button"
+          <button class="ui tiny circular yellow icon button tooltip tooltip-accent"
             [attr.data-tooltip]="auth.txt['fileType'] + ' ' + auth.txt['update']"
             (click)="setUpdateFileType()">
             <i class="arrow down icon"></i>
@@ -51,48 +51,48 @@
       <div class="six wide column">
         @if (validVcfFileSignal() === 1 && sourceReadySignal() === 0 && !isUpdateFileType) {
           <div class="ui small labeled input">
-            <div class="ui label" [attr.data-tooltip]="auth.txt['start_with']">
+            <div class="ui label tooltip tooltip-accent" [attr.data-tooltip]="auth.txt['start_with']">
               {{custtxt['contactNr']}}
             </div>
             <input  (keyup.enter)="prepareImport(startCustNr.value)"
               #startCustNr [value]="startContactNr" type="text">
           </div>
-          <button class="ui tiny circular green icon button"
+          <button class="ui tiny circular green icon button tooltip tooltip-accent"
             [attr.data-tooltip]="auth.txt['prepare_import']"
             (click)="prepareImport(startCustNr.value)">
             <i class="arrow right icon"></i>
           </button>
         }
         @if (sourceReadySignal() === 1 && sourceCheckedSignal() === 0 && recordCount > 0) {
-          <button class="ui tiny circular green icon button"
+          <button class="ui tiny circular green icon button tooltip tooltip-accent"
             [attr.data-tooltip]="auth.txt['check_source']"
             (click)="setImportSourceChecked()">
             <i class="arrow right icon"></i>
           </button>
         }
         @if (sourceCheckedSignal() === 1 && importReadySignal() === 0) {
-          <button class="ui tiny circular yellow icon button"
+          <button class="ui tiny circular yellow icon button tooltip tooltip-accent"
             [attr.data-tooltip]="auth.txt['go_back']"
             (click)="resetImportSource()">
             <i class="arrow left icon"></i>
           </button>
         }
         @if (sourceCheckedSignal() === 1 && importReadySignal() === 0) {
-          <button class="ui tiny circular green icon button"
+          <button class="ui tiny circular green icon button tooltip tooltip-accent"
             [attr.data-tooltip]="auth.txt['check_import']"
             (click)="setImportDuplicates()">
             <i class="arrow right icon"></i>
           </button>
         }
         @if (importReadySignal() === 1 && importFinishedSignal() === 0) {
-          <button class="ui tiny circular yellow icon button"
+          <button class="ui tiny circular yellow icon button tooltip tooltip-accent"
             [attr.data-tooltip]="auth.txt['go_back']"
             (click)="resetImportDuplicates()">
             <i class="arrow left icon"></i>
           </button>
         }
         @if (importReadySignal() === 1 && importFinishedSignal() === 0 && recordCount > 0) {
-          <button class="ui tiny green button"
+          <button class="ui tiny green button tooltip tooltip-accent"
             [attr.data-tooltip]="auth.txt['do_import']"
             (click)="setImportFinished()">
             IMPORT
@@ -149,7 +149,7 @@
             <div class="ui fluid input">
               <input (keyup.enter)="updateFileType(type.value)"
                 #type [value]="fileType" type="text" [placeholder]="auth.txt['fileType'] + '  ...'">
-              <button class="ui tiny green icon button"
+              <button class="ui tiny green icon button tooltip tooltip-top tooltip-accent"
                 [attr.data-tooltip]="auth.txt['submit']" data-position="top center"
                 (click)="updateFileType(type.value)">
                 <i class="check icon"></i>
