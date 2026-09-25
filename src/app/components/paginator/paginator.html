@@ -3,26 +3,26 @@
   <div class="flex justify-center items-center p-4">
     <div class="join">
       @if (numberOfPages > 1 && selectedPage > 1) {
-        <button class="join-item btn btn-outline btn-primary" (click)="goBack()" [attr.data-tip]="getPageTooltip(selectedPage-1)" data-position="getTooltipPosition()">
+        <button class="join-item btn btn-outline btn-primary tooltip tooltip-accent" (click)="goBack()" [attr.data-tip]="getPageTooltip(selectedPage-1)" [ngClass]="isTooltipBelow ? 'tooltip-bottom' : 'tooltip-top'">
           <i class="fas fa-angle-left"></i>
         </button>
       }
-      <button class="join-item btn" (click)="selectPage(1)" [ngClass]="{ 'btn-active': selectedPage==1 }"
+      <button class="join-item btn tooltip tooltip-accent" (click)="selectPage(1)" [ngClass]="{ 'btn-active': selectedPage==1, 'tooltip-bottom': isTooltipBelow, 'tooltip-top': !isTooltipBelow }"
       [attr.data-tip]="getPageTooltip(1)">{{1}}</button>
       @if (numberOfPages > 10 && selectedPage > 5) {
         <button class="join-item btn btn-outline" (click)="goBack10()">...</button>
       }
       @for (page of pages; track $index) {
-        <button class="join-item btn" (click)="selectPage(page)" [ngClass]="{ 'btn-active': selectedPage==page }"
+        <button class="join-item btn tooltip tooltip-accent" (click)="selectPage(page)" [ngClass]="{ 'btn-active': selectedPage==page, 'tooltip-bottom': isTooltipBelow, 'tooltip-top': !isTooltipBelow }"
         [attr.data-tip]="getPageTooltip(page)">{{page}}</button>
       }
       @if (numberOfPages > 10 && selectedPage < numberOfPages-5) {
         <button class="join-item btn btn-outline" (click)="goForward10()">...</button>
       }
-      <button class="join-item btn" (click)="selectPage(numberOfPages)" [ngClass]="{ 'btn-active': selectedPage==numberOfPages }"
+      <button class="join-item btn tooltip tooltip-accent" (click)="selectPage(numberOfPages)" [ngClass]="{ 'btn-active': selectedPage==numberOfPages, 'tooltip-bottom': isTooltipBelow, 'tooltip-top': !isTooltipBelow }"
       [attr.data-tip]="getPageTooltip(numberOfPages)">{{numberOfPages}}</button>
       @if (numberOfPages > 1 && selectedPage < numberOfPages) {
-        <button class="join-item btn btn-outline btn-primary" (click)="goForward()" [attr.data-tip]="getPageTooltip(selectedPage+1)">
+        <button class="join-item btn btn-outline btn-primary tooltip tooltip-accent" (click)="goForward()" [attr.data-tip]="getPageTooltip(selectedPage+1)" [ngClass]="isTooltipBelow ? 'tooltip-bottom' : 'tooltip-top'">
           <i class="fas fa-angle-right"></i>
         </button>
       }

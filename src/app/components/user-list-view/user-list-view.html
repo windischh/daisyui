@@ -56,14 +56,14 @@
             <td class="text-center">
               @if (user['isShowAuthorizations']) {
                 <button class="btn btn-circle btn-sm btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
-                  [attr.data-tip]="txt['hide_authorizations']" data-position="bottom"
+                  [attr.data-tip]="txt['hide_authorizations']"
                   (click)="showAuthorizations(i)">
                   <i class="fas fa-arrow-up"></i>
                 </button>
               }
               @if (!user['isShowAuthorizations']) {
                 <button class="btn btn-circle btn-sm btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
-                  [attr.data-tip]="txt['show_authorizations']" data-position="bottom"
+                  [attr.data-tip]="txt['show_authorizations']"
                   (click)="showAuthorizations(i)">
                   <i class="fas fa-arrow-down"></i>
                 </button>
@@ -88,7 +88,7 @@
             <td class="text-center">
               @if (isMaint && user.userId !== userId) {
                 <button class="btn btn-circle btn-sm btn-outline tooltip tooltip-bottom tooltip-accent"
-                  [attr.data-tip]="txt['disable']" data-position="bottom"
+                  [attr.data-tip]="txt['disable']"
                   (click)="disable(i)">
                   <i class="fas fa-trash"></i>
                 </button>

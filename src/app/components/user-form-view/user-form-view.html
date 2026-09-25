@@ -15,7 +15,7 @@
     </div>
     <div class="flex-1 flex justify-end">
        @if (user?.userName !== '') {
-        <button class="btn btn-outline btn-info tooltip tooltip-bottom tooltip-accent"
+        <button class="btn btn-outline btn-info tooltip tooltip-bottom tooltip-primary"
           [attr.data-tip]="txt['level_up']" data-testid="user-form-return"
           (click)="return()">
           <i class="fas fa-arrow-up mr-2"></i>return
@@ -47,7 +47,7 @@
         <div class="w-1/4">
           <!-- update of uniqueId -->
           @if (!(isNew || isClone)) {
-            <button class="btn btn-circle btn-sm btn-warning text-base-100"
+            <button class="btn btn-circle btn-sm btn-warning text-base-100 tooltip tooltip-primary"
               type="button" [attr.data-tip]="txt['update']"
               [disabled]="isUpdate()"
               (click)="setUniqueId()">
@@ -55,8 +55,8 @@
             </button>
           }
           <!-- clone of uniqueId
-          <button class="btn btn-circle btn-sm btn-warning" *ngIf="!(isNew || isClone)"
-            [attr.data-tip]="txt['clone']" data-position="bottom"
+          <button class="btn btn-circle btn-sm btn-warning tooltip tooltip-bottom tooltip-primary" *ngIf="!(isNew || isClone)"
+            [attr.data-tip]="txt['clone']"
             [disabled]="isUpdate()"
             (click)="setUniqueIdClone()">
             <i class="fas fa-arrow-right"></i>
@@ -109,14 +109,14 @@
         <!-- BUTTONs uniqueId updating                -->
         @if (isUpdateUniqueId || isNew || isClone) {
           <div class="w-1/4 flex gap-2">
-            <button class="btn btn-circle btn-sm btn-success text-primary-content"
-              [attr.data-tip]="txt['submit']" data-position="top"
+            <button class="btn btn-circle btn-sm btn-success text-primary-content tooltip tooltip-top tooltip-accent"
+              [attr.data-tip]="txt['submit']"
               [disabled]="!thisForm.valid"
               type="submit">
               <i class="fas fa-check"></i>
             </button>
-            <button class="btn btn-circle btn-sm btn-error text-primary-content"
-              type="button" [attr.data-tip]="txt['cancel']" data-position="top"
+            <button class="btn btn-circle btn-sm btn-error text-primary-content tooltip tooltip-top tooltip-accent"
+              type="button" [attr.data-tip]="txt['cancel']"
               [disabled]="isNew"
               (click)="cancelUpdates()">
               <i class="fas fa-times"></i>
@@ -132,7 +132,7 @@
     @if (isMaint && user?.userName !== '') {
       <div class="flex gap-4 mb-4">
         <div class="w-1/6">
-          <button class="btn btn-circle btn-sm btn-warning text-primary-content"
+          <button class="btn btn-circle btn-sm btn-warning text-primary-content tooltip tooltip-primary"
             type="button" [attr.data-tip]="txt['update']"
             [disabled]="isUpdate()"
             (click)="setHeader()">
@@ -173,16 +173,16 @@
         <!-- BUTTONs user header updating                -->
         <div class="w-1/4 flex gap-2">
           @if (isUpdateHdr) {
-            <button class="btn btn-circle btn-sm btn-success text-primary-content"
-              [attr.data-tip]="txt['submit']" data-position="top"
+            <button class="btn btn-circle btn-sm btn-success text-primary-content tooltip tooltip-top tooltip-accent"
+              [attr.data-tip]="txt['submit']"
               [disabled]="!thisForm.valid"
               type="submit">
               <i class="fas fa-check"></i>
             </button>
           }
           @if (isUpdateHdr) {
-            <button class="btn btn-circle btn-sm btn-error text-primary-content"
-              type="button" [attr.data-tip]="txt['cancel']" data-position="top"
+            <button class="btn btn-circle btn-sm btn-error text-primary-content tooltip tooltip-top tooltip-accent"
+              type="button" [attr.data-tip]="txt['cancel']"
               (click)="cancelUpdates()">
               <i class="fas fa-times"></i>
             </button>
@@ -197,7 +197,7 @@
     @if (isMaint && user?.userName !== '') {
       <div class="flex gap-4 mb-4">
         <div class="w-1/6">
-          <button class="btn btn-circle btn-sm btn-warning text-primary-content"
+          <button class="btn btn-circle btn-sm btn-warning text-primary-content tooltip tooltip-primary"
             type="button" [attr.data-tip]="txt['update']"
             [disabled]="isUpdate()"
             (click)="setFooter()">
@@ -235,16 +235,16 @@
         <!-- BUTTONs  issue footer  updating                -->
         <div class="w-1/4 flex gap-2">
           @if (isUpdateFtr) {
-            <button class="btn btn-circle btn-sm btn-success text-primary-content"
-              [attr.data-tip]="txt['submit']" data-position="top"
+            <button class="btn btn-circle btn-sm btn-success text-primary-content tooltip tooltip-top tooltip-accent"
+              [attr.data-tip]="txt['submit']"
               [disabled]="!thisForm.valid"
               type="submit">
               <i class="fas fa-check"></i>
             </button>
           }
           @if (isUpdateFtr) {
-            <button class="btn btn-circle btn-sm btn-error text-primary-content"
-              type="button" [attr.data-tip]="txt['cancel']" data-position="top"
+            <button class="btn btn-circle btn-sm btn-error text-primary-content tooltip tooltip-top tooltip-accent"
+              type="button" [attr.data-tip]="txt['cancel']"
               (click)="cancelUpdates()">
               <i class="fas fa-times"></i>
             </button>

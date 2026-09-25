@@ -12,8 +12,8 @@
         </select>
       </div>
       <div class="w-1/12">
-        <button type="button" class="btn btn-outline btn-primary" (click)="dp.toggleCalendar()"
-          [attr.data-tip]="auth.txt['select'] + ' ' + auth.txt['date']" data-position="bottom">
+        <button type="button" class="btn btn-outline btn-primary tooltip tooltip-bottom tooltip-accent" (click)="dp.toggleCalendar()"
+          [attr.data-tip]="auth.txt['select'] + ' ' + auth.txt['date']">
           <i class="fas fa-calendar-alt"></i>
         </button>
         <!-- with type="hidden" display of date input is deactivated - workDayDisplay is shown! -->
@@ -63,9 +63,9 @@
           <input  (keyup.enter)="setUserFilter(userFilterTerm.value)"  #userFilterTerm  type="text"
             placeholder="{{auth.txt['filter']}} {{auth.txt['user']}}.... " class="input join-item w-full">
           @if (userFilter !== '') {
-            <button class="btn btn-error join-item"
+            <button class="btn btn-error join-item tooltip tooltip-bottom tooltip-accent"
               type="button" (click)="userFilterTerm.value=''; setUserFilter(userFilterTerm.value)"
-              [attr.data-tip]="auth.txt['reset'] + ' ' + auth.txt['filter']" data-position="bottom">
+              [attr.data-tip]="auth.txt['reset'] + ' ' + auth.txt['filter']">
               <i class="fas fa-times"></i>
             </button>
           }
@@ -104,8 +104,8 @@
               {{levels}}
             </th>
             <th>
-              <button class="btn btn-circle btn-sm btn-outline"
-                [attr.data-tip]="auth.txt['clear_log'] + ': ' + logPublisher" data-position="bottom"
+              <button class="btn btn-circle btn-sm btn-outline tooltip tooltip-bottom tooltip-accent"
+                [attr.data-tip]="auth.txt['clear_log'] + ': ' + logPublisher"
                 (click)="clearLog(logPublisher)">
                 <i class="fas fa-trash"></i>
               </button>
