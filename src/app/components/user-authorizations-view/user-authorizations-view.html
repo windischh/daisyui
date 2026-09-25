@@ -24,8 +24,8 @@
               <td>{{authorization.lastLoginRejected|date:'dd.MM.yyyy HH:mm'}}</td>
               <td class="text-center">
                 @if (authorization.providerType !== providerType.client && authorization.authorization !== '') {
-                  <button class="btn btn-circle btn-sm btn-neutral"
-                    [attr.data-tip]="txt['reset']" data-position="bottom"
+                  <button class="btn btn-circle btn-sm btn-neutral tooltip tooltip-bottom tooltip-accent"
+                    [attr.data-tip]="txt['reset']"
                     (click)="reset(i)">
                     <i class="fas fa-trash"></i>
                   </button>

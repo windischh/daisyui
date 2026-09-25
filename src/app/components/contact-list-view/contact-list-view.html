@@ -9,15 +9,15 @@
           <input (keyup.enter)="setFilter(filterTerm.value)" #filterTerm
             type="text" placeholder="{{txt['filter'] }}... " data-testid="contact-filter" class="input input-sm join-item">
             @if (contactFilter === '') {
-              <button class="btn btn-sm btn-success text-primary-content join-item" type="button" (click)="setFilter(filterTerm.value)"
-                [attr.data-tip]="txt['set']  + ' ' + txt['filter'] " data-position="bottom"
+              <button class="btn btn-sm btn-success text-primary-content join-item tooltip tooltip-bottom tooltip-accent" type="button" (click)="setFilter(filterTerm.value)"
+                [attr.data-tip]="txt['set']  + ' ' + txt['filter'] "
                 data-testid="contact-filter-enter">
                 <i class="fas fa-check"></i>
               </button>
             }
             @if (contactFilter !== '') {
-              <button class="btn btn-sm btn-error text-primary-content join-item" type="button" (click)="filterTerm.value=''; setFilter(filterTerm.value)"
-                [attr.data-tip]="txt['reset']  + ' ' + txt['filter'] " data-position="bottom">
+              <button class="btn btn-sm btn-error text-primary-content join-item tooltip tooltip-bottom tooltip-accent" type="button" (click)="filterTerm.value=''; setFilter(filterTerm.value)"
+                [attr.data-tip]="txt['reset']  + ' ' + txt['filter'] ">
                 <i class="fas fa-times"></i>
               </button>
             }
@@ -37,8 +37,8 @@
         <dsy-contact-search (contactSelected)="showSearched($event)" class="w-full">
         </dsy-contact-search>
         <!-- no return because list is leading view ....
-        <button class="btn btn-circle btn-sm btn-error"
-          [attr.data-tip]="txt['close']" data-position="bottom"
+        <button class="btn btn-circle btn-sm btn-error tooltip tooltip-bottom tooltip-primary"
+          [attr.data-tip]="txt['close']"
           (click)="return()">
           <i class="fas fa-times"></i>
         </button>
@@ -116,8 +116,8 @@
           <th class="text-center" colspan="2">{{txt['show'] + (isMaint ? ' / ' + txt['update'] : '')}}</th>
           <th class="text-center">
             @if (isCreate && !isShowDisabled) {
-              <button class="btn btn-sm btn-circle btn-warning text-primary-content"
-                [attr.data-tip]="txt['insert']" data-position="bottom"
+              <button class="btn btn-sm btn-circle btn-warning text-primary-content tooltip tooltip-bottom tooltip-primary"
+                [attr.data-tip]="txt['insert']"
                 (click)="insert()">
                 <i class="fas fa-plus"></i>
               </button>
@@ -152,8 +152,8 @@
             </td>
             <td class="text-center">
               @if (!isShowDisabled) {
-                <button class="btn btn-sm btn-circle btn-info text-primary-content"
-                  [attr.data-tip]="txt['show']" data-position="bottom"
+                <button class="btn btn-sm btn-circle btn-info text-primary-content tooltip tooltip-bottom tooltip-primary"
+                  [attr.data-tip]="txt['show']"
                   (click)="show(i)">
                   <i class="fas fa-arrow-right"></i>
                 </button>
@@ -161,8 +161,8 @@
             </td>
             <td class="text-center">
               @if (isMaint && !isShowDisabled) {
-                <button class="btn btn-sm btn-circle btn-warning text-primary-content"
-                  [attr.data-tip]="txt['update']" data-position="bottom"
+                <button class="btn btn-sm btn-circle btn-warning text-primary-content tooltip tooltip-bottom tooltip-primary"
+                  [attr.data-tip]="txt['update']"
                   (click)="maint(i)">
                   <i class="fas fa-arrow-down"></i>
                 </button>
@@ -170,15 +170,15 @@
             </td>
             <td class="text-center">
               @if (isMaint && !isShowDisabled  && contact.contactId > 0) {
-                <button class="btn btn-sm btn-circle btn-outline"
-                  [attr.data-tip]="txt['disable']" data-position="bottom"
+                <button class="btn btn-sm btn-circle btn-outline tooltip tooltip-bottom tooltip-accent"
+                  [attr.data-tip]="txt['disable']"
                   (click)="disable(i)">
                   <i class="fas fa-trash"></i>
                 </button>
               }
               @if (isMaint && isShowDisabled  && contact.contactId > 0 ) {
-                <button class="btn btn-sm btn-circle btn-success text-primary-content"
-                  [attr.data-tip]="txt['enable']" data-position="bottom"
+                <button class="btn btn-sm btn-circle btn-success text-primary-content tooltip tooltip-bottom tooltip-accent"
+                  [attr.data-tip]="txt['enable']"
                   (click)="enable(i)">
                   <i class="fas fa-trash-restore"></i>
                 </button>
