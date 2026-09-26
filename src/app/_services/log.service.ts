@@ -70,6 +70,7 @@ export class LogService {
   }
   */
 
+
   private async writeToLog(
     session: Session | null,
     comp: string,
@@ -91,7 +92,9 @@ export class LogService {
         entry.level = level;
         entry.extraInfo = params;
         for (const logger of this.publishers) {
-          if (logger.name.toLowerCase() !== 'webserver' && session) {
+          // restriction on webrserver only if authorization not necessary ...
+          // logger.name.toLowerCase() !== 'webserver' 
+          if (session && logger.name.toLowerCase() !== 'webserver' ) {
             const response = await logger.log(entry, session);
             if (!response) {
               if (logger.location) {
@@ -104,6 +107,7 @@ export class LogService {
         }
       }
   }
+
 
   private shouldLog(level: LogLevel): boolean {
     let ret = false;
@@ -154,21 +158,21 @@ export class LogService {
     return this.publishers[ix].clear(session);
   }
 
-  public async getServerLogs(session: Session): Promise<Array<Log>> {
+  public async geLogs(publisher: string, session: Session): Promise<Array<Log>> {
     let logs: Array<Log> = [];
-    for (const logger of this.publishers) {
-      if (logger.name.toLowerCase() === 'webserver') {
-        const serverLogs = await logger.getLogs(session);
-        if (serverLogs && serverLogs?.length > 0) {
-          logs = serverLogs;
+    for (const logPublisher of this.publishers) {
+      if (logPublisher.name.toLowerCase() === publisher.toLowerCase()) {
+        const publishedLogs = await logPublisher.getLogs(session);
+        if (publishedLogs && publishedLogs?.length > 0) {
+          logs = publishedLogs;
         }
       }
     }
     return logs;
   }
 
-  public async getLogsRange(session: Session, dateFrom: Date, dateTo: Date, comp: string): Promise<Array<Log>> {
-    const logs = await this.getServerLogs(session);
+  public async getLogsRange(publisher: string, session: Session, dateFrom: Date, dateTo: Date, comp: string): Promise<Array<Log>> {
+    const logs = await this.geLogs(publisher, session);
     return logs.filter(_ => GlobalFunctions.getDateInMinutes(_.date) >= GlobalFunctions.getDateInMinutes(dateFrom) && GlobalFunctions.getDateInMinutes(_.date) <= GlobalFunctions.getDateInMinutes(dateTo));
   }
 }

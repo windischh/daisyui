@@ -44,7 +44,9 @@ export const environment = {
     },
     {
       "loggerName": "webServer",
-      "loggerLocation": "/log/daisytest-log-logfile/logs.json",
+      "loggerLocation": "/log/daisytest-logfile/logs.json",
+      "loggerUser": "admin",
+      "loggerAuth": "admin_pw",
       "isActive": true
     },
     {

@@ -1,5 +1,6 @@
+import { VALUE } from '@nodro7/angular-mydatepicker';
 import {  IContactElement } from '../_interfaces/i-contact-element';
-import { ADR, BDAY, BEGIN, CATEGORIES, COMMA, EMAIL, END, EQUALS, FN, LF, LF_ZONED, N, NICKNAME, NOTE, ORG, PHOTO, PRODID, SEMICOLON, TEL, TITLE, TYPE, UID, URL, VCARD, VERSION } from './constants';
+import { ADR, BDAY, BEGIN, CATEGORIES, COMMA, DATE, EMAIL, END, EQUALS, FN, LF, LF_ZONED, N, NICKNAME, NOTE, ORG, PHOTO, PRODID, SEMICOLON, TEL, TITLE, TYPE, UID, URL, VCARD, VERSION } from './constants';
 
 
 /**
@@ -47,7 +48,7 @@ export class VcfFunctions {
 
     // not handled vcf tags:
 
-    const VALUE_DATE = 'VALUE=DATE';
+    const VALUE_DATE = VALUE + EQUALS + DATE;
 
 
     /*
@@ -312,7 +313,13 @@ export class VcfFunctions {
               currentObj['birthdayFormat'] = 1;
             } else {
               bd = this.vcfDateParser(currentObj, value, 2);
-              currentObj['birthdayFormat'] = 2;
+              if (bd) {
+                currentObj['birthdayFormat'] = 2;
+              } else {
+                // THERE are vcf data exports (thunderbird) which have simple format without VALUE_DATE
+                bd = this.vcfDateParser(currentObj, value, 4);
+                currentObj['birthdayFormat'] = 4;
+              }
             }
           }
           currentObj[keyMap[BDAY]] = bd;
@@ -348,15 +355,15 @@ export class VcfFunctions {
   }
 
   /**
-   * Parse a stringly typed iCal formatted date as a native JS date object
-   * @param calobj: Object to check surroundings of date string - used only for debugging
+   * Parse a stringly typed vcf  formatted date as a native JS date object
+   * @param vcfobj: Object to check surroundings of date string - used only for debugging
    * @param string: date
-   * @param format?: number 1 - iCal date, 2 - iCal without Z, 3 - ISO , 4 simple date without time
+   * @param format?: number 1 - vcf date, 2 - vcf without Z, 3 - ISO , 4 simple date without time
    * @return Date or null
    */
   // we use errCode in the moment only at debugging ...
   // vcfDateParser(date: string, format?: number): {retDate: Date; errCode: Array<number>} {
-  static vcfDateParser(calobj: {}, date: string, format?: number): Date | null {
+  static vcfDateParser(vcfobj: {}, date: string, format?: number): Date | null {
 
     const T_INDEX_ICAL = 8;
     const Z_INDEX_ICAL = 15;

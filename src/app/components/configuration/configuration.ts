@@ -142,7 +142,7 @@ export class ConfigurationComponent implements OnInit {
     let configurationOptions: Array<ConfigurationOption>;
     const session = this.auth.getSession(this.name);
     configurationOptions = await this.configurationService.getConfigurationOptions(this.name);
-    // we get no disabled configurationOptions and - in case of work also
+    // we get no disabled configurationOptions 
     configurationOptions = configurationOptions?.filter(_ => _.status < 9);
     if (configurationOptions?.length > 0) {
       this.configurationOptions = configurationOptions.sort((a, b) =>

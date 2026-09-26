@@ -134,7 +134,14 @@ const URL = 'URL';
 const NOTE = 'NOTE';
 const BDAY = 'BDAY';
 const PHOTO = 'PHOTO';
-// lalready defined
+// types for adress, email, tel
+const HOME = 'HOME';
+const WORK= 'WORK';
+const CELL = 'CELL';
+const INTERNET = 'INTERNET';
+const DATE = 'DATE';
+
+// already defined
 // const UID = 'UID';
 // const VERSION = 'VERSIOM';
 
@@ -791,4 +798,9 @@ export {
   NOTE,
   BDAY,
   PHOTO,
+  HOME,
+  WORK,
+  CELL,
+  INTERNET,
+  DATE
 };

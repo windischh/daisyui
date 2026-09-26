@@ -1,3 +1,4 @@
+import { signal } from "@angular/core";
 import { Menu } from "./menu";
 import { MenuItemFactory } from "./menu-item-factory";
 import { MenuRaw } from "./menu-raw";
@@ -6,7 +7,7 @@ import { MenuRaw } from "./menu-raw";
 export class MenuFactory {
 
   static empty(): Menu {
-    return new Menu(0, '', '', '', false, [], 0, null,
+    return new Menu(0, '', '', '', signal(false), [], 0, null,
     0, 0, new Date(), '', 0, null, '', 0, 0);
   }
 

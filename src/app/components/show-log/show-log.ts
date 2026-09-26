@@ -76,11 +76,6 @@ export class ShowLogComponent {
   // ViewChild static (since angular 8) not necessary cause ngxdp not used at ngOnInit
   @ViewChild('dp') ngxdp!: AngularMyDatePickerDirective;
   public dpModel!: IMyDateModel;   // not initial date set
-  /*
-  public dpDefaultMonth: IMyDefaultMonth = {
-    defMonth: moment(this.opts.workDay).format('MM-YYYY')
-  };
-  */
   public dpDisabled = false;
 
   // disabledRanges contains eventually disabled date ranges

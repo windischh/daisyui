@@ -9,19 +9,11 @@ export interface IEventListElement {
   timeString: string;
   event: Event;
   userName: string;
-  userExternalId: string;
   contactNr: number;
   contactDisplayNr: string;
   contactName: string;
-  contactExternalId: string;
   contactStyle?: {[key: string]: any};
-  issueProviderId: number;
-  nExternalIssueId?: number;
-  sExternalIssueId?: string;
-  issueDisplayNr: string;
-  issueText: string;
-  issueDescription: string;
-  categoryNr: number;
+  issueNr: number;
   /* duration in minutes ... */
   durationMinutes: number;
   durationHours: number;

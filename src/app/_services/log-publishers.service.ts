@@ -81,6 +81,8 @@ export class LogPublishersService {
         if (logPub) {
           // Set location of logging
           logPub.location = pub.loggerLocation;
+          logPub.user = pub.loggerUser ?? '';
+          logPub.auth = pub.loggerAuth ?? '';
           logPub.name = pub.loggerName;
           // Add publisher to array
           this.publishers.push(logPub);

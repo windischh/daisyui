@@ -1,4 +1,4 @@
-import { Inject, Injectable, LOCALE_ID } from '@angular/core';
+import { Inject, Injectable, LOCALE_ID, signal, WritableSignal } from '@angular/core';
 
 import { GlobalFunctions } from '../_globals/global-functions';
 import { CAL_BASE, TXT_BASE } from '../_globals/constants';
@@ -26,6 +26,8 @@ import { IUserEventOptions } from '../_interfaces/i-user-event-options';
 import { LogService } from './log.service';
 import { FetchApiService } from './fetch-api.service';
 import { MessageService } from './message.service';
+import { App } from '../_enums/app.enum';
+
 
 
 /**
@@ -60,6 +62,8 @@ export class AuthenticationService {
 
   private calBase: string[] = CAL_BASE;
   public cal: { [key: string]: string } = {};
+
+  public language: WritableSignal<number> = signal<number>(0);
 
   private production = environment.production;
   private sessionConfiguration = environment.sessionConfiguration;
@@ -156,6 +160,7 @@ export class AuthenticationService {
     session.userToken = user?.userToken ?? 0;
     session.userName = user?.userName ?? '';
     session.createdBy = user?.userName ?? '';
+    session.app = user?.type ?? 1;
     session.releaseCreated = GlobalFunctions.release ;
     session.eventSelectOption = null;
     // all authorizations which are persisted at user are taken into session
@@ -185,8 +190,9 @@ export class AuthenticationService {
   private initUsers( comp: string) {
     const users: Array<User> = [];
     const user1 = UserFactory.empty();
-    // initialize user event options from this.option assuming an empty session
     user1.userId = 1;
+     // do not initialize first user as local user
+    // user1.type = 1;
     user1.releaseCreated = GlobalFunctions.release ;
     user1.userToken  = (new Date()).getTime();
     // we can not set userEventOptions here - we have no options from Configuration service ...
@@ -257,6 +263,7 @@ export class AuthenticationService {
       })) {
         o[t.textName] = t.text;
       }
+      this.language.set(language);
     }
   }
 
@@ -501,12 +508,11 @@ export class AuthenticationService {
       return true;
     }
     if (doIt === 2 && !this.production) {
-      localStorage.removeItem('issues');
-      localStorage.removeItem('issueSelections');
       localStorage.removeItem('providers');
       localStorage.removeItem('events');
       localStorage.removeItem('eventSelectOptions');
       localStorage.removeItem('recurringTimeSpans');
+      localStorage.removeItem('configurationOptions');
       localStorage.removeItem('users');
       this.initSession(0, comp);
       return true;
@@ -581,15 +587,16 @@ export class AuthenticationService {
     } else {
       // message only at test environment ...
       this.message.info('session not longer valid at: ' + new Date());
-      /*
-      const isInitialized = await this.newSessionUser(session?.userId, comp);
-      if (isInitialized) {
-        // console.log('session not valid - initialized with last user found');
-      } else {
-        // console.log('session not valid - reset');
-        await this.initSession(0, comp);
+      let sessionUser = 0;
+      if (session) {
+        sessionUser = await this.newSessionUser(session?.userId, comp);
       }
-       */
+      if (sessionUser > 0) {
+        this.message.info('session initialized with last user found at: ' + new Date());
+      } else {
+        await this.initSession(0, comp);
+        this.message.info('session reset at: ' + new Date());
+      }
     }
   }
 
@@ -766,6 +773,26 @@ export class AuthenticationService {
     }
   }
 
+  /**
+   * getLanguage()
+   *  get language
+   * @param comp name of component
+   * @returns language as number
+   */
+  public getLanguage(comp: string): number {
+    return this.language();
+  }
+
+   /**
+   * getLanguageSignal()
+   *  get language signal
+   * @param comp name of component
+   * @returns language as signal
+   */
+  public getLanguageSignal(comp: string):WritableSignal<number> {
+    return this.language;
+  }
+
 
   /**
    * changeLanguage()
@@ -807,7 +834,23 @@ export class AuthenticationService {
         const session = this.getSession(this.name);
         if (session) {
           session.isPlan = false;
-          session.isPlanMaint = true;
+          switch (user.type) {
+            case App.local:
+              session.app = App.local;
+              session.isPlanMaint = true;
+              break;
+            case App.server:
+              session.app = App.server;
+              session.isPlanMaint = true;
+              break;
+            case App.admin:
+              session.app = App.admin;
+              session.isPlanMaint = false;
+              break;
+
+            default:
+              break;
+          }
           this.setSession(session, comp);
           this.setSessionAuthorizations(user.authorizations, this.name);
         }

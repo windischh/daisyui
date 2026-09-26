@@ -7,14 +7,20 @@ export class Contact {
   constructor (
   public contactId: number,
   public contactNr: number,
+  // company name is usually set to name of organozation
   public companyName: string,
+  // company long name - not in maintenance ...
   public longName: string,
+  // company (or contact) alternate name or additional name
   public nameScnd: string,
+  public companyEmail: string,
+  public companyTel: string,
   public street: string,
   public city: string,
   public plz: number,
   public country: string,
   public website: string,
+  // contactType - 2 internal (only needed in customer invoice systems ...)
   public contactType: number,
   public contactColor: string,
   public contactSalutation: string,
@@ -22,11 +28,15 @@ export class Contact {
   public contactFirstName: string,
   public contactFunction: string,
   public contactEmail: string,
-  public contactEmailScnd: string,
   public contactTel: string,
   public contactTelScnd: string,
+  public contactStreet: string,
+  public contactCity: string,
+  public contactPlz: number,
+  public contactCountry: string,
   public contactBirthday: Date | null,
   public companyUid: string,
+  // the following fields are used only in customer invoicing systems
   public iban: string,
   public paymentInfo: string,
   public ibanScnd: string,
@@ -35,7 +45,7 @@ export class Contact {
   public companyNote: string,
   public externalId: string,
   public timeZoneIdentifier: string,
-  /* display name has name, firstName  */
+  /* display name has contactName, contactFirstName  */
   public displayName: string,
   /* display nr gets nr if contact nrs were fetched from contact url, otherwise contactId */
   public displayNr: string,
@@ -63,7 +73,7 @@ export class Contact {
   // NOTE
   public note: string,
   // BDAY
-  public birthday: Date,
+  public birthday: Date | null,
   // PHOTO
   public photo: string,
   // UID

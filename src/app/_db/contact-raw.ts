@@ -6,6 +6,8 @@ export interface ContactRaw {
     companyName: string;
     longName: string;
     nameScnd: string;
+    companyEmail: string;
+    companyTel: string;
     street: string;
     city: string;
     plz: number;
@@ -18,9 +20,12 @@ export interface ContactRaw {
     contactFirstName: string;
     contactFunction: string;
     contactEmail: string;
-    contactEmailScnd: string;
     contactTel: string;
     contactTelScnd: string;
+    contactStreet: string;
+    contactCity: string;
+    contactPlz: number;
+    contactCountry: string;
     contactBirthday: Date | null;
     companyUid: string;
     iban: string;

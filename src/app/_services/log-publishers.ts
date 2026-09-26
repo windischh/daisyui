@@ -11,6 +11,8 @@ import { Session } from '../_db/session';
 export abstract class LogPublisher {
   name!: string;
   location!: string;
+  user!: string;
+  auth!: string;
   session!: Session;
   abstract log(record: LogEntry, session?: Session): Promise<boolean>;
   abstract clear(session?: Session): Promise<boolean>;
@@ -83,8 +85,31 @@ export class LogLocalStorage extends LogPublisher {
     return Promise.resolve(true);
   }
 
-  getLogs(): Promise<Array<Log> | null> {
-    return Promise.resolve(null);
+  getLogs(): Promise<Array<Log>> {
+    // Get values from local storage
+    let logs: Array<Log> = [];
+    if (localStorage.getItem(this.location)) {
+      const logEntrys: Array<LogEntry>  = JSON.parse(
+          localStorage.getItem(this.location) ?? '');
+      // console.log('local logs: ', localStorage.getItem(this.location));
+      if (logEntrys && logEntrys?.length > 0) {
+        logs = logEntrys.map(_ => {
+          const log = LogFactory.fromObject(_);
+          if (log) {
+            log.date = 
+              typeof(_.entryDate) === 'string' ?
+              new Date(_.entryDate) : _.entryDate;
+            log.logMessage = _.message;
+            log.logLevel = _.level;
+            log.extraInfo = _.extraInfo.reduce((acc, el) => acc + el + ' ','');
+          }
+          return log;
+        })
+      }
+    } else {
+      logs = [];
+    }
+    return Promise.resolve(logs);
   }
 
 }
@@ -165,25 +190,24 @@ export class LogWebServer extends LogPublisher {
       log.createdBy = 'LogPublisher - ' + this.name;
       log.releaseCreated = GlobalFunctions.release;
       logs.push(log);
-      const ix = session?.authorizations.findIndex(_ => _.providerType === 2);
-      if (ix >= 0) {
-        if (session.authorizations[ix].login !== '' && session.authorizations[ix].authorization !== '') {
-          const auth = session.authorizations[ix].authorization;
-          const headers = new Headers({
-            'Authorization': auth,
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache'
-          });
-          const mode: RequestMode = 'cors';
-          const op = 'put log on web server';
-          return await this.fetch.put(this.location, logs, headers, mode)
-          .catch((error: any) : any => {
-            // we are part of the logging infrastructure, so we log to console instead
-            console.error('error: ' + error.message + ' at: ' + this.name + ' op: ' + op);
-            return false;
-          });
-        }
-      }
+      // TODO in the moment we have a fix authorzation fpr logs.json
+      // we will not use session authorization - but we must put these authorization into environment ...
+      const login = 'admin';
+      const password = 'admin_pw'
+      const auth = 'Basic ' + GlobalFunctions.base64Encode(login.trim() + ':' + password.trim());
+      const headers = new Headers({
+        'Authorization': auth,
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
+      });
+      const mode: RequestMode = 'cors';
+      const op = 'put log on web server';
+      return await this.fetch.put(this.location, logs, headers, mode)
+      .catch((error: any) : any => {
+        // we are part of the logging infrastructure, so we log to console instead
+        console.error('error: ' + error.message + ' at: ' + this.name + ' op: ' + op);
+        return false;
+      });
     }
     return false;
 
@@ -192,57 +216,53 @@ export class LogWebServer extends LogPublisher {
   // Clear all log entries from Web server
   public async clear(session: Session): Promise<boolean> {
     let logs: Array<Log> = [];
-    const ix = session?.authorizations.findIndex(_ => _.providerType === 2);
-    if (ix >= 0) {
-      if (session.authorizations[ix].login !== '' && session.authorizations[ix].authorization !== '') {
-        const auth = session.authorizations[ix].authorization;
-        const headers = new Headers({
-          'Authorization': auth,
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
-        });
-        const mode: RequestMode = 'cors';
-        const op = 'purge log on web server';
-        return this.fetch.put(this.location, logs, headers, mode)
-        .catch((error: any) : any => {
-          // we are part of the logging infrastructure, so we log to console instead
-          console.error('error: ' + error.message + ' at: ' + this.name + ' op: ' + op);
-          return false;
-        });
-      }
-    }
-    return false;
+    //  this authorization comes from  environment ...
+    const login = this.user;
+    const password = this.auth;
+    const auth = 'Basic ' + GlobalFunctions.base64Encode(login.trim() + ':' + password.trim());
+
+    const headers = new Headers({
+      'Authorization': auth,
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache'
+    });
+    const mode: RequestMode = 'cors';
+    const op = 'purge log on web server';
+    return this.fetch.put(this.location, logs, headers, mode)
+    .catch((error: any) : any => {
+      // we are part of the logging infrastructure, so we log to console instead
+      console.error('error: ' + error.message + ' at: ' + this.name + ' op: ' + op);
+      return false;
+    });
 
   }
 
   // get logs from a logs.json server file
   public async getLogs(session: Session): Promise<Array<Log>> {
     let logs: Array<Log> = [];
-    const ix = session?.authorizations.findIndex(_ => _.providerType === 2);
-    if (ix >= 0) {
-      if (session.authorizations[ix].login !== '' && session.authorizations[ix].authorization !== '') {
-        const auth = session.authorizations[ix].authorization;
-        const headers = new Headers({
-          'Authorization': auth,
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
-        });
-        const mode: RequestMode = 'cors';
-        const op = 'get log from web server';
-        const rawLogs: Array<LogRaw>  = await this.fetch.get<{logs: Array<LogRaw>}>(this.location, headers, mode)
-        .catch((error: any) : any => {
-          // we are part of the logging infrastructure, so we log to console instead
-          console.error('error: ' + error.message + ' at: ' + this.name + ' op: ' + op);
-          return null;
-        });
-        // if we have already logs we get them into logs, else logs is an empty array
-        if (rawLogs && rawLogs?.length > 0) {
-          logs = rawLogs.map(rawLog => {
-            let log = LogFactory.fromObject(rawLog);
-            return log;
-          });
-        }
-      }
+    //  this authorization comes from  environment ...
+    const login = this.user;
+    const password = this.auth;
+    const auth = 'Basic ' + GlobalFunctions.base64Encode(login.trim() + ':' + password.trim());
+    const headers = new Headers({
+      'Authorization': auth,
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache'
+    });
+    const mode: RequestMode = 'cors';
+    const op = 'get log from web server';
+    const rawLogs: Array<LogRaw>  = await this.fetch.get<{logs: Array<LogRaw>}>(this.location, headers, mode)
+    .catch((error: any) : any => {
+      // we are part of the logging infrastructure, so we log to console instead
+      console.error('error: ' + error.message + ' at: ' + this.name + ' op: ' + op);
+      return null;
+    });
+    // if we have already logs we get them into logs, else logs is an empty array
+    if (rawLogs && rawLogs?.length > 0) {
+      logs = rawLogs.map(rawLog => {
+        let log = LogFactory.fromObject(rawLog);
+        return log;
+      });
     }
     return logs;
 

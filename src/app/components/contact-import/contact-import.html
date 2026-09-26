@@ -13,8 +13,8 @@
       <div class="flex-1">
         @if (resetableSignal()) {
           <div class="flex-1 flex justify-end">
-            <button class="btn btn-circle btn-sm btn-error text-primary-content"
-              [attr.data-tip]="auth.txt['reset']" data-position="bottom"
+            <button class="btn btn-circle btn-sm btn-error text-primary-content tooltip tooltip-bottom tooltip-accent"
+              [attr.data-tip]="auth.txt['reset']"
               (click)="resetImport()">
               <i class="fas fa-times"></i>
             </button>
@@ -28,8 +28,8 @@
       <div class="w-1/6">
         <!-- open update area for  file name ....  -->
         @if (validVcfFileSignal() === false && !isUpdateFileType) {
-          <button class="btn btn-circle btn-sm btn-warning text-primary-content"
-            [attr.data-tip]="auth.txt['fileType'] + ' ' + auth.txt['update']" data-position="bottom"
+          <button class="btn btn-circle btn-sm btn-warning text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['fileType'] + ' ' + auth.txt['update']"
             (click)="setUpdateFileType()">
             <i class="fas fa-arrow-down"></i>
           </button>
@@ -60,44 +60,44 @@
                   #startCustNr [value]="startContactNr" type="text" 
                   [placeholder]="" class="input input-success join-item w-full">
              </div>
-            <button class="btn btn-success text-primary-content join-item"
-              [attr.data-tip]="auth.txt['prepare_import']" data-position="bottom"
+            <button class="btn btn-success text-primary-content join-item tooltip tooltip-bottom tooltip-accent"
+              [attr.data-tip]="auth.txt['prepare_import']"
               (click)="prepareImport(startCustNr.value)">
               <i class="fas fa-arrow-right"></i>
             </button>
           </div>
         }
         @if (importReadySignal() === 1 && sourceContacts.length > 0) {
-          <button class="btn btn-circle btn-sm btn-success text-primary-content"
-            [attr.data-tip]="auth.txt['check_source']" data-position="bottom"
+          <button class="btn btn-circle btn-sm btn-success text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['check_source']"
             (click)="setImportSourceChecked()">
             <i class="fas fa-arrow-right"></i>
           </button>
         }
         @if (importReadySignal() === 2) {
-          <button class="btn btn-circle btn-sm btn-warning text-primary-content"
-            [attr.data-tip]="auth.txt['go_back']" data-position="bottom"
+          <button class="btn btn-circle btn-sm btn-warning text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['go_back']"
             (click)="resetImportSource()">
             <i class="fas fa-arrow-left"></i>
           </button>
         }
         @if (importReadySignal() === 2) {
-          <button class="btn btn-circle btn-sm btn-success text-primary-content"
-            [attr.data-tip]="auth.txt['check_import']" data-position="bottom"
+          <button class="btn btn-circle btn-sm btn-success text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['check_import']"
             (click)="setImportOverwrites()">
             <i class="fas fa-arrow-right"></i>
           </button>
         }
         @if (importReadySignal() === 3) {
-          <button class="btn btn-circle btn-sm btn-warning text-primary-content"
-            [attr.data-tip]="auth.txt['go_back']" data-position="bottom"
+          <button class="btn btn-circle btn-sm btn-warning text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['go_back']"
             (click)="resetImportOverwrites()">
             <i class="fas fa-arrow-left"></i>
           </button>
         }
         @if (importReadySignal() === 3 && sourceContacts.length > 0) {
-          <button class="btn btn-success btn-sm text-primary-content"
-            [attr.data-tip]="auth.txt['do_import']" data-position="bottom"
+          <button class="btn btn-success btn-sm text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['do_import']"
             (click)="setImportFinished()">
             <i class="fas fa-download mr-2"></i>IMPORT
           </button>
@@ -161,8 +161,8 @@
           <input id="type" (keyup.enter)="updateFileType(type.value)"
             #type [value]="fileType" type="text" [placeholder]="auth.txt['fileType'] + '  ...'" 
             class="input input-success join-item">
-          <button class="btn btn-success text-primary-content join-item"
-            [attr.data-tip]="auth.txt['submit']" data-position="top"
+          <button class="btn btn-success text-primary-content join-item tooltip tooltip-top tooltip-accent"
+            [attr.data-tip]="auth.txt['submit']"
             (click)="updateFileType(type.value)">
             <i class="fas fa-check"></i>
           </button>

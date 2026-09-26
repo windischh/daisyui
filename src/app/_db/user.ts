@@ -22,8 +22,8 @@ export class User {
     */
     public authorizations: Array<IAuthorization>,
     /*
-      we do not need user type in the moment ...
-      type 0 - admin user, 1 - local  user, 2 - server user
+      user type correcpons with app ....
+      type 0 - undefined (former it was reserved for admins at server ....), 1 - local  user, 2 - server user, 3 - local admin user
     */
     public type: number,
     /*

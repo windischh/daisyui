@@ -5,6 +5,7 @@ import { EventSelectOption } from "./event-select-option";
 
 export interface SessionRaw {
   sessionId: number;
+  app: number;
   userId: number;
   userToken: number;
   userName: string;

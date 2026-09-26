@@ -12,6 +12,7 @@ import { FetchApiService } from './fetch-api.service';
 import { MessageService } from './message.service';
 
 import { MAX_CONTACT_NR } from '../_globals/constants';
+import { StyleFactory } from '../_globals/style-factory';
 
 
 
@@ -59,23 +60,23 @@ export class ContactService {
 
   /**
    * setLocalContacts()
-   *  st contacts (in  local storage)
+   *  sst contacts (in  local storage)
    * @param userId id of user for which we load data (if 0, it is session usr ...)
    * @param contacts to be set
    * @param comp name of calling component
    * @returns contacts which are stored in local storage for the session user
    */
     private setLocalContacts(userId: number, contacts: Array<Contact>, comp: string): boolean {
-    const session = this.auth.getSession(comp);
-    const localUserId = userId && userId > 0 ? userId : (session?.userId ?? 0);
-    // we get all elements
-    const userData = this.auth.getUserData(localUserId, 'contacts', comp);;
-    if (userData && userData.contacts) {
+    if (contacts) {
+      const session = this.auth.getSession(comp);
+      const localUserId = userId && userId > 0 ? userId : (session?.userId ?? 0);
+      // we get all elements
+      const userData = this.auth.getUserData(localUserId, 'contacts', comp);;
+      // contacts are set - even if there were no entries before ...
       userData.contacts = contacts;
       return this.auth.setUserData(localUserId, 'contacts', userData, comp);
-    } else {
-      return false;
     }
+    return false;
   }
 
 
@@ -106,7 +107,9 @@ export class ContactService {
    */
   public searchContacts(searchTerm: string, comp: string): Array<Contact> {
     const contacts = this.getContacts(comp);
-    return contacts.filter(_ => Number(_.displayNr) === Number(searchTerm) || _.companyName?.startsWith(searchTerm));
+    return contacts.filter(_ => Number(_.displayNr) === Number(searchTerm) 
+      || _.displayName?.toLowerCase().startsWith(searchTerm.toLocaleLowerCase())
+      || _.companyName?.toLowerCase().startsWith(searchTerm.toLocaleLowerCase()));
   }
 
   /**
@@ -143,12 +146,28 @@ export class ContactService {
     return null;
   }
 
+  /**
+   * get max contactNr()
+   * @param comp name of calling component
+   * @returns max contactNr or 0
+   */
+  public getMaxContactNr(comp: string): number {
+    const contacts = this.getContacts(comp);
+    if (contacts) {
+       return contacts.length > 0
+        ? contacts.reduce((a,b) => a.contactNr > b.contactNr ? a : b).contactNr
+        : 0;
+    }
+    return 0;
+  }
+
+
    /**
    * check contact -  same  GET as getContact, delivers true, if a contact with
    *  required identifiers already exists
    * @param contactNr nr of contact
    * @param comp name of calling component
-   * @returns  true if nr exists for given type
+   * @returns  true if nr exists - (can be disabled ...)
    */
    public checkContactNr(contactNr: number, comp: string): boolean {
     const contacts = this.getContacts(comp);
@@ -171,7 +190,7 @@ export class ContactService {
   public getContactLatestClone(contactName: string, comp: string): Contact | null  {
     const contacts = this.getContacts(comp);
     if (contacts?.length > 0) {
-      return contacts.filter(_ => _.companyName.startsWith(contactName)).reduce((a, b) => a.companyName > b.companyName ? a : b);
+      return contacts.filter(_ => _.displayName.startsWith(contactName)).reduce((a, b) => a.displayName > b.displayName ? a : b);
     } else {
       return null;
     }
@@ -284,30 +303,34 @@ export class ContactService {
    * createContacts()
    *  creates an array of contacts (usually got via import)
    * @param contacts Array of contacts
+   * @param isContactNrUpdate - true if contactNr of each contact refers to an existing contactNr
+   * @param startContactNr - if contactNr is 0 or we have no contact update, then start with this nrif startContactNr is 0, we start at last contactNr
    * @param comp name of calling component
    * @returns trur if all can be stored, false if not (in this case server contacts remain unchaned)
    */
-  public createContacts(contacts: Array<Contact>, comp: string): boolean {
+  public createContacts(contacts: Array<Contact>, isContactNrUpdate: boolean, startContactNr: number, comp: string): Array<{nr: number, style: {}, message: string}> {
     const session = this.auth.getSession(comp);
     let legacyContacts: Array<Contact> = [];
-
+    let nextContactNr = startContactNr;
+    let createdContacts: Array<{nr: number, style: {}, message: string}> = [];
     legacyContacts = this.getContacts(comp);
     // build contactId  as max of id of existing contacts
     let lastContactId = legacyContacts?.length > 0
       ? legacyContacts.reduce((a,b) => a.contactId > b.contactId ? a : b).contactId
       : 0;;
-    // build contactNr  as max of nr of existing contacts
-    let lastContactNr = legacyContacts?.length > 0
-      ? legacyContacts.reduce((a,b) => a.contactNr > b.contactNr ? a : b).contactNr
-      : 0;;
+    // build contactNr  as max of nr of existing contacts (including disabled - as then can be enabled, we do not give theis number ..)
+    let lastContactNr = this.getMaxContactNr(comp);
     for (const contact of contacts) {
       let ix = -1;
       if (legacyContacts?.length > 0) {
-        ix = legacyContacts.findIndex(_ => _.contactNr === contact.contactNr
+        ix = legacyContacts.findIndex(_ => (contact.contactNr > 0 && _.contactNr === contact.contactNr && isContactNrUpdate)
           || (_.contactName === contact.contactName && _.contactFirstName === contact.contactFirstName));
       }
       if (ix >= 0 && legacyContacts[ix].status < 9) {
+        const importNr = contact.contactNr;
         contact.contactId = legacyContacts[ix].contactId;
+        contact.contactNr = legacyContacts[ix].contactNr;
+        contact.contactColor = legacyContacts[ix].contactColor;
         contact.created = legacyContacts[ix].created;
         contact.createdBy = legacyContacts[ix].createdBy;
         contact.releaseCreated = legacyContacts[ix].releaseCreated;
@@ -317,13 +340,34 @@ export class ContactService {
         contact.version = legacyContacts[ix].version++;
         // TODO set fields only if not empty ....
         legacyContacts[ix] = contact;
+        createdContacts.push({nr: contact.contactNr, style: StyleFactory.getBgColorStyle(contact.contactColor), message: 'UPD from ' + importNr});
       } else {
         lastContactId++;
+        let isBuildNewContactNr = false;
+        const importNr = contact.contactNr;
         if (!contact.contactNr || contact.contactNr === 0) {
-          lastContactNr++;
-          contact.contactNr = lastContactNr;
+          isBuildNewContactNr = true;
+        } else {
+          // if nr exists, we must buuld a new ...
+          isBuildNewContactNr = this.checkContactNr(contact.contactNr, comp);
+        }
+        if (isBuildNewContactNr) {
+          if (nextContactNr === 0) {
+           nextContactNr = lastContactNr + 1;
+          } else if (nextContactNr <= lastContactNr) {
+            for (let validContactNr = nextContactNr; validContactNr++; validContactNr > lastContactNr) {
+              nextContactNr = validContactNr;
+              const isUsed = this.checkContactNr(validContactNr, comp);
+              if (!isUsed) {
+                break;
+              }
+            }
+          }
+          contact.contactNr = nextContactNr;
+          nextContactNr++;
         }
         contact.contactId = lastContactId;
+        contact.contactColor = ((contact.contactNr % 10) * 10 + Math.round(contact.contactNr / 10) % 10).toString();
         contact.created = new Date();
         contact.createdBy = session?.userName ?? '';
         contact.releaseCreated = session?.releaseUpdated ?? 0;
@@ -332,17 +376,17 @@ export class ContactService {
         contact.releaseUpdated = 0;
         contact.version = 0;
         legacyContacts.push(contact);
+        createdContacts.push({nr: contact.contactNr, style: StyleFactory.getBgColorStyle(contact.contactColor), message: 'NEW from ' + importNr});
       }
     }
     // we now store  all contacts
     if (lastContactId > 0) {
       const isStored = this.setContacts(legacyContacts, comp);
       if (isStored) {
-        return true;
+        return createdContacts;
       }
     }
-
-    return false;
+    return [];
   }
 
 

@@ -22,8 +22,8 @@
         </h1>
       </div>
       <div class="flex-1 flex justify-end">
-        <button type="button" class="btn btn-circle btn-sm btn-error text-primary-content"
-          [attr.data-tip]="txt['close']" data-position="bottom"
+        <button type="button" class="btn btn-circle btn-sm btn-error text-primary-content tooltip tooltip-bottom tooltip-primary"
+          [attr.data-tip]="txt['close']"
           (click)="return()">
           <i class="fas fa-times"></i>
         </button>
@@ -43,8 +43,8 @@
           <div class="join">
             <input (keyup.enter)="setStyle(styleString.value); styleString.value=''"
               #styleString type="text" [placeholder]="txt['enter_a_number']" class="input join-item w-full">
-            <button class="btn btn-warning text-primary-content join-item" type="button" (click)="setStyle(styleString.value)"
-              [attr.data-tip]="txt['create_new_style']" data-position="bottom">
+            <button class="btn btn-warning text-primary-content join-item tooltip tooltip-bottom tooltip-accent" type="button" (click)="setStyle(styleString.value)"
+              [attr.data-tip]="txt['create_new_style']">
               <i class="fas fa-plus"></i>
             </button>
           </div>
@@ -89,8 +89,8 @@
             }
             <th class="w-1/6">
               @if (isMaint && !isStyle) {
-                <button type="button" class="btn btn-circle btn-sm btn-info text-primary-content"
-                  [disabled]="isUpdateOption"  [attr.data-tip]="txt['sort']" data-position="bottom"
+                <button type="button" class="btn btn-circle btn-sm btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+                  [disabled]="isUpdateOption"  [attr.data-tip]="txt['sort']"
                   (click)="setSort()">
                   <i class="fas fa-sort"></i>
                 </button>
@@ -139,9 +139,9 @@
                 }
                 <td>
                   @if (isMaint) {
-                    <button type="button" class="btn btn-circle btn-sm btn-warning text-primary-content"
+                    <button type="button" class="btn btn-circle btn-sm btn-warning text-primary-content tooltip tooltip-bottom tooltip-accent"
                       [disabled]="isUpdateOption"
-                      [attr.data-tip]="txt['update']" data-position="bottom"
+                      [attr.data-tip]="txt['update']"
                       (click)="setOption(i)">
                       <i class="fas fa-arrow-down"></i>
                     </button>
@@ -150,9 +150,9 @@
                   a whole style (style header, o.optionGroup === 0) can be deleted if no option for this style
                   -->
                   @if (o.isDeleteable && o.optionId > 0) {
-                    <button type="button" class="btn btn-circle btn-sm btn-outline"
+                    <button type="button" class="btn btn-circle btn-sm btn-outline tooltip tooltip-bottom tooltip-accent"
                       [disabled]="isUpdateOption"
-                      (click)="setDelete(i)" [attr.data-tip]="txt['delete']" data-position="bottom">
+                      (click)="setDelete(i)" [attr.data-tip]="txt['delete']">
                       <i class="fas fa-trash"></i>
                     </button>
                   }
@@ -298,13 +298,13 @@
                 </div>
                 </td>
                 <td>
-                  <button class="btn btn-circle btn-sm btn-success text-primary-content"
+                  <button class="btn btn-circle btn-sm btn-success text-primary-content tooltip tooltip-top tooltip-accent"
                     [disabled]="!thisForm.valid"
-                    type="submit" [attr.data-tip]="txt['submit']" data-position="top">
+                    type="submit" [attr.data-tip]="txt['submit']">
                     <i class="fas fa-check"></i>
                   </button>
-                  <button type="button" class="btn btn-circle btn-sm btn-error text-primary-content"
-                    [attr.data-tip]="txt['cancel']" data-position="top"
+                  <button type="button" class="btn btn-circle btn-sm btn-error text-primary-content tooltip tooltip-top tooltip-accent"
+                    [attr.data-tip]="txt['cancel']"
                     (click)="cancelUpdates()">
                     <i class="fas fa-times"></i>
                   </button>
@@ -328,9 +328,9 @@
             <td>
               <!-- we restrict adding options for admin users only, except it are style options and style options name record exists ...  -->
               @if ((isNew || isMaint) && ((isStyle && shownOptions && shownOptions.length > 0) || !isStyle)) {
-                <button type="button" class="btn btn-circle btn-sm btn-warning text-primary-content"
+                <button type="button" class="btn btn-circle btn-sm btn-warning text-primary-content tooltip tooltip-bottom tooltip-primary"
                   [disabled]="isUpdateOption"
-                  (click)="addOption()" [attr.data-tip]="txt['insert']" data-position="bottom">
+                  (click)="addOption()" [attr.data-tip]="txt['insert']">
                   <i class="fas fa-plus"></i>
                 </button>
               }

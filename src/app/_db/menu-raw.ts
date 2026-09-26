@@ -1,3 +1,4 @@
+import { WritableSignal } from "@angular/core";
 import { IMenu } from "../_interfaces/i-menu";
 import { MenuItemRaw } from "./menu-item-raw";
 
@@ -8,7 +9,7 @@ export interface MenuRaw extends IMenu {
   menuName: string;
   /* text from IMenu */
   text: string;
-  isVisible: boolean;
+  isVisible: WritableSignal<boolean>;
   /* items from IMenu */
   items: MenuItemRaw[];
   providerId: number;

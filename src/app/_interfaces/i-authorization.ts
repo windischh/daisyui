@@ -5,6 +5,7 @@
 export interface IAuthorization {
   [key: string]: any;
   providerId: number;
+  providerName: string;
   providerDataUrl: string;
   providerDocumentsUrl: string;
   providerType: number;

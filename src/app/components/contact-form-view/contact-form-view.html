@@ -18,8 +18,8 @@
       </div>
       <div class="flex-1 w-16 flex justify-end">
         @if (this.contact.type !== 4) {
-          <button class="btn btn-sm btn-circle btn-error text-primary-content"
-            [attr.data-tip]="txt['close']" data-position="bottom"
+          <button class="btn btn-sm btn-circle btn-error text-primary-content tooltip tooltip-bottom tooltip-primary"
+            [attr.data-tip]="txt['close']"
             (click)="return()">
             <i class="fas fa-times"></i>
           </button>
@@ -52,13 +52,13 @@
             <div>
               <!-- update of uniqueId -->
               @if (isMaint && !isClone) {
-                <button class="btn btn-sm btn-circle btn-warning text-primary-content"
+                <button class="btn btn-sm btn-circle btn-warning text-primary-content tooltip tooltip-accent"
                   type="button" [attr.data-tip]="txt['update']"
                   [disabled]="isUpdate()"
                   (click)="setUniqueId()">
                   <i class="fas fa-arrow-down"></i>
                 </button>
-                <button class="btn btn-sm btn-circle btn-warning text-primary-content"
+                <button class="btn btn-sm btn-circle btn-warning text-primary-content tooltip tooltip-primary"
                   type="button" [attr.data-tip]="txt['clone']"
                   [disabled]="isUpdate()"
                   (click)="setUniqueIdClone()">
@@ -124,14 +124,14 @@
           <!-- BUTTONs uniqueId updating                -->
           @if (isUpdateUniqueId || isNew || isClone) {
             <div class="w-1/4 flex gap-2">
-              <button class="btn btn-circle btn-sm btn-success text-primary-content"
-                [attr.data-tip]="txt['submit']" data-position="top"
+              <button class="btn btn-circle btn-sm btn-success text-primary-content tooltip tooltip-top tooltip-accent"
+                [attr.data-tip]="txt['submit']"
                 [disabled]="!thisForm.valid"
                 type="submit">
                 <i class="fas fa-check"></i>
               </button>
-              <button class="btn btn-sm btn-circle btn-error text-primary-content"
-                type="button" [attr.data-tip]="txt['cancel']" data-position="top"
+              <button class="btn btn-sm btn-circle btn-error text-primary-content tooltip tooltip-top tooltip-accent"
+                type="button" [attr.data-tip]="txt['cancel']"
                 [disabled]="isNew || isClone"
                 (click)="cancelUpdates()">
                 <i class="fas fa-times"></i>
@@ -149,7 +149,7 @@
               <span>{{txt['contact_data'] }}</span>
               <!-- button for update of contact   -->
               @if (isMaint) {
-                <button class="btn btn-sm btn-circle btn-warning text-primary-content"
+                <button class="btn btn-sm btn-circle btn-warning text-primary-content tooltip tooltip-accent"
                   type="button" [attr.data-tip]="txt['update'] "
                   [disabled]="isUpdate()"
                   (click)="setContact()">
@@ -237,14 +237,14 @@
           </div>
           <!-- BUTTONs contact updating                -->
           <div class="w-1/4 flex gap-2">
-            <button class="btn btn-sm btn-circle btn-success text-primary-content"
-              [attr.data-tip]="txt['submit'] " data-position="top"
+            <button class="btn btn-sm btn-circle btn-success text-primary-content tooltip tooltip-top tooltip-accent"
+              [attr.data-tip]="txt['submit'] "
               [disabled]="!thisForm.valid"
               type="submit">
               <i class="fas fa-check"></i>
             </button>
-            <button class="btn btn-sm  btn-circle btn-error text-primary-content"
-              type="button" [attr.data-tip]="txt['cancel'] " data-position="top"
+            <button class="btn btn-sm  btn-circle btn-error text-primary-content tooltip tooltip-top tooltip-accent"
+              type="button" [attr.data-tip]="txt['cancel'] "
               (click)="cancelUpdates()">
               <i class="fas fa-times"></i>
             </button>
@@ -316,7 +316,7 @@
             <h5 class="card-title flex justify-between">
               <span>{{txt['company']}}</span>
               @if (isMaint && !(isNew || isClone)) {
-                <button class="btn btn-sm btn-circle btn-warning text-primary-content"
+                <button class="btn btn-sm btn-circle btn-warning text-primary-content tooltip tooltip-accent"
                   type="button" [attr.data-tip]="txt['update']"
                   [disabled]="isUpdate()"
                   (click)="setHdr()">
@@ -398,14 +398,14 @@
           </div>
           <!-- BUTTONs contact header updating                -->
           <div class="w-1/4 flex gap-2">
-            <button class="btn btn-sm btn-circle btn-success text-primary-content"
-              [attr.data-tip]="txt['submit']" data-position="top"
+            <button class="btn btn-sm btn-circle btn-success text-primary-content tooltip tooltip-top tooltip-accent"
+              [attr.data-tip]="txt['submit']"
               [disabled]="!thisForm.valid"
               type="submit">
               <i class="fas fa-check"></i>
             </button>
-            <button class="btn btn-sm btn-circle btn-error text-primary-content"
-              [attr.data-tip]="txt['cancel']" data-position="top"
+            <button class="btn btn-sm btn-circle btn-error text-primary-content tooltip tooltip-top tooltip-accent"
+              [attr.data-tip]="txt['cancel']"
               type="button" (click)="cancelUpdates()">
               <i class="fas fa-times"></i>
             </button>
@@ -475,7 +475,7 @@
               <span>{{txt['ftr_data'] }}</span>
               <!-- button for update of footer   -->
               @if (isMaint) {
-                <button class="btn btn-sm  btn-circle btn-warning text-primary-content"
+                <button class="btn btn-sm  btn-circle btn-warning text-primary-content tooltip tooltip-accent"
                   type="button" [attr.data-tip]="txt['update'] "
                   [disabled]="isUpdate()"
                   (click)="setFtr()">
@@ -494,8 +494,8 @@
               <fieldset  formGroupName="ftrGroup">
                 <legend class = "badge badge-success">  {{txt['ftr_data'] }} {{txt['field'] }} {{txt['update'] }}</legend>
                 <div class="flex items-center gap-2 mb-2">
-                  <label for="contactColor" class="label"
-                  [attr.data-tip]="txt['enter_color'] " data-position="bottom">{{contacttxt['contactColor'] }}</label>
+                  <label for="contactColor" class="label tooltip tooltip-bottom tooltip-accent"
+                  [attr.data-tip]="txt['enter_color'] ">{{contacttxt['contactColor'] }}</label>
                   <input id="contactColor" formControlName="contactColor" class="input input-bordered w-full">
                 </div>
                 @if ( errors['ftrGroup.contactColor'] ) {
@@ -538,14 +538,14 @@
           </div>
           <!-- BUTTONs contact footer updating                -->
           <div class="w-1/4 flex gap-2">
-            <button class="btn btn-sm btn-circle  btn-success text-primary-content"
-              [attr.data-tip]="txt['submit'] " data-position="top"
+            <button class="btn btn-sm btn-circle  btn-success text-primary-content tooltip tooltip-top tooltip-accent"
+              [attr.data-tip]="txt['submit'] "
               [disabled]="!thisForm.valid"
               type="submit">
               <i class="fas fa-check"></i>
             </button>
-            <button class="btn btn-sm btn-circle  btn-error text-primary-content"
-              type="button" [attr.data-tip]="txt['cancel'] " data-position="top"
+            <button class="btn btn-sm btn-circle  btn-error text-primary-content tooltip tooltip-top tooltip-accent"
+              type="button" [attr.data-tip]="txt['cancel'] "
               (click)="cancelUpdates()">
               <i class="fas fa-times"></i>
             </button>

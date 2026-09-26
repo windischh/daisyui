@@ -9,13 +9,13 @@ export enum ConfigurationArea {
   events = 3,
   // userEvents and eventCalendar are in pEvent-log
   userEvents = 4,
-  eventCalendar = 5,
+  calendar = 5,
   // invoicePrint = 6,
   // timeSpan and todo are in pEvent-log
   timeSpanCategory = 7,
   // otdos are not implemented
   // todoCategory = 8,
-  eventExport = 9,
+  calendarExport = 9,
   documentCategory = 10
   }
 

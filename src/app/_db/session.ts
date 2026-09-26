@@ -7,6 +7,10 @@ export class Session {
   constructor (
     public sessionId: number,
     /* at implementations with local storage user management
+      app may be local or adminr
+    */
+    public app: number,
+    /* at implementations with local storage user management
       userId references the localStarge user
     */
     public userId: number,

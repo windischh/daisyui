@@ -31,9 +31,9 @@ export class EventSelectOption {
     // empty login selects all users
     public userLogin: string,
     // we allow null for selection = according to eventOption
-    public isPlan: boolean,
+    public isPlan: boolean | null,
     // we allow null for location type selection = all types
-    public locationType: number,
+    public locationType: number | null,
     public isShowDetails: boolean,
     public sortCriterias: IEventSortCriteria[],
     public userName?: string,

@@ -18,8 +18,8 @@
           }
         </select>
         <!-- no return because list is leading view ....
-        <button class="btn btn-circle btn-sm btn-error"
-          [attr.data-tip]="txt['close']" data-position="bottom"
+        <button class="btn btn-circle btn-sm btn-error tooltip tooltip-bottom tooltip-primary"
+          [attr.data-tip]="txt['close']"
           (click)="return()">
           <i class="fas fa-times"></i>
         </button>
@@ -39,8 +39,8 @@
           <th class="text-center" colspan="2">{{txt['update']}}</th>
           <th class="text-center">
             @if (isCreate) {
-              <button class="btn btn-circle btn-warning text-primary-content"
-                [attr.data-tip]="txt['insert']" data-position="bottom"
+              <button class="btn btn-circle btn-warning text-primary-content tooltip tooltip-bottom tooltip-primary"
+                [attr.data-tip]="txt['insert']"
                 (click)="insert()">
                 <i class="fas fa-plus"></i>
               </button>
@@ -61,16 +61,16 @@
               {{area.styles|number:'1.0-0'}}
             </td>
             <td class="text-center">
-              <button class="btn btn-circle btn-sm btn-info text-primary-content"
-                [attr.data-tip]="txt['show']" data-position="bottom"
+              <button class="btn btn-circle btn-sm btn-info text-primary-content tooltip tooltip-bottom tooltip-primary"
+                [attr.data-tip]="txt['show']"
                 (click)="show(i)">
                 <i class="fas fa-arrow-right"></i>
               </button>
             </td>
             <td class="text-center">
               @if (isMaint) {
-                <button class="btn btn-circle btn-sm btn-warning text-primary-content"
-                  [attr.data-tip]="txt['update']" data-position="bottom"
+                <button class="btn btn-circle btn-sm btn-warning text-primary-content tooltip tooltip-bottom tooltip-primary"
+                  [attr.data-tip]="txt['update']"
                   (click)="maint(i)">
                   <i class="fas fa-arrow-down"></i>
                 </button>

@@ -4,10 +4,10 @@ import { ContactRaw } from './contact-raw';
 export class ContactFactory {
 
   static empty(): Contact {
-    return new Contact(0, 0,  '',  '', '', '', '',  0, '', '', 0, '',
-      '', '', '', '', '', '', '', '', null, '', '', '', '', '', 0, '',  '', '', '',  '',
+    return new Contact(0, 0,  '',  '', '', '', '',  '', '', 0, '', '', 0, '',
+      '', '', '', '', '', '', '', '', '', 0, '', null, '', '', '', '', '', 0, '',  '', '', '',  '',
       /* from here we have fields which are according to vcf  */
-      {value: ''},  '', {value: ''}, [], [],  [], '', '', {value: ''},'', '', new Date(), '', '', '', '', [],
+      {value: ''},  '', {value: ''}, [], [],  [], '', '', {value: ''},'', '', null, '', '', '', '', [],
       0, 0, new Date(), '', 0, null, '', 0, 0);
   }
 
@@ -18,6 +18,8 @@ export class ContactFactory {
       rawContact.companyName,
       rawContact.longName,
       rawContact.nameScnd,
+      rawContact.companyEmail,
+      rawContact.companyTel,
       rawContact.street,
       rawContact.city,
       rawContact.plz,
@@ -30,9 +32,12 @@ export class ContactFactory {
       rawContact.contactFirstName,
       rawContact.contactFunction,
       rawContact.contactEmail,
-      rawContact.contactEmailScnd,
       rawContact.contactTel,
       rawContact.contactTelScnd,
+      rawContact.contactStreet,
+      rawContact.contactCity,
+      rawContact.contactPlz,
+      rawContact.contactCountry,
       typeof(rawContact.contactBirthday) === 'string' ?
       new Date(rawContact.contactBirthday) : rawContact.contactBirthday,
       rawContact.companyUid,
@@ -60,7 +65,7 @@ export class ContactFactory {
       rawContact.note,
       typeof(rawContact.birthday) === 'string' ?
       new Date(rawContact.birthday) : rawContact.birthday,
-      rawContact. photo,
+      rawContact.photo,
       rawContact.uid,
       rawContact.vcardVersion,
       rawContact.vcardProdId,

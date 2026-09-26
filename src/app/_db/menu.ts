@@ -1,3 +1,4 @@
+import { WritableSignal } from "@angular/core";
 import { IMenu } from "../_interfaces/i-menu";
 import { MenuItem } from "./menu-item";
 
@@ -23,7 +24,7 @@ export class Menu implements IMenu{
      * - we show this text if we set menu visible
      */
     public text: string,
-    public isVisible: boolean,
+    public isVisible: WritableSignal<boolean>,
     public items: MenuItem[],
     /**
      * in case of type 6 or higher providerId is > 0

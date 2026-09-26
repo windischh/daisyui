@@ -26,7 +26,8 @@ export class LogFactory {
       rawLog.logLevel,
       rawLog.extraInfo,
       rawLog.createdBy,
-      rawLog.dateCreated,
+      typeof(rawLog.dateCreated) === 'string' ?
+      new Date(rawLog.dateCreated) : rawLog.dateCreated,
       rawLog.releaseCreated
     );
   }

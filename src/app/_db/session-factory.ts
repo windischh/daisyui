@@ -6,7 +6,7 @@ import { EventSelectOptionFactory } from './event-select-option-factory';
 export class SessionFactory {
 
   static empty(): Session {
-    return new Session(0, 0, 0, '', {user: 0, maint: 0, show: 0, isTest: false}, '',
+    return new Session(0, 0, 0, 0, '', {user: 0, maint: 0, show: 0, isTest: false}, '',
      new Date(), new Date(), [], 0, '',
      {contact: 0, issue: 0, event: 0},  0, 0, 0, new Date(),
      null, false, false,
@@ -16,6 +16,7 @@ export class SessionFactory {
   static fromObject(rawSession: SessionRaw): Session {
     return new Session(
       rawSession.sessionId,
+      rawSession.app,
       rawSession.userId,
       rawSession.userToken,
       rawSession.userName,

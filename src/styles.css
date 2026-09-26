@@ -12,8 +12,14 @@
   /* Sekundärfarbe */
   --color-secondary: #ec4899; /* Pink (Tailwind pink-500) */
   --color-secondary-content: #ffffff; /* Weiß */
-  
+
+   /* Accentfarbe - zB für tooltip der eine reine Info ohne Aktion signalisiert */
+  --color-accent: #f0fdfa; /* Teal ganz hell (Tailwind teal-50) */
+  --color-accent-content: #005f5a; /* Teal dunkel (Tailwind teal-800) */
+
+
 }
+
 
 
 

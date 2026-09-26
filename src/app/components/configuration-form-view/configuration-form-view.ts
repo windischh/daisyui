@@ -87,7 +87,7 @@ export class ConfigurationFormViewComponent implements OnInit {
 
   // groupChoices define the available optionGroups in case of style-structured areas
   groupChoices: Array<{value: number, text: string}> = [];
-  // optionGroupWorkCalendarEnum: typeof OptionGroupWorkCalendar = OptionGroupWorkCalendar;
+  // optionGroupCalendarEnum: typeof OptionGroupCalendar = OptionGroupCalendar;
   groupChoicesCalendar = Object.keys(OptionGroupCalendar)
   .filter((k: any) => typeof OptionGroupCalendar[k] === 'number')
   .map(_ => {

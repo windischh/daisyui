@@ -154,7 +154,7 @@ export class HeaderComponent {
     || this.route.snapshot.url.toString().substring(0, 5).toLowerCase() === 'local') {
       // console.log ('param issueProvider: ', this.route.snapshot.params['issueProvider']);
       sessionStorage.setItem('appParams', JSON.stringify(this.route.snapshot.params));
-      // if component was entered via pwork, it is now reloaded with url /header ...
+      // if component was entered via daisytest, it is now reloaded with url /header ...
       this.router.navigate(['../header'], { relativeTo: this.route.parent });
     } else if (this.route.snapshot.url.toString().substring(0, 7).toLowerCase() === 'restart') {
       this.router.navigate(['../header'], { relativeTo: this.route.parent });

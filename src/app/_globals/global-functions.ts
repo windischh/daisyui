@@ -1198,16 +1198,16 @@ export class GlobalFunctions {
     } else if (typeof objectA[sortElement.key] === 'object' && typeof objectB[sortElement.key] === 'object'
       && objectA[sortElement.key] instanceof Date && objectB[sortElement.key] instanceof Date) {
       if (sortElement.datePart && sortElement.datePart.substr(0, 1).toUpperCase() === 'Y') {
-        comparison = GlobalFunctions.getY(objectA[sortElement.key]) ?? 0
+        comparison = (GlobalFunctions.getY(objectA[sortElement.key]) ?? 0)
         - (GlobalFunctions.getY(objectB[sortElement.key]) ?? 0);
       } else if (sortElement.datePart && sortElement.datePart.substr(0, 1).toUpperCase() === 'M') {
-        comparison = GlobalFunctions.getYM(objectA[sortElement.key]) ?? 0
+        comparison = (GlobalFunctions.getYM(objectA[sortElement.key]) ?? 0)
         - (GlobalFunctions.getYM(objectB[sortElement.key]) ?? 0);
       } else if (sortElement.datePart && sortElement.datePart.substr(0, 1).toUpperCase() === 'W') {
         comparison = GlobalFunctions.getYW(objectA[sortElement.key])
         - GlobalFunctions.getYW(objectB[sortElement.key]);
       } else if (sortElement.datePart && sortElement.datePart.substr(0, 1).toUpperCase() === 'D') {
-        comparison = GlobalFunctions.getYMDH(objectA[sortElement.key]) ?? 0
+        comparison = (GlobalFunctions.getYMDH(objectA[sortElement.key]) ?? 0)
         - (GlobalFunctions.getYMDH(objectB[sortElement.key])?? 0);
       // dates without datePart option are compared by getTime
       } else {
@@ -1348,6 +1348,7 @@ export class GlobalFunctions {
 
   /** --------------------------  date functions -------------------------------------------- */
 
+
   /**
    * parse date from string
    * @param dateString string in format 'DD.MM.YYYY' (with year >= 1000)
@@ -1439,6 +1440,25 @@ export class GlobalFunctions {
 
 
   /**
+   * parse date from string
+   * @param dateString string in format 'YYYYMMDD'
+   * @returns date, if parseable string - else returns null
+   */
+   static parseYMDtoDate(dateString: string): Date | null {
+    if (dateString && dateString !== '') {
+      // simple format yyyymmdd
+      const year: number = parseInt(dateString.substring(0, 4), 10);
+      const month: number = parseInt(dateString.substring(4, 6), 10) - 1;
+      const day: number = parseInt(dateString.substring(6, 8), 10);
+      if (year > 999 && month < 12 && day < 32) {
+        return new Date(year, month, day);
+      }
+    }
+    return null;
+  }
+
+
+  /**
    * gets minutes from 1.1.1970
    * @param date date object
    */
@@ -1509,19 +1529,19 @@ export class GlobalFunctions {
   /** returns yyyymm, mm = month as 01 - 12  */
   static getYM(date: Date): number | null {
     if (date && date instanceof Date) {
-      return GlobalFunctions.getY(date) ?? 0 * 100 + date.getMonth() + 1;
+      return (GlobalFunctions.getY(date) ?? 0) * 100 + date.getMonth() + 1;
     } else return null;
   }
 
   /** returns yyyyww, ww = week  */
   static getYW(date: Date): number {
-    return GlobalFunctions.getWeekYear(date) ?? 0 * 100 + (GlobalFunctions.getWeek(date) ?? 0);
+    return (GlobalFunctions.getWeekYear(date) ?? 0) * 100 + (GlobalFunctions.getWeek(date) ?? 0);
   }
 
   /** returns yyyymmdd  */
   static getYMD(date: Date): number | null {
     if (date && date instanceof Date) {
-      return GlobalFunctions.getYM(date) ?? 0 * 100 + date.getDate();
+      return (GlobalFunctions.getYM(date) ?? 0) * 100 + date.getDate();
     } else return null;
 
   }
@@ -1543,7 +1563,7 @@ export class GlobalFunctions {
   /** returns yyyymmddhh  */
   static getYMDH(date: Date): number | null {
     if (date && date instanceof Date) {
-      return GlobalFunctions.getYMD(date) ?? 0 * 100 + date.getHours();
+      return (GlobalFunctions.getYMD(date) ?? 0) * 100 + date.getHours();
     } else return null;
 
   }
@@ -1552,7 +1572,7 @@ export class GlobalFunctions {
   /** returns yyyymmddhhmm  */
   static getYMDHM(date: Date): number | null {
     if (date && date instanceof Date) {
-      return GlobalFunctions.getYMDH(date) ?? 0 * 100 + date.getMinutes();
+      return (GlobalFunctions.getYMDH(date) ?? 0) * 100 + date.getMinutes();
     } else return null;
 
   }
@@ -1560,7 +1580,7 @@ export class GlobalFunctions {
   /** returns yyyymmddhhmmss  */
   static getYMDHMS(date: Date): number | null {
     if (date && date instanceof Date) {
-      return GlobalFunctions.getYMDHM(date) ?? 0* 100 + date.getSeconds();
+      return (GlobalFunctions.getYMDHM(date) ?? 0) * 100 + date.getSeconds();
     } else return null;
 
   }
@@ -1649,13 +1669,19 @@ export class GlobalFunctions {
 
   /** returns hhmm as number - to get full 4 digits in a string use getHMString  */
   static getHM(date: Date): number {
-    return GlobalFunctions.getH(date) ?? 0 * 100 + date.getMinutes();
+    return (GlobalFunctions.getH(date) ?? 0) * 100 + date.getMinutes();
   }
 
   /** returns hhmm as string  */
   static getHM4String(date: Date): string {
     const hhmm = GlobalFunctions.getHM(date).toString();
-    if (date.getHours() < 10) {
+    if (date.getHours() === 0) {
+       if (date.getMinutes() < 10) {
+        return '000' + hhmm;
+       } else {
+        return '00' + hhmm;
+       }
+    } else if (date.getHours() < 10) {
       return '0' + hhmm;
     } else {
       return hhmm;
@@ -1690,12 +1716,12 @@ export class GlobalFunctions {
 
   /** returns UTC yyyymm, mm = month as 01 - 12  */
   static getUTCYM(date: Date): number {
-    return GlobalFunctions.getUTCY(date) ?? 0 * 100 + date.getUTCMonth() + 1;
+    return (GlobalFunctions.getUTCY(date) ?? 0) * 100 + date.getUTCMonth() + 1;
   }
 
   /** returns UTC yyyyww, ww = week  */
   static getUTCYW(date: Date): number {
-    return GlobalFunctions.getUTCWeekYear(date) ?? 0 * 100 + (GlobalFunctions.getUTCWeek(date) ?? 0);
+    return (GlobalFunctions.getUTCWeekYear(date) ?? 0) * 100 + (GlobalFunctions.getUTCWeek(date) ?? 0);
   }
 
   /** returns UTC yyyymmdd  */
@@ -1953,7 +1979,7 @@ export class GlobalFunctions {
 
   /** returns start of week  */
   static getStartOfWeek(date: Date, firstDay?: number, locale?: string): Date {
-    return this.addDays(date, this.getWeekDay(date, firstDay, locale) ?? 0 * -1);
+    return this.addDays(date, (this.getWeekDay(date, firstDay, locale) ?? 0) * -1);
   }
 
   /** returns start of year  */

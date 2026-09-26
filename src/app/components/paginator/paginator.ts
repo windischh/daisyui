@@ -151,14 +151,6 @@ export class PaginatorComponent implements AfterViewInit, ControlValueAccessor {
     }
   }
 
-  getTooltipPosition(): string {
-    if (this.isTooltipBelow) {
-      return 'bottom center'; 
-    } else {
-      return 'top center'; 
-    }
-  }
-
 
   selectPage(page: number): void  {
     // here selection is done only if this component is used - not when selectedPage is changed from outside ..

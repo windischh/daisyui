@@ -163,6 +163,7 @@ export class ProviderService {
    public addAuthorization(authorizations: Array<IAuthorization>,  provider: Provider): Array<IAuthorization>  {
     const authorization: IAuthorization = {
       providerId: provider.providerId,
+      providerName: provider.providerName,
       providerDataUrl: provider.providerUrl,
       providerDocumentsUrl: provider.providerDocumentsUrl,
       providerType: provider.type,

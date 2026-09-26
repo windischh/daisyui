@@ -84,13 +84,10 @@ export class ConfigurationService {
     const session = this.auth.getSession(comp);
     const localUserId = userId && userId > 0 ? userId : (session?.userId ?? 0);
     // we get all elements
-    const userData = this.auth.getUserData(localUserId, 'configurationOptions', comp);;
-    if (userData && userData.configurationOptions) {
-      userData.configurationOptions = configurationOptions;
-      return this.auth.setUserData(localUserId, 'configurationOptions', userData, comp);
-    } else {
-      return false;
-    }
+    const userData = this.auth.getUserData(localUserId, 'configurationOptions', comp);
+    // configuration options are set - even if there were no entries before ...
+    userData.configurationOptions = configurationOptions;
+    return this.auth.setUserData(localUserId, 'configurationOptions', userData, comp);
   }
 
   

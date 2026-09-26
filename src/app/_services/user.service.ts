@@ -19,6 +19,8 @@ import { ConfigurationService } from './configuration.service';
 import { IHoliday } from '../_interfaces/i-holiday';
 import { Contact } from '../_db/contact';
 import { MAX_MONTHS } from '../_globals/constants';
+import { App } from '../_enums/app.enum';
+import { UserFactory } from '../_db/user-factory';
 
 
 
@@ -56,7 +58,7 @@ private buildAuthorizations(userId: number): Array<IAuthorization> {
 
 /**
    * buildRecurringTimeSpans()
-   *  load timeSpans from holidays 
+   *  load timeSpans from holidays
    *  and build a user element 'recurrringTimeSpans' as user events
    *  (independent of provider - recurringTimeSpans exist only in local storage)
    * @param userId id of user for which we load data (if 0, it is session user ...)
@@ -104,14 +106,13 @@ private buildAuthorizations(userId: number): Array<IAuthorization> {
             birthdayTimeSpan.type = EventType.timeSpanCategory2;
             // customer info in timeSpan
             birthdayTimeSpan.eventInfo = {
-            issueProviderId: 1,
             contactNr: _.contactNr,
             contactDisplayNr: _.displayNr,
-            contactName: _.companyName,
-            contactLongName: _.longName,
-            street: _.street,
-            city: _.city,
-            plz: _.plz,
+            contactDisplayName: _.displayName,
+            companyName: _.companyName,
+            street: _.contactStreet ?? _.street,
+            city: _.contactCity?? _.city,
+            plz: _.contactPlz ?? _.plz,
             contactColor: _.contactColor
             };
             return birthdayTimeSpan;
@@ -151,7 +152,10 @@ private buildAuthorizations(userId: number): Array<IAuthorization> {
       user.status = 1;
       this.auth.setUser(userId, user, comp);
       this.providerService.loadProviders(userId, comp);
-      this.loadRecurringTimeSpans(userId, comp);
+      // in this moment user has not correct type - so we will builf timeSpans also for admins .....
+      if (user.type !== App.admin) {
+        this.loadRecurringTimeSpans(userId, comp);
+      }
       user.authorizations = this.buildAuthorizations(userId);
       this.auth.setUser(userId, user, comp);
        // TODO implement later
@@ -227,8 +231,8 @@ private buildAuthorizations(userId: number): Array<IAuthorization> {
       user.updated = null;
       user.updatedBy = '';
       user.releaseUpdated = 0;
-      //  user type is set to 0
-      user.type = 0;
+      // there might be no session app at init - user type will be set to 0 - but user type is set anyway later at setUserTyoe
+      user.type = session?.app === App.server ? 2 : session?.app === App.local ? 1 : 0;
       user.version = 0;
       if (!user.userEventOptions) {
         // options are read from configuration file ...
@@ -284,8 +288,8 @@ private buildAuthorizations(userId: number): Array<IAuthorization> {
   public isUserDeleteable(userId: number, comp: string): boolean {
     const user = this.auth.getUser(userId, comp);
     if (user) {
-      if (user.type === 0) {
-        // no delete of admin user (there is only 1)
+      if (user.type === 3) {
+        // no delete of local admin user (there is only 1)
         return false;
       }
       const data = this.auth.getUserData(userId, 'event', comp);
@@ -293,9 +297,122 @@ private buildAuthorizations(userId: number): Array<IAuthorization> {
         // TODO check if currentEvents are exported ...
         // if (data.events.filter(_ => _.isExported))
       }
-      // TODO check if providerEvents of any provider with isStoreEvent are exported ...
       return true;
     } else return false;
+  }
+
+  /**
+   * setUserType()
+   *  sets user.type according to app - if user was just initialized
+   *  otherwise find a user with fitting  type or create a new one
+   * @param app according to calling parameters (should be called with app that is targetted ..; should not be null)
+   * @param comp name of calling component
+   */
+  public async setUserType(app: App,  comp: string) {
+    let session = this.auth.getSession(comp);
+    if (session) {
+      let user = this.getUser(session.userId, comp);
+      let isNewUser = false;
+       // app null should not occur - before calling setUserType parameter app ist set to 1,2,3
+      const appChoices = Object.keys(App)
+      .filter((k: any) => typeof App[k] === 'number' && Number(App[k]) > 0)
+      .map((_: any) => Number(App[_]));
+      if (user && (user.status === 0 || (!appChoices.includes(user.type)) )) {
+        // user was just created as default user or we have incorrect user t
+        isNewUser = true;
+      } else if (user && !appChoices.includes(app)) {
+        app = user.type;
+      }
+      // after checking on new user, we assure anyway that session user data are loaded
+      await this.buildUserData(session.userId, this.name);
+      user = this.getUser(session.userId, comp);
+      // in case of existing session must stay in this mode ...
+      if (user && !isNewUser && session.app === app && user.type === app ) {
+        // we do not need to change anything
+      } else {
+        if (user && isNewUser && session.app === 0) {
+          // we have a new created session and user ....
+          user.type = app;
+          if (app === App.admin) {
+            user.userName = 'admin';
+          }
+          this.setUser(user.userId, user, this.name);
+        }
+        if (user && user.type !== app) {
+          // we have a user with wrong type
+          let setSessionUserId = 0;
+          const users = this.getUsers(this.name).filter(_ => _.status < 9
+            && _.type === app);
+          if (users && users.length > 0) {
+            for (user of users) {
+              if (setSessionUserId === 0) {
+                if (user.type === App.server) {
+                  setSessionUserId = user.userId;
+                }
+              }
+            }
+          }
+          if (users && users.length > 0 && setSessionUserId === 0 && users[0].userId >= 1 ) {
+            setSessionUserId = users[0].userId;
+          } else if (setSessionUserId === 0) {
+            user = UserFactory.empty();
+            setSessionUserId = await this.createUser(user, this.name);
+            user = this.getUser(setSessionUserId, this.name);
+            // create user has type according to actual session app
+            if (user) {
+              user.type = app;
+              if (app === App.admin) {
+                user.userName = 'admin';
+              }
+              this.setUser(setSessionUserId, user, this.name);
+              await this.buildUserData(setSessionUserId, this.name);
+            }
+          }
+          const newUserId = await this.auth.newSessionUser(setSessionUserId, this.name);
+          if (newUserId === setSessionUserId) {
+            session = this.auth.getSession(this.name);
+          }
+        }
+        if (session && session.app !== app) {
+          // here we change session.app and user.type
+          user = this.getUser(session.userId, comp);
+          if (user) {
+            switch (app) {
+              case App.local:
+                session.app = App.local;
+                session.isPlan = true;
+                session.isPlanMaint = true;
+                break;
+              case App.server:
+                session.app = App.server;
+                session.isPlan = true;
+                session.isPlanMaint = true;
+                break;
+              case App.admin:
+                session.app = App.admin;
+                // to show actual event as default in calendar.component ...
+                session.isPlan = false;
+                // we have no calendar component usage at app.admin in the moment
+                session.isPlanMaint = false;
+                break;
+
+              default:
+                break;
+            }
+            // this.setUser(user.userId, user, comp);
+            session.userName = user.userName;
+            this.auth.setSession(session, comp);
+          }
+        }
+      } // end else - there was a need of changechange
+      session = this.auth.getSession(this.name);
+      if (session && session?.authorizations?.length > 0) {
+      // already built
+      } else if (user) {
+        // we build all authorizations - also if session.issueProviderId limits the session to 1 provider ...
+        this.auth.setSessionAuthorizations(user.authorizations, this.name);
+      }
+    }
   }
 
 
@@ -396,7 +513,7 @@ private buildAuthorizations(userId: number): Array<IAuthorization> {
       this.loadRecurringTimeSpans(userId, comp, startDate, endDate);
       timeSpans = this.getRecurringTimeSpans(userId, comp);
     }
-   
+
     if (timeSpans?.length > 0) {
     timeSpans = timeSpans.filter(_ =>
       GlobalFunctions.getDateInMinutes(_.eventBegin) >= GlobalFunctions.getDateInMinutes(fromDate)

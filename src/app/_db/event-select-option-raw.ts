@@ -16,9 +16,9 @@ export interface EventSelectOptionRaw {
   externalUserId: string;
   userLogin: string;
   // we allow null for selection = according to eventOption
-  isPlan: boolean;
+  isPlan: boolean | null;
   // we allow null for location type selection = all types
-  locationType: number;
+  locationType: number | null;
   isShowDetails: boolean;
   sortCriterias: IEventSortCriteria[];
   userName?: string;
