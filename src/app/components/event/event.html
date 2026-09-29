@@ -1,45 +1,49 @@
 <br>
 @if (eventsReadySignal() >= 0 && auth && auth.txt && session) {
-  <div class="ui grid container">
-    <div class="row">
+  <div class="container mx-auto p-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <!-- at left side we show issue and contact select -->
-      <div class="four wide column">
+      <div>
         @if (eventContact.contactNr > 0) {
           @if (!isEventContactAutoSelected) {
-            <div class="ui checkbox">
-              <input type="checkbox" [checked]="isEventContactSelected" (change)="setShowContact($event)">
-              <label></label>
+            <div class="form-control">
+              <label class="label cursor-pointer">
+                <input type="checkbox" [checked]="isEventContactSelected" (change)="setShowContact($event)" class="checkbox checkbox-sm">
+                <span class="label-text">{{auth.txt['contact']}}</span>
+              </label>
             </div>
           }
-          <div class="ui label"
+          <div class="badge tooltip tooltip-left tooltip-accent"
             [ngStyle]="contactStyle"
-            [attr.data-tooltip]="auth.txt['contact'] + ': ' + eventContact.name" data-position="right center">
+            [attr.data-tip]="auth.txt['contact'] + ': ' + eventContact.name">
             {{eventContact.displayNr}}
           </div>
         }
         <!-- even if eventSelectOpion === eventOption  we show them twice,
-        just a divider before  !!!  -->
-        <div class="ui divider"></div>
+        just a divider before  !!!
+        -->
+        <div class="divider my-2"></div>
         @if ((eventContact.contactNr !== eventSelectOption.contactNr || eventIssueNr !== eventSelectOption.issueNr)
           && eventSelectOption.issueNr &&  eventSelectOption.issueNr > 0 ) {
           @if (eventSelectOption.issueNr > 0) {
-            <div class="ui label"
+            <div class="badge tooltip tooltip-left tooltip-accent"
               [ngStyle]="eventSelectStyle"
-              [attr.data-tooltip]="eventSelectOption.issueNr + (eventSelectOption.contactName && eventSelectOption.contactName !== '' ? ('|' + eventSelectOption.contactName.substring(0,20)) : '')" data-position="right center">
+              [attr.data-tip]="eventSelectOption.issueNr + (eventSelectOption.contactName && eventSelectOption.contactName !== '' ? ('|' + eventSelectOption.contactName.substring(0,20)) : '')">
               {{eventSelectOption.issueNr}}
             </div>
           } @else {
-            <div class="ui label"
+            <div class="badge tooltip tooltip-left tooltip-accent"
               [ngStyle]="eventSelectStyle"
-              [attr.data-tooltip]="auth.txt['contact']+ ': ' + eventSelectOption.contactName" data-position="right center">
+              [attr.data-tip]="auth.txt['contact']+ ': ' + eventSelectOption.contactName">
               {{eventSelectOption.contactDisplayNr}}
             </div>
           }
         }
       </div>
-      <!-- at central column we show header, user and event select options  -->
-      <div class="six wide column">
-        <h2>{{session.serviceLevel.contact === 1 ? auth.txt['event_list'] : auth.txt['event_list']}} </h2>
+      <!-- at central column we show header, user and event select options
+      -->
+      <div>
+        <h2 class="text-2xl font-bold">{{session.serviceLevel.contact === 1 ? auth.txt['event_list'] : auth.txt['event_list']}} </h2>
         {{session.serviceLevel.contact === 1 ? auth.txt['events'] : auth.txt['events']}}
         @if (eventSelectOption.userName) {
           <span> {{auth.txt['of']}}: {{eventSelectOption.userName}} - </span>
@@ -49,97 +53,98 @@
         } @else {
           {{auth.txt['actual']}}
         }
-        <div class="ui divider"></div>
-        <div class="ui grid">
-          <div class="row">
-            <!-- without label cause of saving space
-            <div class="three wide column">
-              <h4>{{auth.txt['select_option}}:</h4>
-            </div>
-            -->
-            <div class="twelve wide column">
-              @if ((eventSelectChoices && eventSelectChoices.length === 1) || isUpdate) {
-                <!-- securityLevel must allow maint - local user has rights in local app ...  -->
-                @if (!isUpdate && (session.securityLevel.maint > 0 || session.app === App.local) ) {
-                  <span (click)="setUpdateEventSelectOption()">{{eventSelectOption.name|slice:0:50}}</span>
+        <div class="divider my-2"></div>
+        <div class="flex items-center gap-2">
+          <!-- without label cause of saving space
+          <div>
+            <h4>{{auth.txt['select_option']}}:</h4>
+          </div>
+          -->
+          <div class="flex-1">
+            @if ((eventSelectChoices && eventSelectChoices.length === 1) || isUpdate) {
+              <!-- securityLevel must allow maint - local user has rights in local app ...
+              -->
+              @if (!isUpdate && (session.securityLevel.maint > 0 || session.app === App.local) ) {
+                <span class="link link-primary cursor-pointer" (click)="setUpdateEventSelectOption()">{{eventSelectOption.name|slice:0:50}}</span>
+              } @else {
+                @if (isInsert) {
+                  {{'(' + eventSelectOption.nr + ')'}} - {{eventSelectOption.name|slice:0:50}}
                 } @else {
-                  @if (isInsert) {
-                    {{'(' + eventSelectOption.nr + ')'}} - {{eventSelectOption.name|slice:0:50}}
-                  } @else {
-                    {{eventSelectOption.name|slice:0:50}}
-                  }
+                  {{eventSelectOption.name|slice:0:50}}
                 }
               }
-              @if (eventSelectChoices && eventSelectChoices.length > 1 && !isUpdate) {
-                <select class="ui search dropdown" (change)="setEventSelectOption($event)">
-                  @for (c of eventSelectChoices; track c.nr) {
-                    <option [value]="c.nr"
-                      [selected]="c.isSelected">
-                      {{c.nr}} - {{c.name|slice:0:50}}
-                    </option>
-                  }
-                </select>
-              }
-            </div>
-            <!-- securityLevel maint-->
-            @if ( !isUpdate && (session.securityLevel.maint > 0 || session.app === App.local)) {
-              <div class="column">
-                <button class="ui tiny yellow circular icon button"
-                  [attr.data-tooltip]="auth.txt['update']" data-inverted=""
-                  type ="button" (click)="setUpdateEventSelectOption()">
-                  <i class="left arrow icon"></i>
-                </button>
-              </div>
             }
-            <!-- // securityLevel maint -->
-            @if (!isUpdate && (session.securityLevel.maint > 0 || session.app === App.local)) {
-              <div class="column">
-                <button class="ui tiny yellow circular icon button"
-                  [attr.data-tooltip]="auth.txt['clone']" data-inverted=""
-                  type ="button" (click)="setCloneEventSelectOption()">
-                  <i class="right arrow icon"></i>
-                </button>
-              </div>
+            @if (eventSelectChoices && eventSelectChoices.length > 1 && !isUpdate) {
+              <select class="select select-primary w-full" (change)="setEventSelectOption($event)">
+                @for (c of eventSelectChoices; track c.nr) {
+                  <option [value]="c.nr"
+                    [selected]="c.isSelected">
+                    {{c.nr}} - {{c.name|slice:0:50}}
+                  </option>
+                }
+              </select>
             }
           </div>
-        </div>
-      </div>
-      <!-- at right side we show dates  -->
-      <div class="six wide column">
-        <h2>{{dateFromDisplay}}@if (dateToDisplay) {
-          <span> - {{dateToDisplay}}</span>
-        }</h2>
-        @if (listDayChoices.length > 0) {
-          <div class="right aligned column">
-            @for (l of listDayChoices; track $index; let i = $index) {
-              <div class="ui radio checkbox">
-                <input type="radio" [value]="l.value" [checked] = "l.isChecked"
-                  (change)="setListDay($event)"  >
-                  <label>{{l.value}}</label>
-                </div>
-              }
+          <!-- securityLevel maint-->
+          @if ( !isUpdate && (session.securityLevel.maint > 0 || session.app === App.local)) {
+            <div>
+              <button class="btn btn-sm btn-circle btn-warning text-primary-content tooltip tooltip-bottom tooltip-primary"
+                [attr.data-tip]="auth.txt['update']"
+                type ="button" (click)="setUpdateEventSelectOption()">
+                <i class="fas fa-arrow-left"></i>
+              </button>
+            </div>
+          }
+          <!-- // securityLevel maint -->
+          @if (!isUpdate && (session.securityLevel.maint > 0 || session.app === App.local)) {
+            <div>
+              <button class="btn btn-sm btn-circle btn-warning text-primary-content tooltip tooltip-bottom tooltip-primary"
+                [attr.data-tip]="auth.txt['clone']"
+                type ="button" (click)="setCloneEventSelectOption()">
+                <i class="fas fa-arrow-right"></i>
+              </button>
             </div>
           }
         </div>
+      </div>
+      <!-- at right side we show dates
+      -->
+      <div>
+        <h2 class="text-2xl font-bold">{{dateFromDisplay}}@if (dateToDisplay) {
+          <span> - {{dateToDisplay}}</span>
+        }</h2>
+        @if (listDayChoices.length > 0) {
+          <div class="flex flex-col items-end gap-1">
+            @for (l of listDayChoices; track $index; let i = $index) {
+              <div class="form-control">
+                <label class="label cursor-pointer">
+                  <input type="radio" [value]="l.value" [checked] = "l.isChecked"
+                    (change)="setListDay($event)" name="listday" class="radio radio-sm">
+                  <span class="label-text ml-2">{{l.value}}</span>
+                </label>
+              </div>
+            }
+          </div>
+        }
         <!-- there is no return in routed components
-        <div class="right floated one wide column">
-          <button class="left floated ui tiny circular red icon button"
-            [attr.data-tooltip]="auth.txt['close']" data-position="bottom center" data-inverted=""
+        <div>
+          <button class="btn btn-sm btn-circle btn-error tooltip tooltip-bottom tooltip-primary"
+            [attr.data-tip]="auth.txt['close']"
             (click)="return()">
-            <i class="times icon"></i>
+            <i class="fas fa-times"></i>
           </button>
         </div>
         -->
       </div>
     </div>
+  </div>
   }
-
   <!-- we use eventSelectOption for maintenance -->
   @if (selectViewSignal() === 1 && auth && auth.txt && users) {
     <dsy-event-select-form-view
       [txt]="auth.txt" [opts]="options" [optiontxt]="optiontxt"  [eventtxt]="eventtxt"
       [eventContact]="eventContact" [eventIssueNr]="eventIssueNr" [eventContacts]="eventContacts"
-      [timeSpans]="timeSpans" 
+      [timeSpans]="timeSpans"
       [session]="session" [users]="users"  [locale]="locale"
       [eventSelectOption]="eventSelectOption"
       (optionUpdate)="updateEventSelectOption($event)"
@@ -147,9 +152,8 @@
       (cancelUpdate)="cancelUpdate()">
     </dsy-event-select-form-view>
   }
-
   <!-- we use auth.eventSelectOption to filter the list -->
-  @if (eventsReadySignal() === 1 && selectViewSignal() === 0 && auth && auth.txt 
+  @if (eventsReadySignal() === 1 && selectViewSignal() === 0 && auth && auth.txt
       && eventElements.length > 0) {
     <dsy-event-list-view
       [txt]="auth.txt"  [eventtxt]="eventtxt" [session]="session" [isShowUser]="isShowUser"
@@ -159,8 +163,7 @@
       (eventShow)="showEvent($event)">
     </dsy-event-list-view>
   }
-
-  @if (eventsReadySignal() === 1 && selectViewSignal() === 0 && auth && auth.txt 
+  @if (eventsReadySignal() === 1 && selectViewSignal() === 0 && auth && auth.txt
     && (!eventElements || eventElements.length === 0)) {
-    <h4 class="ui center aligned header">  {{auth.txt['no_records_to_show']}} </h4>
+    <h4 class="text-center font-semibold mt-4">  {{auth.txt['no_records_to_show']}} </h4>
   }

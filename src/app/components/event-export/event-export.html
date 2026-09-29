@@ -1,312 +1,316 @@
 <br>
 @if (refreshSignal() === 1) {
-  <div class="ui grid container">
-    <div class="row">
-      <div class="ten wide column">
-        <h2 class="ui center aligned header">  {{this.auth.txt['event_export']}} </h2>
+  <div class="container mx-auto p-4">
+    <div class="flex flex-wrap gap-4 items-start">
+      <div class="flex-1"></div>
+      <div class="flex-1 text-center">
+        <h2 class="text-2xl md:text-3xl font-bold">  {{this.auth.txt['event_export']}} </h2>
       </div>
-      <div class="four wide column">
+      <div class="flex-1">
         @if (exportDayChoices.length > 0) {
-          <div class="right aligned column">
-            <h4 class="ui center aligned header">  {{auth.txt['related_to']}}: </h4>
+          <div class="flex flex-col items-end gap-1">
+            <h4 class="text-center">  {{auth.txt['related_to']}}: </h4>
             @for (e of exportDayChoices; track e; let i = $index) {
-              <div class="ui radio checkbox">
-                <input type="radio" [value]="e.value" [checked] = "e.isChecked"
-                  (change)="setExportDay($event)"  >
-                  <label>{{e.value}}</label>
-                </div>
-              }
-            </div>
-          }
-        </div>
+              <div class="form-control">
+                <label class="label cursor-pointer gap-2">
+                  <input type="radio" [value]="e.value" [checked] = "e.isChecked"
+                    (change)="setExportDay($event)" name="exportday" class="radio radio-sm">
+                  <span class="label-text">{{e.value}}</span>
+                </label>
+              </div>
+            }
+          </div>
+        }
         @if (resetableSignal() === 1) {
-          <div class="column">
-            <button class="ui tiny circular red icon button"
-              [attr.data-tooltip]="auth.txt['reset']"
+          <div class="flex justify-end mt-2">
+            <button class="btn btn-sm btn-circle btn-error text-primary-content tooltip tooltip-bottom tooltip-accent"
+              [attr.data-tip]="auth.txt['reset']"
               (click)="resetExport()">
-              <i class="times icon"></i>
+              <i class="fas fa-times"></i>
             </button>
           </div>
         }
       </div>
-      <div class="ui divider"></div>
-      <div class="row">
-        <div class="three wide column">
-          <h4>{{auth.txt['filter']}} {{auth.txt['select_option']}}:</h4>
-        </div>
-        <div class="six wide column">
-          @if ((eventSelectChoices && eventSelectChoices.length === 1)) {
-            {{session.eventSelectOption?.name|slice:0:50}}
-          }
-          @if (eventSelectChoices && eventSelectChoices.length > 1) {
-            <select class="ui search dropdown" (change)="setEventSelectOption($event)">
-              @for (c of eventSelectChoices; track c) {
-                <option [value]="c.nr"
-                  [selected]="c.isSelected">
-                  {{c.nr}} - {{c.name|slice:0:50}}
-                </option>
-              }
-            </select>
-          }
-        </div>
-        <div class="four wide column">
-          <h4 class="ui right aligned header">  {{auth.txt['export_according_to_list']}}: </h4>
-        </div>
-        <div class="two wide column">
-          <!-- open area for showing filter  ...  -->
-          @if (!isShowFilter) {
-            <button class="ui tiny circular blue icon button"
-              [attr.data-tooltip]="auth.txt['show'] + ' ' + auth.txt['filter']"
-              (click)="setShowFilter()">
-              <i class="arrow down icon"></i>
-            </button>
-          }
-          @if (isShowFilter) {
-            <button class="ui tiny circular blue icon button"
-              [attr.data-tooltip]="auth.txt['hide'] + ' ' + auth.txt['filter'] "
-              (click)="setShowFilter()">
-              <i class="arrow up icon"></i>
-            </button>
-          }
-        </div>
+    </div>
+    <div class="divider"></div>
+    <div class="flex flex-wrap gap-4 items-center">
+      <div class="w-1/5">
+        <h4>{{auth.txt['filter']}} {{auth.txt['select_option']}}:</h4>
       </div>
-      @if (isShowFilter) {
-        <div class="row">
-          <div class="two wide column">
-          </div>
-          <div class="four wide column">
-            <h4>  {{auth.txt['events'] }}  {{(session.eventSelectOption?.isPlan === null && session.isPlan) || session.eventSelectOption?.isPlan ? auth.txt['plan']  : auth.txt['actual'] }} </h4>
-          </div>
-          <div class="two wide column">
-            <h4>  {{dateFromDisplay}} </h4>
-          </div>
-          <div class="one wide column">
-            <h4> - </h4>
-          </div>
-          <div class="two wide column">
-            <h4>  {{dateToDisplay}} </h4>
-          </div>
-          <div class="four wide column">
-            @if (isMoreFilters) {
-              <h4>  ... {{auth.txt['more_filters_are_set'] }} </h4>
-            }
-          </div>
-        </div>
-      }
-      <div class="ui divider"></div>
-      <div class="row">
-        <div class="three wide column">
-          <h4>{{auth.txt['event_export'] + ' ' + auth.txt['style'] }}:</h4>
-        </div>
-        <div class="six wide column">
-          <select class="ui search dropdown" (change)="selectStyle($event)">
-            @for (s of styleChoices; track s) {
-              <option [value]="s.value"
-                [selected]="s.isSelected">
-                {{s.value}} - {{s.text}}
+      <div class="w-2/5">
+        @if ((eventSelectChoices && eventSelectChoices.length === 1)) {
+          {{session.eventSelectOption?.name|slice:0:50}}
+        }
+        @if (eventSelectChoices && eventSelectChoices.length > 1) {
+          <select class="select select-primary w-full" (change)="setEventSelectOption($event)">
+            @for (c of eventSelectChoices; track c) {
+              <option [value]="c.nr"
+                [selected]="c.isSelected">
+                {{c.nr}} - {{c.name|slice:0:50}}
               </option>
             }
           </select>
+        }
+      </div>
+      <div class="w-1/3 text-right">
+        <h4>  {{auth.txt['export_according_to_list']}}: </h4>
+      </div>
+      <div class="w-1/12">
+        <!-- open area for showing filter  ...
+        -->
+        @if (!isShowFilter) {
+          <button class="btn btn-xs btn-circle btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['show'] + ' ' + auth.txt['filter']"
+            (click)="setShowFilter()">
+            <i class="fas fa-arrow-down"></i>
+          </button>
+        }
+        @if (isShowFilter) {
+          <button class="btn btn-xs btn-circle btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['hide'] + ' ' + auth.txt['filter'] "
+            (click)="setShowFilter()">
+            <i class="fas fa-arrow-up"></i>
+          </button>
+        }
+      </div>
+    </div>
+    @if (isShowFilter) {
+      <div class="flex flex-wrap gap-4 items-center mt-2">
+        <div class="w-1/6">
         </div>
-        <div class="four wide column">
-          <h4 class="ui right aligned header">  {{auth.txt['export_columns'] }}: </h4>
+        <div class="w-1/5">
+          <h4>  {{auth.txt['events'] }}  {{(session.eventSelectOption?.isPlan === null && session.isPlan) || session.eventSelectOption?.isPlan ? auth.txt['plan']  : auth.txt['actual'] }} </h4>
         </div>
-        <div class="two wide column">
-          <!-- open area for showing style - as columns ...  -->
-          @if (!isShowStyle) {
-            <button class="ui tiny circular blue icon button"
-              [attr.data-tooltip]="auth.txt['show']  + ' ' + auth.txt['style']"
-              (click)="setShowStyle()">
-              <i class="arrow down icon"></i>
-            </button>
-          }
-          @if (isShowStyle) {
-            <button class="ui tiny circular blue icon button"
-              [attr.data-tooltip]="auth.txt['hide']  + ' ' + auth.txt['style'] "
-              (click)="setShowStyle()">
-              <i class="arrow up icon"></i>
-            </button>
+        <div class="w-1/6">
+          <h4>  {{dateFromDisplay}} </h4>
+        </div>
+        <div class="w-1/12">
+          <h4> - </h4>
+        </div>
+        <div class="w-1/6">
+          <h4>  {{dateToDisplay}} </h4>
+        </div>
+        <div class="w-1/5">
+          @if (isMoreFilters) {
+            <h4>  ... {{auth.txt['more_filters_are_set'] }} </h4>
           }
         </div>
       </div>
-      @if (isShowStyle) {
-        <div class="row">
-          <div [style]="tableScrollStyle">
-            <table class="ui very basic table">
-              <thead>
-                <tr>
-                  @for (h of showHeader; track h) {
-                    <td>
-                      <h4>{{h}}</h4>
-                    </td>
-                  }
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  @for (c of showContent; track c) {
-                    <td >
-                      <h5>{{c}}</h5>
-                    </td>
-                  }
-                </tr>
-                <tr>
-                  @for (s of columnStyles; track s) {
-                    <td >
-                      <small>{{s ? '(' + s['columnContent']+ ')' : ''}}</small>
-                    </td>
-                  }
-                </tr>
-              </table>
+    }
+    <div class="divider"></div>
+    <div class="flex flex-wrap gap-4 items-center">
+      <div class="w-1/5">
+        <h4>{{auth.txt['event_export'] + ' ' + auth.txt['style'] }}:</h4>
+      </div>
+      <div class="w-2/5">
+        <select class="select select-primary w-full" (change)="selectStyle($event)">
+          @for (s of styleChoices; track s) {
+            <option [value]="s.value"
+              [selected]="s.isSelected">
+              {{s.value}} - {{s.text}}
+            </option>
+          }
+        </select>
+      </div>
+      <div class="w-1/3 text-right">
+        <h4>  {{auth.txt['export_columns'] }}: </h4>
+      </div>
+      <div class="w-1/12">
+        <!-- open area for showing style - as columns ...
+        -->
+        @if (!isShowStyle) {
+          <button class="btn btn-xs btn-circle btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['show']  + ' ' + auth.txt['style']"
+            (click)="setShowStyle()">
+            <i class="fas fa-arrow-down"></i>
+          </button>
+        }
+        @if (isShowStyle) {
+          <button class="btn btn-xs btn-circle btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['hide']  + ' ' + auth.txt['style'] "
+            (click)="setShowStyle()">
+            <i class="fas fa-arrow-up"></i>
+          </button>
+        }
+      </div>
+    </div>
+    @if (isShowStyle) {
+      <div class="mt-2" [style]="tableScrollStyle">
+        <table class="table w-full">
+          <thead>
+            <tr>
+              @for (h of showHeader; track h) {
+                <th>
+                  {{h}}
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              @for (c of showContent; track c) {
+                <td>
+                  {{c}}
+                </td>
+              }
+            </tr>
+            <tr>
+              @for (s of columnStyles; track s) {
+                <td>
+                  <small>{{s ? '(' + s['columnContent']+ ')' : ''}}</small>
+                </td>
+              }
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    }
+    <div class="divider"></div>
+    <div class="flex gap-4 items-center">
+      <div class="w-1/6">
+        <!-- open update area for extended file name ....
+        -->
+        @if (exportReadySignal() === 0 && !isUpdateExtendedFileName) {
+          <button class="btn btn-circle btn-sm btn-warning text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['fileName']  + ' ' + auth.txt['update'] "
+            (click)="setUpdateExtendedFileName()">
+            <i class="fas fa-arrow-down"></i>
+          </button>
+        }
+        @if (isUpdateExtendedFileName) {
+          <button class="btn btn-circle btn-sm btn-success text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['fileName']  + ' ' + auth.txt['update']"
+            [disabled]="isUpdateFileName || isUpdateFileType"
+            (click)="setUpdateExtendedFileName()">
+            <i class="fas fa-check"></i>
+          </button>
+        }
+      </div>
+      <div class="w-2/3">
+        <h4>
+          {{auth.txt['fileName']}}: {{extendedFileName}}
+        </h4>
+        @if (exportReadySignal() === 1 && exportFinishedSignal() === 0 && recordCount > 0) {
+          <h4>
+            {{'   ' + auth.txt['record_count'] + ': ' + recordCount}}
+          </h4>
+        }
+      </div>
+      <div class="w-1/6 flex justify-end">
+        @if (exportReadySignal() === 0 && !isUpdateExtendedFileName) {
+          <button class="btn btn-circle btn-sm btn-success text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['prepare_export'] "
+            (click)="prepareExport()">
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        }
+        <!-- design the a link as button is best possibility to use href ....
+        -->
+        @if (exportReadySignal() === 1 && exportFinishedSignal() === 0 && recordCount > 0) {
+          <a class="btn btn-success btn-sm text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [href]="encodedUri|safeResource"
+            [attr.download]="extendedFileName"
+            [attr.data-tip]="auth.txt['do_export']"
+            (click)="setExportFinished()">
+            <i class="fas fa-download mr-2"></i>DOWNLOAD
+          </a>
+        }
+        @if (exportReadySignal() === 1 && recordCount === 0) {
+          <h4>
+            {{auth.txt['no_records_to_export'] }}
+          </h4>
+        }
+        @if (exportFinishedSignal() === 1) {
+          <h4>
+            {{recordCount + ' ' + auth.txt['records_exported'] }}
+          </h4>
+        }
+      </div>
+    </div>
+    <!-- updating file name
+    -->
+    @if (isUpdateExtendedFileName) {
+      <div class="divider"></div>
+      <div class="flex gap-4 items-center">
+        <div class="w-1/6">
+          <h4> {{auth.txt['fileName']}}:</h4>
+        </div>
+        <div class="w-2/3" >
+          @if (!isUpdateFileName) {
+            <h4>
+              {{fileName}}
+            </h4>
+          }
+          @if (isUpdateFileName) {
+            <div class="join w-full">
+              <input (keyup.enter)="updateFileName(name.value)"
+                #name [value]="fileName" type="text" [placeholder]="auth.txt['fileName']  + '  ...'" class="input input-bordered join-item w-full">
+              <button class="btn btn-sm btn-success text-primary-content join-item tooltip tooltip-bottom tooltip-accent"
+                [attr.data-tip]="auth.txt['submit']"
+                (click)="updateFileName(name.value)">
+                <i class="fas fa-check"></i>
+              </button>
             </div>
+          }
+        </div>
+        @if (!isUpdateFileName && !isUpdateFileType && exportReadySignal() === 0) {
+          <div>
+            <button class="btn btn-circle btn-sm btn-warning text-primary-content tooltip tooltip-bottom tooltip-accent"
+              [attr.data-tip]="auth.txt['fileName']  + ' ' + auth.txt['update'] "
+              (click)="setUpdateFileName()">
+              <i class="fas fa-arrow-left"></i>
+            </button>
           </div>
         }
-        <div class="ui divider"></div>
-        <div class="row">
-          <div class="two wide column">
-            <!-- open update area for extended file name ....  -->
-            @if (exportReadySignal() === 0 && !isUpdateExtendedFileName) {
-              <button class="ui tiny circular yellow icon button"
-                [attr.data-tooltip]="auth.txt['fileName']  + ' ' + auth.txt['update'] "
-                (click)="setUpdateExtendedFileName()">
-                <i class="arrow down icon"></i>
-              </button>
-            }
-            @if (isUpdateExtendedFileName) {
-              <button class="ui tiny circular green icon button"
-                [attr.data-tooltip]="auth.txt['fileName']  + ' ' + auth.txt['update']"
-                [disabled]="isUpdateFileName || isUpdateFileType"
-                (click)="setUpdateExtendedFileName()">
-                <i class="check icon"></i>
-              </button>
-            }
-          </div>
-          <div class="eight wide column">
-            <h4>
-              {{auth.txt['fileName']}}: {{extendedFileName}}
-            </h4>
-            @if (exportReadySignal() === 1 && exportFinishedSignal() === 0 && recordCount > 0) {
-              <h4>
-                {{'   ' + auth.txt['record_count'] + ': ' + recordCount}}
-              </h4>
-            }
-          </div>
-          <div class="two wide column">
-            @if (exportReadySignal() === 0 && !isUpdateExtendedFileName) {
-              <button class="ui tiny circular green icon button"
-                [attr.data-tooltip]="auth.txt['prepare_export'] "
-                (click)="prepareExport()">
-                <i class="arrow right icon"></i>
-              </button>
-            }
-            <!-- design the a link as button is best possibility to use href ....  -->
-            @if (exportReadySignal() === 1 && exportFinishedSignal() === 0 && recordCount > 0) {
-              <a class="ui tiny green button"
-                [href]="encodedUri|safeResource"
-                [attr.download]="extendedFileName"
-                [attr.data-tooltip]="auth.txt['do_export']"
-                (click)="setExportFinished()">
-                DOWNLOAD
-              </a>
-            }
-            @if (exportReadySignal() === 1 && recordCount === 0) {
-              <h4>
-                {{auth.txt['no_records_to_export'] }}
-              </h4>
-            }
-            @if (exportFinishedSignal() === 1) {
-              <h4>
-                {{recordCount + ' ' + auth.txt['records_exported'] }}
-              </h4>
-            }
+      </div>
+      <div class="flex gap-4 items-center mt-2">
+        <div class="w-1/6">
+        </div>
+        <div class="w-1/6" >
+          <div class="form-control">
+            <label class="label cursor-pointer gap-2">
+              <input type="checkbox" [checked]="isFileExtension"
+                [disabled]="isUpdateFileName || isUpdateFileType || exportReadySignal() === 1"
+                (change)="setShowExtension($event)" class="checkbox checkbox-sm">
+              <span class="label-text">{{auth.txt['fileNameExtension'] }} </span>
+            </label>
           </div>
         </div>
-        <!-- updating file name                     -->
-        @if (isUpdateExtendedFileName) {
-          <div class="ui divider"></div>
-          <div class="row">
-            <div class="two wide column">
-              <h4> {{auth.txt['fileName']}}:</h4>
+      </div>
+      <div class="flex gap-4 items-center mt-2">
+        <div class="w-1/6">
+          <h4> {{auth.txt['fileType'] }}:</h4>
+        </div>
+        <div class="w-1/6" >
+        </div>
+        <div class="w-1/2" >
+          @if (!isUpdateFileType) {
+            <h4>
+              {{fileType}}
+            </h4>
+          }
+          @if (isUpdateFileType) {
+            <div class="join w-full">
+              <input (keyup.enter)="updateFileType(type.value)"
+                #type [value]="fileType" type="text" [placeholder]="auth.txt['fileType'] + '  ...'" class="input input-bordered join-item w-full">
+              <button class="btn btn-sm btn-success text-primary-content join-item tooltip tooltip-bottom tooltip-accent"
+                [attr.data-tip]="auth.txt['submit']"
+                (click)="updateFileType(type.value)">
+                <i class="fas fa-check"></i>
+              </button>
             </div>
-            <div class="eight wide column" >
-              @if (!isUpdateFileName) {
-                <h4>
-                  {{fileName}}
-                </h4>
-              }
-              @if (isUpdateFileName) {
-                <h4>
-                  <div class="ui fluid input">
-                    <input (keyup.enter)="updateFileName(name.value)"
-                      #name [value]="fileName" type="text" [placeholder]="auth.txt['fileName']  + '  ...'">
-                    <button class="ui tiny green icon button"
-                      [attr.data-tooltip]="auth.txt['submit']" data-position="top center"
-                      (click)="updateFileName(name.value)">
-                      <i class="check icon"></i>
-                    </button>
-                  </div>
-                </h4>
-              }
-            </div>
-            @if (!isUpdateFileName && !isUpdateFileType && exportReadySignal() === 0) {
-              <div class="column">
-                <button class="ui tiny circular yellow icon button"
-                  [attr.data-tooltip]="auth.txt['fileName']  + ' ' + auth.txt['update'] "
-                  (click)="setUpdateFileName()">
-                  <i class="arrow left icon"></i>
-                </button>
-              </div>
-            }
-          </div>
-          <div class="row">
-            <div class="two wide column">
-            </div>
-            <div class="two wide column" >
-              <div class="ui checkbox">
-                <input type="checkbox" [checked]="isFileExtension"
-                  [disabled]="isUpdateFileName || isUpdateFileType || exportReadySignal() === 1"
-                  (change)="setShowExtension($event)">
-                <label>{{auth.txt['fileNameExtension'] }} </label>
-              </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="two wide column">
-              <h4> {{auth.txt['fileType'] }}:</h4>
-            </div>
-            <div class="two wide column" >
-            </div>
-            <div class="six wide column" >
-              @if (!isUpdateFileType) {
-                <h4>
-                  {{fileType}}
-                </h4>
-              }
-              @if (isUpdateFileType) {
-                <h4>
-                  <div class="ui fluid input">
-                    <input (keyup.enter)="updateFileType(type.value)"
-                      #type [value]="fileType" type="text" [placeholder]="auth.txt['fileType'] + '  ...'">
-                    <button class="ui tiny green icon button"
-                      [attr.data-tooltip]="auth.txt['submit']" data-position="top center"
-                      (click)="updateFileType(type.value)">
-                      <i class="check icon"></i>
-                    </button>
-                  </div>
-                </h4>
-              }
-            </div>
-            @if (!isUpdateFileName && !isUpdateFileType && exportReadySignal() === 0) {
-              <div class="column">
-                <button class="ui tiny circular yellow icon button"
-                  [attr.data-tooltip]="auth.txt['fileType'] + ' ' + auth.txt['update']"
-                  (click)="setUpdateFileType()">
-                  <i class="arrow left icon"></i>
-                </button>
-              </div>
-            }
+          }
+        </div>
+        @if (!isUpdateFileName && !isUpdateFileType && exportReadySignal() === 0) {
+          <div>
+            <button class="btn btn-circle btn-sm btn-warning text-primary-content tooltip tooltip-bottom tooltip-accent"
+              [attr.data-tip]="auth.txt['fileType'] + ' ' + auth.txt['update']"
+              (click)="setUpdateFileType()">
+              <i class="fas fa-arrow-left"></i>
+            </button>
           </div>
         }
       </div>
     }
-
+  </div>
+}
