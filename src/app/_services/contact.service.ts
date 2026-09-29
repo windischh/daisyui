@@ -1,19 +1,19 @@
-import { LogPublishersService } from './log-publishers.service';
-import { IAuthorization } from '../_interfaces/i-authorization';
+
 import { Injectable } from '@angular/core';
+
+import { StyleFactory } from '../_globals/style-factory';
 
 import { ContactRaw } from '../_db/contact-raw';
 import { ContactFactory } from '../_db/contact-factory';
 import { Contact } from '../_db/contact';
 
+import { App } from '../_enums/app.enum';
+
 import { LogService } from './log.service';
 import { AuthenticationService } from './authentication.service';
 import { FetchApiService } from './fetch-api.service';
 import { MessageService } from './message.service';
-
-import { MAX_CONTACT_NR } from '../_globals/constants';
-import { StyleFactory } from '../_globals/style-factory';
-
+import { UserService } from './user.service';
 
 
 /**
@@ -32,6 +32,7 @@ export class ContactService {
   constructor(
     private logger: LogService,
     public auth: AuthenticationService,
+    public userService: UserService,
     public fetch: FetchApiService,
     private message: MessageService) {
    }
@@ -48,14 +49,30 @@ export class ContactService {
     private getLocalContacts(userId: number, comp: string): Array<Contact> {
     let contacts: Array<Contact> = [];
     const session = this.auth.getSession(comp);
-    const localUserId = userId && userId > 0 ? userId : (session?.userId ?? 0);
-    // we get all elements
-    const userData = this.auth.getUserData(localUserId, 'contacts', comp);;
-    if (userData && userData.contacts) {
-      return userData.contacts;
-    } else {
-      return contacts;
+    if (session && session.app === App.local && (session.userId === userId || userId === 0)) {
+      const userData = this.auth.getUserData(session.userId, 'contacts', comp);
+      if(userData && userData.contacts) {
+        contacts = userData.contacts;
+      }
+    } else if (session && session.app === App.admin) {
+      if (userId === 0) {
+        // we get events for all active local users
+        const users = this.userService.getUsers(this.name);
+        const localUsers = users.filter(_ => _.type === 1 && _.status < 9 );
+        for (const user of localUsers) {
+          const userData = this.auth.getUserData(user.userId, 'contacts', comp);
+          if(userData && userData.contacts) {
+            contacts.concat(userData.contacts);
+          }
+        }
+      } else {
+        const userData = this.auth.getUserData(userId, 'contacts', comp);
+        if(userData && userData.contacts) {
+          contacts = userData.contacts;
+        }
+      }
     }
+    return contacts;
   }
 
   /**
@@ -69,12 +86,14 @@ export class ContactService {
     private setLocalContacts(userId: number, contacts: Array<Contact>, comp: string): boolean {
     if (contacts) {
       const session = this.auth.getSession(comp);
-      const localUserId = userId && userId > 0 ? userId : (session?.userId ?? 0);
-      // we get all elements
-      const userData = this.auth.getUserData(localUserId, 'contacts', comp);;
-      // contacts are set - even if there were no entries before ...
-      userData.contacts = contacts;
-      return this.auth.setUserData(localUserId, 'contacts', userData, comp);
+      if (session && session.app === App.local && (session.userId === userId || userId === 0)) {
+        // we get all elements
+        const userData = this.auth.getUserData(session.userId, 'contacts', comp);;
+        // contacts are set - even if there were no entries before ...
+        userData.contacts = contacts;
+        return this.auth.setUserData(session.userId, 'contacts', userData, comp);
+      }
+      // LATER if necessary we could need contact update where admin user updates contacts of a local user....
     }
     return false;
   }
@@ -82,6 +101,7 @@ export class ContactService {
 
 
   /** ------------------------  public methods --------------------------------------------------- */
+
 
   /**
    * getContacts()
@@ -91,13 +111,28 @@ export class ContactService {
   */
   public getContacts(comp: string): Array<Contact> {
     let contacts: Array<Contact> = [];
-    const session = this.auth.getSession(comp);
-    if (session && session?.userId && session?.userId > 0) {
-      contacts = this.getLocalContacts(session.userId, comp);
-    }
+    contacts = this.getLocalContacts(0, comp);
     return contacts;
   }
 
+
+  /**
+   * getUserContacts()
+   *  in case of admin: get contacts  for user - otherwise gets contacts for session user
+   * @param userId id of user - used only at admin
+   * @param comp name of calling component
+   * @returns contacts (ATTN: also disabled contacts are returned)
+   */
+  public getUserContacts(userId: number, comp: string): Array<Contact> {
+    let contacts: Array<Contact> = [];
+    const session = this.auth.getSession(comp);
+    if (session && session.app === App.admin) {
+      contacts = this.getLocalContacts(userId, comp);
+    } else {
+      contacts = this.getContacts(comp);
+    }
+    return contacts;
+  }
 
   /**
    * search Contacts()
@@ -228,11 +263,11 @@ export class ContactService {
     if (contacts?.length > 0) {
       ix = contacts.findIndex(_ => _.contactId === contact.contactId);
     }
-    if (contact) {
+    if (session && contact) {
       if (contact.contactId > 0 && ix >= 0) {
         contact.updated = new Date();
-        contact.updatedBy = session?.userName ?? '';
-        contact.releaseUpdated = session?.releaseUpdated ?? 0;
+        contact.updatedBy = session.userName;
+        contact.releaseUpdated = session?.releaseUpdated;
         contact.version++;
         contacts[ix] = contact;
       } else {
@@ -241,9 +276,10 @@ export class ContactService {
         : 0;
         lastContactId++;
         contact.contactId = lastContactId;
+        contact.userId = session.userId;
         contact.created = new Date();
-        contact.updatedBy = session?.userName ?? '';
-        contact.releaseCreated = session?.releaseUpdated ?? 0;
+        contact.updatedBy = session?.userName;
+        contact.releaseCreated = session?.releaseUpdated;
         contact.version = 0;
         contacts.push(contact);
       }
@@ -310,80 +346,83 @@ export class ContactService {
    */
   public createContacts(contacts: Array<Contact>, isContactNrUpdate: boolean, startContactNr: number, comp: string): Array<{nr: number, style: {}, message: string}> {
     const session = this.auth.getSession(comp);
-    let legacyContacts: Array<Contact> = [];
-    let nextContactNr = startContactNr;
-    let createdContacts: Array<{nr: number, style: {}, message: string}> = [];
-    legacyContacts = this.getContacts(comp);
-    // build contactId  as max of id of existing contacts
-    let lastContactId = legacyContacts?.length > 0
-      ? legacyContacts.reduce((a,b) => a.contactId > b.contactId ? a : b).contactId
-      : 0;;
-    // build contactNr  as max of nr of existing contacts (including disabled - as then can be enabled, we do not give theis number ..)
-    let lastContactNr = this.getMaxContactNr(comp);
-    for (const contact of contacts) {
-      let ix = -1;
-      if (legacyContacts?.length > 0) {
-        ix = legacyContacts.findIndex(_ => (contact.contactNr > 0 && _.contactNr === contact.contactNr && isContactNrUpdate)
-          || (_.contactName === contact.contactName && _.contactFirstName === contact.contactFirstName));
-      }
-      if (ix >= 0 && legacyContacts[ix].status < 9) {
-        const importNr = contact.contactNr;
-        contact.contactId = legacyContacts[ix].contactId;
-        contact.contactNr = legacyContacts[ix].contactNr;
-        contact.contactColor = legacyContacts[ix].contactColor;
-        contact.created = legacyContacts[ix].created;
-        contact.createdBy = legacyContacts[ix].createdBy;
-        contact.releaseCreated = legacyContacts[ix].releaseCreated;
-        contact.updated = new Date();
-        contact.updatedBy = session?.userName ?? '';
-        contact.releaseUpdated = session?.releaseUpdated ?? 0;
-        contact.version = legacyContacts[ix].version++;
-        // TODO set fields only if not empty ....
-        legacyContacts[ix] = contact;
-        createdContacts.push({nr: contact.contactNr, style: StyleFactory.getBgColorStyle(contact.contactColor), message: 'UPD from ' + importNr});
-      } else {
-        lastContactId++;
-        let isBuildNewContactNr = false;
-        const importNr = contact.contactNr;
-        if (!contact.contactNr || contact.contactNr === 0) {
-          isBuildNewContactNr = true;
-        } else {
-          // if nr exists, we must buuld a new ...
-          isBuildNewContactNr = this.checkContactNr(contact.contactNr, comp);
+    if (session) {
+      let legacyContacts: Array<Contact> = [];
+      let nextContactNr = startContactNr;
+      let createdContacts: Array<{nr: number, style: {}, message: string}> = [];
+      legacyContacts = this.getContacts(comp);
+      // build contactId  as max of id of existing contacts
+      let lastContactId = legacyContacts?.length > 0
+        ? legacyContacts.reduce((a,b) => a.contactId > b.contactId ? a : b).contactId
+        : 0;;
+      // build contactNr  as max of nr of existing contacts (including disabled - as then can be enabled, we do not give theis number ..)
+      let lastContactNr = this.getMaxContactNr(comp);
+      for (const contact of contacts) {
+        let ix = -1;
+        if (legacyContacts?.length > 0) {
+          ix = legacyContacts.findIndex(_ => (contact.contactNr > 0 && _.contactNr === contact.contactNr && isContactNrUpdate)
+            || (_.contactName === contact.contactName && _.contactFirstName === contact.contactFirstName));
         }
-        if (isBuildNewContactNr) {
-          if (nextContactNr === 0) {
-           nextContactNr = lastContactNr + 1;
-          } else if (nextContactNr <= lastContactNr) {
-            for (let validContactNr = nextContactNr; validContactNr++; validContactNr > lastContactNr) {
-              nextContactNr = validContactNr;
-              const isUsed = this.checkContactNr(validContactNr, comp);
-              if (!isUsed) {
-                break;
+        if (ix >= 0 && legacyContacts[ix].status < 9) {
+          const importNr = contact.contactNr;
+          contact.contactId = legacyContacts[ix].contactId;
+          contact.contactNr = legacyContacts[ix].contactNr;
+          contact.contactColor = legacyContacts[ix].contactColor;
+          contact.created = legacyContacts[ix].created;
+          contact.createdBy = legacyContacts[ix].createdBy;
+          contact.releaseCreated = legacyContacts[ix].releaseCreated;
+          contact.updated = new Date();
+          contact.updatedBy = session?.userName;
+          contact.releaseUpdated = session?.releaseUpdated;
+          contact.version = legacyContacts[ix].version++;
+          // TODO set fields only if not empty ....
+          legacyContacts[ix] = contact;
+          createdContacts.push({nr: contact.contactNr, style: StyleFactory.getBgColorStyle(contact.contactColor), message: 'UPD from ' + importNr});
+        } else {
+          lastContactId++;
+          let isBuildNewContactNr = false;
+          const importNr = contact.contactNr;
+          if (!contact.contactNr || contact.contactNr === 0) {
+            isBuildNewContactNr = true;
+          } else {
+            // if nr exists, we must buuld a new ...
+            isBuildNewContactNr = this.checkContactNr(contact.contactNr, comp);
+          }
+          if (isBuildNewContactNr) {
+            if (nextContactNr === 0) {
+            nextContactNr = lastContactNr + 1;
+            } else if (nextContactNr <= lastContactNr) {
+              for (let validContactNr = nextContactNr; validContactNr++; validContactNr > lastContactNr) {
+                nextContactNr = validContactNr;
+                const isUsed = this.checkContactNr(validContactNr, comp);
+                if (!isUsed) {
+                  break;
+                }
               }
             }
+            contact.contactNr = nextContactNr;
+            nextContactNr++;
           }
-          contact.contactNr = nextContactNr;
-          nextContactNr++;
+          contact.contactId = lastContactId;
+          contact.userId = session.userId;
+          contact.contactColor = ((contact.contactNr % 10) * 10 + Math.round(contact.contactNr / 10) % 10).toString();
+          contact.created = new Date();
+          contact.createdBy = session.userName;
+          contact.releaseCreated = session.releaseUpdated;
+          contact.updated = null;
+          contact.updatedBy = '';
+          contact.releaseUpdated = 0;
+          contact.version = 0;
+          legacyContacts.push(contact);
+          createdContacts.push({nr: contact.contactNr, style: StyleFactory.getBgColorStyle(contact.contactColor), message: 'NEW from ' + importNr});
         }
-        contact.contactId = lastContactId;
-        contact.contactColor = ((contact.contactNr % 10) * 10 + Math.round(contact.contactNr / 10) % 10).toString();
-        contact.created = new Date();
-        contact.createdBy = session?.userName ?? '';
-        contact.releaseCreated = session?.releaseUpdated ?? 0;
-        contact.updated = null;
-        contact.updatedBy = '';
-        contact.releaseUpdated = 0;
-        contact.version = 0;
-        legacyContacts.push(contact);
-        createdContacts.push({nr: contact.contactNr, style: StyleFactory.getBgColorStyle(contact.contactColor), message: 'NEW from ' + importNr});
       }
-    }
-    // we now store  all contacts
-    if (lastContactId > 0) {
-      const isStored = this.setContacts(legacyContacts, comp);
-      if (isStored) {
-        return createdContacts;
+      // we now store  all contacts
+      if (lastContactId > 0) {
+        const isStored = this.setContacts(legacyContacts, comp);
+        if (isStored) {
+          return createdContacts;
+        }
       }
     }
     return [];

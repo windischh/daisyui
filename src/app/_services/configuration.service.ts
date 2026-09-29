@@ -307,6 +307,7 @@ export class ConfigurationService {
           let newConfig = ConfigurationOptionFactory.empty();
           newConfig = this.setConfigurationOptionContent(configurationOption, newConfig);
           newConfig.optionId = lastConfigurationOptionId;
+          newConfig.userId = session.userId;
           newConfig.created = new Date();
           newConfig.createdBy = session.userName;
           newConfig.releaseCreated = session.releaseUpdated;

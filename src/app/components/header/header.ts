@@ -332,6 +332,25 @@ export class HeaderComponent {
           this.routerMenu.items.push(item);
         }
 
+        let subMenu = MenuFactory.empty();
+        let subItem = MenuItemFactory.empty();
+        item = MenuItemFactory.empty();
+        item.text = 'export';
+        item.hasIconLeft = true;
+        item.iconClassLeft = 'fas fa-file-export';
+        subMenu = MenuFactory.empty();
+
+        subItem = MenuItemFactory.empty();
+        subItem.text = 'event_export'
+        subItem.link = 'eventExport';
+        subItem.hasIconLeft = true;
+        subItem.iconClassLeft = 'fas fa-file-export';
+        subMenu.items.push(subItem);
+
+        item.hasSubMenu = true;
+        item.subMenu = subMenu;
+        this.routerMenu.items.push(item);
+
         // configuration can be set for every user and also admin.
         // if not set, fixed options from assets are relevant ...
 

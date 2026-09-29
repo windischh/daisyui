@@ -12,7 +12,7 @@ export class ConfigurationOptionFactory {
   static fromObject(rawOption: ConfigurationOptionRaw): ConfigurationOption {
     return new ConfigurationOption(
       rawOption.optionId,
-      rawOption.mandantId,
+      rawOption.userId,
       rawOption.optionName,
       rawOption.optionArea,
       rawOption.optionNr,

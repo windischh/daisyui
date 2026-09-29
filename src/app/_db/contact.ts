@@ -6,6 +6,7 @@ import { IContactElement } from "../_interfaces/i-contact-element";
 export class Contact {
   constructor (
   public contactId: number,
+  public userId: number,
   public contactNr: number,
   // company name is usually set to name of organozation
   public companyName: string,

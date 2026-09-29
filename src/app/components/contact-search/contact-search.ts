@@ -1,9 +1,6 @@
 import { NgClass } from '@angular/common';
 import { Component, EventEmitter, HostListener, OnInit, Output } from '@angular/core';
 
-import { of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
-
 import { Contact } from '../../_db/contact';
 import { ContactService } from '../../_services/contact.service';
 import { MessageService } from '../../_services/message.service';
@@ -26,7 +23,6 @@ export class ContactSearchComponent implements OnInit {
 
   @Output() contactSelected = new EventEmitter<Contact>();
 
-  // keyup = new EventEmitter<string>();
 
   constructor(
     private contactService: ContactService,

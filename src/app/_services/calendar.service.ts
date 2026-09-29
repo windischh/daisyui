@@ -1,33 +1,28 @@
 import { Injectable, Inject, LOCALE_ID } from '@angular/core';
 
 import { GlobalFunctions } from './../_globals/global-functions';
-import { MAX_MONTHS } from '../_globals/constants';
+
 import { StyleFactory } from '../_globals/style-factory';
 
 import { Event } from '../_db/event';
 import { EventFactory } from '../_db/event-factory';
 import { EventRaw } from '../_db/event-raw';
-import { Provider } from '../_db/provider';
-import { UserData } from '../_db/user-data';
 import { User } from '../_db/user';
 import { EventSelectOption } from '../_db/event-select-option';
 import { ContactFactory } from '../_db/contact-factory';
 import { Contact } from '../_db/contact';
 import { EventSelectOptionFactory } from '../_db/event-select-option-factory';
 
-import { ProviderType } from '../_enums/provider-type.enum';
+import { App } from '../_enums/app.enum';
 import { EventType } from '../_enums/event-type.enum';
 import { EventSortCriteria } from '../_enums/event-sort-criteria.enum';
 import { LocationType } from '../_enums/location-type.enum';
 
-import { IEventsFound } from '../_interfaces/i-events-found';
-import { IHoliday } from '../_interfaces/i-holiday';
+
 import { IEventSelectChoice } from '../_interfaces/i-event-select-choice';
 import { IEventInfo } from '../_interfaces/i-event-info';
 import { ISortElement } from '../_interfaces/i-sort-element';
 import { IEventListElement } from '../_interfaces/i-event-list-element';
-import { IAuthorization } from '../_interfaces/i-authorization';
-import { App } from '../_enums/app.enum';
 
 import { LogService } from './log.service';
 import { AuthenticationService } from './authentication.service';
@@ -35,6 +30,7 @@ import { FetchApiService } from './fetch-api.service';
 import { ContactService } from './contact.service';
 import { ProviderService } from './provider.service';
 import { MessageService } from './message.service';
+import { UserService } from './user.service';
 
 @Injectable({
   providedIn: 'root'
@@ -49,6 +45,7 @@ export class CalendarService {
     private fetch: FetchApiService,
     private providerService: ProviderService,
     private contactService: ContactService,
+    private userService: UserService,
     private auth: AuthenticationService,
     private message: MessageService) {
    }
@@ -59,17 +56,36 @@ export class CalendarService {
   /**
    * getLocalEvents()
    *  get events from local storage
-   * @param userId id of user for which we get data (if 0, it is session usr ...)
+   * @param userId id of user for which we get data (if 0, it is session user or all users in case of admin)
    * @param comp name of calling component
    * @returns events which are stored in local storage
    */
   private getLocalEvents(userId: number, comp: string): Array<Event> {
     let localEvents: Array<Event> = [];
     const session = this.auth.getSession(comp);
-    const localUserId = userId && userId > 0 ? userId : (session?.userId ?? 0);
-    const userData = this.auth.getUserData(localUserId, 'events', comp);
-    if(userData && userData.events) {
-      localEvents = userData.events;
+    // in the moment we allow local user to get only own contacts ...
+    if (session && session.app === App.local && (session.userId === userId || userId === 0)) {
+      const userData = this.auth.getUserData(session.userId, 'events', comp);
+      if(userData && userData.events) {
+        localEvents = userData.events;
+      }
+    } else if (session && session.app === App.admin) {
+      if (userId === 0) {
+        // we get events for all active local users
+        const users = this.userService.getUsers(this.name);
+        const localUsers = users.filter(_ => _.type === 1 && _.status < 9 );
+        for (const user of localUsers) {
+          const userData = this.auth.getUserData(user.userId, 'events', comp);
+          if(userData && userData.events) {
+            localEvents.concat(userData.events);
+          }
+        }
+      } else {
+        const userData = this.auth.getUserData(userId, 'events', comp);
+        if(userData && userData.events) {
+          localEvents = userData.events;
+        }
+      }
     }
     return localEvents;
   }
@@ -86,11 +102,13 @@ export class CalendarService {
    private setLocalEvents(userId: number, events: Array<Event>, comp: string): boolean {
     if (events) {
       const session = this.auth.getSession(comp);
-      const localUserId = userId && userId > 0 ? userId : (session?.userId ?? 0);
-      // build a user data element with events
-      const userData = this.auth.getUserData(localUserId, 'events', comp);
-      userData.events = events;
-      this.auth.setUserData(userId, 'events', userData, comp);
+      if (session && session.app === App.local && (session.userId === userId || userId === 0)) { 
+        // build a user data element with events
+        const userData = this.auth.getUserData(session.userId, 'events', comp);
+        userData.events = events;
+        return this.auth.setUserData(session.userId, 'events', userData, comp);
+      }
+      // LATER if necessary we could need event update where admin user updates events of a local user....
     }
     return false;
    }
@@ -100,18 +118,32 @@ export class CalendarService {
   /** ------------------------  public methods --------------------------------------------------- */
 
 
-
   /**
    * getEvents()
-   *  get events  (from local storage with user of session)s
+   *  in case of admin: get events  for all users - otherwise gets events for session user
    * @param comp name of calling component
    * @returns events (ATTN: also disabled events are returned)
    */
   public getEvents(comp: string): Array<Event> {
     let events: Array<Event> = [];
+    events = this.getLocalEvents(0, comp);
+    return events;
+  }
+
+  /**
+   * getUserEvents()
+   *  get events  for user (from local storage with user of session or user with userId at admin)
+   * @param userId id of user - used only at admin
+   * @param comp name of calling component
+   * @returns events (ATTN: also disabled events are returned)
+   */
+  public getUserEvents(userId: number, comp: string): Array<Event> {
+    let events: Array<Event> = [];
     const session = this.auth.getSession(comp);
-    if (session && session?.userId && session?.userId > 0) {
-      events = this.getLocalEvents(session.userId, comp);
+    if (session && session.app === App.admin) {
+      events = this.getLocalEvents(userId, comp);
+    } else {
+      events = this.getEvents(comp);
     }
     return events;
   }
@@ -120,16 +152,26 @@ export class CalendarService {
    * getEventsRange()
    *  get eventsRange
    *  events are filtered by session user and time range
-   * @param userId usually a linked user for which we want to get event data
+   * @param userId in case of admin we can choose an for which we want to get event data
    * @param fromDate begin of time range
    * @param toDate end of time range
    * @param type event type (0 - plan, 1 - actual ,..) - in case of type 20 all timeSpan types 20 - 29 are chosen
    * @param comp name of calling component
    * @returns events (only active events are returned)
    */
-  public getEventsRange(fromDate: Date, toDate: Date, type: number, comp: string): Array<Event> {
+  public getEventsRange(userId: number, fromDate: Date, toDate: Date, type: number, comp: string): Array<Event> {
     let events: Array<Event> = [];
-    events = this.getEvents(comp);
+    const session = this.auth.getSession(comp);
+    if (session && session.app === App.admin) {
+      if (userId === 0) {
+        events = this.getEvents(comp);
+      } else {
+        events = this.getUserEvents(userId, comp);
+      }
+    } else if (session && session.app === App.local) {
+      // userId is ignored ...
+      events = this.getEvents(comp);
+    }
     if (events?.length > 0) {
       events = events.filter(_ =>
         GlobalFunctions.getDateInMinutes(_.eventBegin) >= GlobalFunctions.getDateInMinutes(fromDate)
@@ -140,18 +182,17 @@ export class CalendarService {
   }
 
   /**
-     * search Event()
+     * searchEvents()
+     * searches in all events (in case of /admin - all users)
      * @param searchTerm string with text to search
      * @param comp name of calling component
      * @returns events with text contained in summary or description
      */
-    public searchEvent(searchTerm: string, comp: string): Array<Event> {
+    public searchEvents(searchTerm: string, comp: string): Array<Event> {
       const events = this.getEvents(comp);
       return events.filter(_ => _.summary.includes(searchTerm) || _.description.includes(searchTerm));
     }
   
-
-
 
   /**
    * getEvent()
@@ -300,8 +341,6 @@ export class CalendarService {
         event.eventId = lastEventId;
         event.userId = session.userId;
         event.userToken = session.userToken;
-        // in case of event to issue there is already login filled
-        event.login = event.login === '' ? session.userName : event.login;
         event.created = new Date();
         event.createdBy = session.userName;
         event.releaseCreated = session.releaseUpdated;
@@ -368,7 +407,7 @@ export class CalendarService {
           // now update  old event with same uid ..
           const ix = legacyEvents.findIndex(_ =>
             _.type === event.type
-            &&  (_.eventId.toString() + '@daisytest_' + '_' + session.userName) === event.uid
+            &&  (_.eventId.toString() + '@daisytest_' + session.userName) === event.uid
           );
           if (ix >= 0) {
             legacyEvents[ix].summary = event.summary;
@@ -398,8 +437,6 @@ export class CalendarService {
             event.eventId = lastEventId;
             event.userId = session.userId;
             event.userToken = session.userToken;
-            // in case of event to issue there is already login filled
-            event.login = event.login === '' ? session.userName : event.login;
             event.created = new Date();
             event.createdBy = session.userName;
             event.releaseCreated = session.releaseUpdated;
@@ -434,7 +471,6 @@ export class CalendarService {
     firstOpt.name = 'default';
     if (session && session.app === App.admin) {
       firstOpt.userId = 0;
-      firstOpt.userLogin = '';
       firstOpt.userName = '';
       firstOpt.isPlan = false;
     } else {
@@ -550,33 +586,33 @@ export class CalendarService {
     const session = this.auth.getSession(comp);
     if (session) {
       const nrSelected = session.eventSelectOption?.nr;
-      const listDay = isRelatedToEventDay ? session.calendarDay : GlobalFunctions.getStartOfDay(new Date()) ?? new Date();
+      const listDay = isRelatedToEventDay ? session.calendarDay : GlobalFunctions.getStartOfDay(new Date());
       let eventSelectOptions = this.getEventSelectOptions(comp);
       if (eventSelectOptions && eventSelectOptions.length > 0) {
         eventSelectOptions.forEach((c, ix)  => {
           let dateFrom =
             c.isPreviousDay ? GlobalFunctions.addDays(listDay, -1):
             c.isPreviousWeek ? GlobalFunctions.addWeeks(GlobalFunctions.getStartOfWeek(listDay), -1):
-            c.isPreviousMonth ? GlobalFunctions.addMonths(GlobalFunctions.getStartOfMonth(listDay) ?? listDay, -1):
+            c.isPreviousMonth ? GlobalFunctions.addMonths(GlobalFunctions.getStartOfMonth(listDay), -1):
             c.isCurrentDay ? listDay :
             c.isCurrentWeek ? GlobalFunctions.getStartOfWeek(listDay) :
             c.isCurrentMonth ? GlobalFunctions.getStartOfMonth(listDay) :
             c.isNextDay ? GlobalFunctions.addDays(listDay, 1):
             c.isNextWeek ? GlobalFunctions.addWeeks(GlobalFunctions.getStartOfWeek(listDay), 1):
-            c.isNextMonth ? GlobalFunctions.addMonths(GlobalFunctions.getStartOfMonth(listDay) ?? listDay, 1):
+            c.isNextMonth ? GlobalFunctions.addMonths(GlobalFunctions.getStartOfMonth(listDay), 1):
             c.isDateInterval ? GlobalFunctions.addDays(listDay, (c.showFrom ?? 0) * -1):
             c.isDateRange ? c.dateFrom :
             listDay;
           let dateTo =
             c.isPreviousDay ? GlobalFunctions.addDays(listDay, -1):
             c.isPreviousWeek ? GlobalFunctions.addDays(GlobalFunctions.getStartOfWeek(listDay), -1) :
-            c.isPreviousMonth ? GlobalFunctions.addDays(GlobalFunctions.getStartOfMonth(listDay) ?? listDay, -1) :
+            c.isPreviousMonth ? GlobalFunctions.addDays(GlobalFunctions.getStartOfMonth(listDay), -1) :
             c.isCurrentDay ? listDay :
             c.isCurrentWeek ? GlobalFunctions.addDays(GlobalFunctions.addWeeks(GlobalFunctions.getStartOfWeek(listDay), 1), -1) :
-            c.isCurrentMonth ? GlobalFunctions.addDays(GlobalFunctions.addMonths(GlobalFunctions.getStartOfMonth(listDay) ?? listDay, 1), -1):
+            c.isCurrentMonth ? GlobalFunctions.addDays(GlobalFunctions.addMonths(GlobalFunctions.getStartOfMonth(listDay), 1), -1):
             c.isNextDay ? GlobalFunctions.addDays(listDay, 1):
             c.isNextWeek ? GlobalFunctions.addDays(GlobalFunctions.addWeeks(GlobalFunctions.getStartOfWeek(listDay), 2), -1):
-            c.isNextMonth ? GlobalFunctions.addDays(GlobalFunctions.addMonths(GlobalFunctions.getStartOfMonth(listDay) ?? listDay, 2), -1):
+            c.isNextMonth ? GlobalFunctions.addDays(GlobalFunctions.addMonths(GlobalFunctions.getStartOfMonth(listDay), 2), -1):
             c.isDateInterval ? GlobalFunctions.addDays(listDay, c.showTo ?? 0):
             c.isDateRange ? c.dateTo :
             listDay;
@@ -587,7 +623,7 @@ export class CalendarService {
             dateTo = listDay
           }
           // isSelected is the name of session.eventSelectOptions - if there is no, the first choice is selected
-          eventSelectChoices.push({nr: c.nr, name: c.name, custIssueNr: c.custIssueNr, userName: c.userName,
+          eventSelectChoices.push({nr: c.nr, name: c.name, contactNr: c.contactNr, userName: c.userName,
             dateFrom, dateTo, isPlan: c.isPlan ?? false, isSelected: nrSelected ? nrSelected === c.nr : ix === 0});
         });
       }
@@ -602,7 +638,7 @@ export class CalendarService {
    * @param comp name of calling component
    * @returns event with renewed eventInfo
    */
-   public async buildEventInfo(event: Event, comp: string): Promise<Event> {
+   public buildEventInfo(event: Event, comp: string): Event {
     let eventInfo: IEventInfo = {contactNr: 0};
     if (event.eventInfo && (event.eventInfo?.contactNr > 0)) {
       // we have an existing eventInfo for this event
@@ -611,7 +647,7 @@ export class CalendarService {
       event.eventInfo = eventInfo;
     }
     if (event.contactNr > 0) {
-      const contact = await this.contactService.getContactNr(event.contactNr, comp);
+      const contact = this.contactService.getContactNr(event.contactNr, comp);
       // if we find a contact with this id, we renew eventInfo data
       if (contact) {
         event.eventInfo.contactNr = contact.contactNr;
@@ -631,13 +667,13 @@ export class CalendarService {
    * filterEvents()
    *  filters events for list (in event component) and export (in event-export component)
    * @param events (we must assure that each event has userId according to actual server and local users ...)
-   * @param users array of local and server users to get userName
-   * @param filterContactnr
+   * @param users array of local users to get userName
+   * @param filterContactNr
    * @param filterIssueNr
    * @param comp name of calling component
    * @returns array of IEventListElements
    */
-  public filterEvents(events: Array<Event>, users: Array<User>, filterContactnr: number, filterIssueNr: number, comp: string): Array<IEventListElement> {
+  public filterEvents(events: Array<Event>, users: Array<User>, filterContactNr: number, filterIssueNr: number, comp: string): Array<IEventListElement> {
     const session = this.auth.getSession(comp);
     // we build sortElements from sortCriterias fo each sort field which is to be sorted, in order of appearance in array
     const sortElements = this.getEventSelectOptionSortElements(comp);
@@ -646,10 +682,9 @@ export class CalendarService {
       // we build  array of events to filter and sort event elements
       eventListElements = events
       .map(_ => {
-        let userName = _.login;
+        let userName = '';
         // name of user in case of server or local events
         userName = users.filter(u => u.userId === _.userId)[0]?.userName ?? '';
-
         return {
           timeString: '',
           event: _,
@@ -674,8 +709,11 @@ export class CalendarService {
           if (session.eventSelectOption?.locationType && session.eventSelectOption?.locationType >= 0) {
             isFiltered = (_.event.locationType === session.eventSelectOption?.locationType);
           }
-          if (filterContactnr > 0) {
-            return _.contactNr === filterContactnr && isFiltered;
+          if (filterContactNr > 0) {
+            return _.contactNr === filterContactNr && isFiltered;
+          }
+          if (filterIssueNr > 0) {
+            return _.issueNr === filterIssueNr && isFiltered;
           }
           return isFiltered;
         } else {

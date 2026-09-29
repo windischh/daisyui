@@ -7,28 +7,18 @@ export interface EventSelectOptionRaw {
   nr: number;
   name: string;
   contactNr: number;
-  issueProviderId: number;
-  providerUrl: string;
-  login: string;
-  nExternalIssueId: number;
-  sExternalIssueId: string;
   userId: number;
-  externalUserId: string;
-  userLogin: string;
+  userName: string;
   // we allow null for selection = according to eventOption
   isPlan: boolean | null;
   // we allow null for location type selection = all types
   locationType: number | null;
   isShowDetails: boolean;
   sortCriterias: IEventSortCriteria[];
-  userName?: string;
-  // custIssueNr has contactNr or issueNr
-  custIssueNr?: string;
   contactDisplayNr?: string;
   contactName?: string;
   contactColor?: string;
-  issueDisplayNr?: string,
-  issueText?: string;
+  issueNr?: number,
   isPreviousDay?: boolean;
   isPreviousWeek?: boolean;
   isPreviousMonth?: boolean;

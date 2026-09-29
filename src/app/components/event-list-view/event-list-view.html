@@ -1,0 +1,263 @@
+
+<!-- if we await more than 100 records or use complex query we should activate data load dimmer
+<div *ngIf="!eventElements" class="ui active inverted dimmer">
+  <div class="ui large text loader">loading data ...</div>
+</div>
+-->
+
+@if (txt && eventSelectOption) {
+  <table class="ui compact celled structured table">
+    <thead>
+      <tr>
+        @if (isShowUser) {
+          <th>{{txt['user']}}</th>
+        }
+        @if (isShowLocationType) {
+          <th></th>
+        }
+        <th>{{session.serviceLevel.contact === 1 ? txt['contact'] : txt['contact']}} {{txt['issue']}}</th>
+        <th>{{txt['date']}}</th>
+        <th>{{txt['from']}}</th>
+        <th>{{txt['to']}}</th>
+        <th>{{eventtxt['summary']}}</th>
+        <th>{{eventtxt['location']}}</th>
+        <th>{{eventtxt['eventDuration']}}</th>
+        @if (session.app !== App.admin) {
+          <th class="center aligned"></th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (el of eventElements; track el; let i = $index) {
+        @if (el.isGroupElement && el.changedCriteria === 'total') {
+          <tr>
+            @if (isShowUser) {
+              <td></td>
+            }
+            @if (isShowLocationType) {
+              <td></td>
+            }
+            <!-- if we restrict to 1 contact or 1 order, this criteria is present also in total record  !!!-->
+            <td class="left aligned">
+              @if (!isShowLocationType && !isLocationTypeGrouped && el.event.locationType >= 1 && el.event.locationType <= 5) {
+                <div class="ui label"
+                  [attr.data-tooltip]="el.event.locationType.toString() + ' - ' + txt[locationTypeEnum[el.event.locationType]]">
+                  @if (el.event.locationType === 1) {
+                    <i class="wrench icon"></i>
+                  }
+                  @if (el.event.locationType === 2) {
+                    <i class="motorcycle icon"></i>
+                  }
+                  @if (el.event.locationType === 3) {
+                    <i class="users icon"></i>
+                  }
+                  @if (el.event.locationType === 4) {
+                    <i class="laptop icon"></i>
+                  }
+                  @if (el.event.locationType === 5) {
+                    <i class="mobile alternate icon"></i>
+                  }
+                  @if (el.event.locationType === 6) {
+                    <i class="briefcase icon"></i>
+                  }
+                </div>
+              }
+              @if (el.contactNr > 0 && (isEventIssueSelected || eventSelectOption.contactNr > 0)) {
+                <div class="ui label"
+                  [ngStyle]="el.contactStyle"
+                  [attr.data-tooltip]="el.contactName + (el.issueNr !== 0 ? ' | ' + el.issueNr : '')" data-position="bottom center">
+                  {{el.issueNr !== 0? el.issueNr : ''}}
+                </div>
+              }
+            </td>
+            <td>
+              <h3>{{txt['sum']}}:</h3>
+            </td>
+            <!-- dateFrom, dateTo in eventSelectOption is set in every date criteria specifiction !!!-->
+            <td>{{eventSelectOption.dateFrom|date:'d.MMM'}}</td>
+            <td>{{eventSelectOption.dateTo|date:'d.MMM'}}</td>
+            <td class="left aligned" colspan="2">
+            </td>
+            <td class="right aligned">
+              <!--  date format x.xxx  if hours > 24 -->
+              <h3>{{GlobalFunctions.minutesDisplay(el.sumDuration ?? 0)}}</h3>
+            </td>
+            @if (session.app !== App.admin) {
+              <td ></td>
+            }
+          </tr>
+        }
+        @if (el.isGroupElement && el.changedCriteria !== 'total') {
+          <tr >
+            @if (isShowUser) {
+              <td></td>
+            }
+            @if (isShowLocationType) {
+              <td></td>
+            }
+            <td>
+              @if (el.isSubTotal) {
+                <h4>{{txt[el.changedCriteria ?? '']}}:</h4>
+              }
+              @if (el.isSum) {
+                <h5>{{txt[el.changedCriteria ?? '']}}:</h5>
+              }
+              @if (!el.isSubTotal && !el.isSum) {
+                <span>{{txt[el.changedCriteria ?? '']}}</span>
+              }
+            </td>
+            @if (el.changedCriteria === 'user') {
+              <td class="left aligned" colspan="5">
+                {{el.userName}}
+              </td>
+            }
+            @if (el.changedCriteria === 'contact') {
+              <td class="left aligned" colspan="5">
+                {{el.contactDisplayNr}} {{el.contactName}}
+              </td>
+            }
+            @if (el.changedCriteria === 'issue') {
+              <td class="left aligned" colspan="5">
+               {{el.issueNr}}
+              </td>
+            }
+            @if (el.changedCriteria === 'month') {
+              <td class="left aligned" colspan="5">
+                {{el.event.eventBegin|date:'yyyy.MM'}}
+              </td>
+            }
+            @if (el.changedCriteria === 'week') {
+              <td class="left aligned" colspan="5">
+                {{el.event.eventBegin|date:'yyyy'}}.{{GlobalFunctions.getWeek(el.event.eventBegin)}}
+              </td>
+            }
+            @if (el.changedCriteria === 'day') {
+              <td class="left aligned" colspan="5">
+                {{el.event.eventBegin|date:'dd.MM.yyyy'}}
+              </td>
+            }
+            @if (el.changedCriteria === 'locationType') {
+              <td class="left aligned" colspan="5">
+                @if (el.event.locationType >= 1 && el.event.locationType <= 5) {
+                  <div class="ui label"
+                    [attr.data-tooltip]="el.event.locationType.toString() + ' - ' + txt[locationTypeEnum[el.event.locationType]]">
+                    @if (el.event.locationType === 1) {
+                      <i class="wrench icon"></i>
+                    }
+                    @if (el.event.locationType === 2) {
+                      <i class="motorcycle icon"></i>
+                    }
+                    @if (el.event.locationType === 3) {
+                      <i class="users icon"></i>
+                    }
+                    @if (el.event.locationType === 4) {
+                      <i class="laptop icon"></i>
+                    }
+                    @if (el.event.locationType === 5) {
+                      <i class="mobile alternate icon"></i>
+                    }
+                    @if (el.event.locationType === 6) {
+                      <i class="briefcase icon"></i>
+                    }
+                  </div>
+                }
+              </td>
+            }
+            @if (el.isSubTotal) {
+              <td class="right aligned">
+                <h4>{{GlobalFunctions.minutesDisplay(el.sumDuration ?? 0)}}</h4>
+              </td>
+            }
+            @if (el.isSum) {
+              <td class="center aligned">
+                <h5>{{GlobalFunctions.minutesDisplay(el.sumDuration ?? 0)}}</h5>
+              </td>
+            }
+            @if (!el.isSum && !el.isSubTotal) {
+              <td></td>
+            }
+            @if (session.app !== App.admin) {
+              <td ></td>
+            }
+          </tr>
+        }
+        @if (!el.isGroupElement) {
+          <tr>
+            @if (isShowUser) {
+              <td class="left aligned">
+                {{el.userName|slice:0:25}}
+              </td>
+            }
+            @if (isShowLocationType) {
+              <td>
+                @if (el.event.locationType >= 1 && el.event.locationType <= 5) {
+                  <div class="ui tiny label"
+                    [attr.data-tooltip]="el.event.locationType.toString() + ' - ' + txt[locationTypeEnum[el.event.locationType]]">
+                    @if (el.event.locationType === 1) {
+                      <i class="wrench icon"></i>
+                    }
+                    @if (el.event.locationType === 2) {
+                      <i class="motorcycle icon"></i>
+                    }
+                    @if (el.event.locationType === 3) {
+                      <i class="users icon"></i>
+                    }
+                    @if (el.event.locationType === 4) {
+                      <i class="laptop icon"></i>
+                    }
+                    @if (el.event.locationType === 5) {
+                      <i class="mobile alternate icon"></i>
+                    }
+                    @if (el.event.locationType === 6) {
+                      <i class="briefcase icon"></i>
+                    }
+                  </div>
+                }
+              </td>
+            }
+            <td class="left aligned">
+              @if (el.contactDisplayNr !== '' || el.issueNr !== 0) {
+                <div class="ui small label"
+                  [ngStyle]="el.contactStyle"
+                  [attr.data-tooltip]="el.contactName + (el.contactName !== '' && el.issueNr !== 0 ? ' | ' : '')" data-position="bottom center">
+                  {{el.issueNr !== 0 ? el.issueNr : el.contactDisplayNr}}
+                </div>
+              }
+            </td>
+            <td class="left aligned">
+              {{el.event.eventBegin|date:'dd.MM.yyyy'}}
+            </td>
+            <td class="left aligned">
+              {{el.event.eventBegin|date:'HH:mm'}}
+            </td>
+            <td class="left aligned">
+              {{el.event.eventEnd|date:'HH:mm'}}
+            </td>
+            <td class="left aligned">
+              {{el.event.summary|slice:0:30}}
+            </td>
+            <td class="left aligned">
+              {{el.event.location|slice:0:30}}
+            </td>
+            <!--  convert duration in milliseconds and show time relative to base date 1.1.1970 ... -->
+            <td class="left aligned">
+              {{GlobalFunctions.getTimeFormatted(el.durationMinutes)}}
+            </td>
+            @if (session.app !== App.admin) {
+              <td >
+                <!-- we have assured that el.event.userId is according to actual users!! -->
+                @if (session.userId === el.event.userId) {
+                  <button class="ui mini circular teal icon button"
+                    [attr.data-tooltip]="txt['show']" data-inverted=""
+                    (click)="show(el)">
+                    <i class="arrow right icon"></i>
+                  </button>
+                }
+              </td>
+            }
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+}

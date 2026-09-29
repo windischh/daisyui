@@ -2,6 +2,7 @@ import { IContactElement } from "../_interfaces/i-contact-element";
 
 export interface ContactRaw {
     contactId: number;
+    userId: number;
     contactNr: number;
     companyName: string;
     longName: string;

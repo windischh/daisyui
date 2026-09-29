@@ -1,0 +1,516 @@
+<!-- FORM starts here                    -->
+
+<form [formGroup] = "thisForm"
+  (ngSubmit)="submitForm()">
+
+  <!-- outer grid with 2 wide empty columns on each side-->
+  <div class="ui grid">
+    <div class="two wide column">
+    </div>
+    <div class="twelve wide column">
+      <div class="ui segment">
+        <!-- segment to show an outlined form - the grid container in this segment has also 16 columns per default-->
+        <div class="ui grid container" formGroupName="option">
+          <div class="row">
+            <div class="four wide column">
+            </div>
+            <div class="twelve wide column">
+              <h2>{{optiontxt['className']}}</h2>
+            </div>
+          </div>
+          <div class="row">
+            <div class="four wide column">
+              <h3>{{optiontxt['optionNr']}}</h3>
+            </div>
+            <div class="four wide column">
+              <h4>
+                <div class="ui fluid icon input">
+                  <input formControlName="nrString">
+                </div>
+                @if (errors['option.nrString']) {
+                  <div class="ui negative message">
+                    {{errors['option.nrString']}}
+                  </div>
+                }
+              </h4>
+            </div>
+          </div>
+          <div class="row">
+            <div class="four wide column">
+              <h3>{{optiontxt['optionName']}}</h3>
+            </div>
+            <div class="twelve wide column">
+              <h3>
+                <input formControlName="name">
+              </h3>
+            </div>
+          </div>
+          <div class="row">
+            <div class="four wide column">
+              <h3>{{txt['event_selection']}}:</h3>
+            </div>
+            <div class="twelve wide column">
+              @for (p of planChoices; track p) {
+                <div class="ui radio checkbox" >
+                  <input type="radio"  formControlName="selectPlan" [value]="p.value" [checked]="p.isSelected">
+                  <label>{{p.text}}</label>
+                </div>
+              }
+            </div>
+          </div>
+          <div class="row">
+            <div class="four wide column">
+              <h3>{{txt['show']}} {{txt['detail']}}:</h3>
+            </div>
+            <div class="twelve wide column">
+              <h3>
+                <div class="ui checkbox">
+                  <input type="checkbox" formControlName="isShowDetails">
+                  <label></label>
+                </div>
+              </h3>
+            </div>
+          </div>
+          <!-- location type selection  -->
+          <div class="row">
+            <div class="four wide column">
+              <h3>{{eventtxt['locationType']}}:</h3>
+            </div>
+            <div class="twelve wide column">
+              <h4>
+                <select class="ui search dropdown" formControlName="locationType">
+                  @for (c of locationTypeChoices; track c) {
+                    <option [ngValue]="c.value"
+                      [selected]="c.isSelected">
+                      {{c.value !== '' ? c.value + ' - ' : ''}}{{c.text}}
+                    </option>
+                  }
+                </select>
+              </h4>
+            </div>
+          </div>
+          <!-- user selection  -->
+          <div class="row">
+            <div class="four wide column">
+              <h3>{{txt['select_user']}}:</h3>
+            </div>
+            <div class="twelve wide column">
+              <h4>
+                @if (session.app === App.admin) {
+                  <select class="ui search dropdown" formControlName="userId">
+                    @for (u of userChoices; track u) {
+                      <option [ngValue]="u.userId"
+                        [selected]="u.isSelected">
+                        {{u.userName}}
+                      </option>
+                    }
+                  </select>
+                }
+              </h4>
+            </div>
+          </div>
+        </div> <!-- end of grid container for fixed part of the form with formGroup-->
+        <div class="ui grid container">
+          <!-- contact/issue selection  -->
+          <div class="row">
+            <div class="sixteen wide column">
+              <div class="ui segment">
+                <div class="ui grid container">
+                  <div class="row">
+                    <div class="eight wide column">
+                      <h4>{{txt['contact']}}:</h4>
+                    </div>
+                    <div class="eight wide column">
+                      <h4>{{txt['issue']}}:</h4>
+                    </div>
+                  </div>
+                  @for (c of contactChoices; track c) {
+                    <div class="row">
+                      <div class="eight wide column">
+                        <div class="item">
+                          <div class="ui checkbox">
+                            <input type="checkbox" [value]="c.value" [checked]="c.isSelected" (change)="setContact($event)">
+                            <label>{{c.text}}</label>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="eight wide column">
+                        <div class="ui fluid icon input">
+                          <input formControlName="issueNrString">
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div> <!-- end of grid container -->
+              </div>  <!-- end of segment -->
+            </div>  <!-- end of 16 wide column -->
+          </div> <!-- end of row -->
+
+            <!-- 11 choices - 9 for previous/current/next date, interval selection, absolute date range selection with  datePicker -->
+            <div class="row">
+              <div class="four wide column">
+                <h3>{{txt['date']}}:</h3>
+              </div>
+              <div class="ten wide column">
+                <h4>
+                  {{dateChoices[0].isSelected?txt['previous_day']:dateChoices[1].isSelected?txt['previous_week']:dateChoices[2].isSelected?txt['previous_month']
+                  :dateChoices[3].isSelected?txt['current_day']:dateChoices[4].isSelected?txt['current_week']:dateChoices[5].isSelected?txt['current_month']
+                  :dateChoices[6].isSelected?txt['next_day']:dateChoices[7].isSelected?txt['next_week']:dateChoices[8].isSelected?txt['next_month']
+                  :dateChoices[9].isSelected?txt['date_interval']:txt['date_range']}}: {{dateFrom|date:'dd.MM.yyyy'}}
+                  @if (!dateChoices[0].isSelected) {
+                    <span> - {{dateTo|date:'dd.MM.yyyy'}}</span>
+                  }
+                </h4>
+              </div>
+              <div class="two wide column">
+                <button class="ui tiny right floated circular gray icon button"
+                  [attr.data-tooltip]="txt['show_menu'] + ' ' + txt['for'] + ' ' + txt['date']"  data-position="top left"
+                  type="button" (click)="showDateChoices()">
+                  <i class="ellipsis vertical icon"></i>
+                </button>
+              </div>
+            </div>
+            @if (isShowDateChoices) {
+              <div class="row">
+                <div class="sixteen wide column">
+                  <div class="ui segment">
+                    <div class="ui grid container">
+                      <div class="row">
+                        <div class="four wide column">
+                          <h4>{{txt['select_relative_date']}}:</h4>
+                        </div>
+                        <div class="four wide column">
+                          <h4>
+                            <div class="ui checkbox">
+                              <input type="checkbox" [value]="dateChoices[0].value" [checked]="dateChoices[0].isSelected" (change)="setDate($event)">
+                              <label>{{txt['previous_day']}}</label>
+                            </div>
+                          </h4>
+                        </div>
+                        <div class="four wide column">
+                          <h4>
+                            <div class="ui checkbox">
+                              <input type="checkbox" [value]="dateChoices[1].value" [checked]="dateChoices[1].isSelected" (change)="setDate($event)">
+                              <label>{{txt['previous_week']}}</label>
+                            </div>
+                          </h4>
+                        </div>
+                        <div class="four wide column">
+                          <h4>
+                            <div class="ui checkbox">
+                              <input type="checkbox" [value]="dateChoices[2].value" [checked]="dateChoices[2].isSelected" (change)="setDate($event)">
+                              <label>{{txt['previous_month']}}</label>
+                            </div>
+                          </h4>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="four wide column">
+                        </div>
+                        <div class="four wide column">
+                          <h4>
+                            <div class="ui checkbox">
+                              <input type="checkbox" [value]="dateChoices[3].value" [checked]="dateChoices[3].isSelected" (change)="setDate($event)">
+                              <label>{{txt['current_day']}}</label>
+                            </div>
+                          </h4>
+                        </div>
+                        <div class="four wide column">
+                          <h4>
+                            <div class="ui checkbox">
+                              <input type="checkbox" [value]="dateChoices[4].value" [checked]="dateChoices[4].isSelected" (change)="setDate($event)">
+                              <label>{{txt['current_week']}}</label>
+                            </div>
+                          </h4>
+                        </div>
+                        <div class="four wide column">
+                          <h4>
+                            <div class="ui checkbox">
+                              <input type="checkbox" [value]="dateChoices[5].value" [checked]="dateChoices[5].isSelected" (change)="setDate($event)">
+                              <label>{{txt['current_month']}}</label>
+                            </div>
+                          </h4>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="four wide column">
+                        </div>
+                        <div class="four wide column">
+                          <h4>
+                            <div class="ui checkbox">
+                              <input type="checkbox" [value]="dateChoices[6].value" [checked]="dateChoices[6].isSelected" (change)="setDate($event)">
+                              <label>{{txt['next_day']}}</label>
+                            </div>
+                          </h4>
+                        </div>
+                        <div class="four wide column">
+                          <h4>
+                            <div class="ui checkbox">
+                              <input type="checkbox" [value]="dateChoices[7].value" [checked]="dateChoices[7].isSelected" (change)="setDate($event)">
+                              <label>{{txt['next_week']}}</label>
+                            </div>
+                          </h4>
+                        </div>
+                        <div class="four wide column">
+                          <h4>
+                            <div class="ui checkbox">
+                              <input type="checkbox" [value]="dateChoices[8].value" [checked]="dateChoices[8].isSelected" (change)="setDate($event)">
+                              <label>{{txt['next_month']}}</label>
+                            </div>
+                          </h4>
+                        </div>
+                      </div>
+                      <ng-container  formGroupName="date">
+                        <div class="row">
+                          <div class="eight wide column">
+                            <h4>{{txt['select_date_interval']}}:</h4>
+                          </div>
+                          <div class="two wide column">
+                            <h4>
+                              <div class="ui checkbox">
+                                <input type="checkbox" [value]="dateChoices[9].value" [checked]="dateChoices[9].isSelected" (change)="setDate($event)">
+                                <label></label>
+                              </div>
+                            </h4>
+                          </div>
+                        </div>
+                        <div class="row" >
+                          <div class="four wide column">
+                          </div>
+                          <div class="five wide column">
+                            <h4>
+                              {{txt['days']}} {{txt['before']}} {{txt['current_day']}}:
+                            </h4>
+                            <h4>
+                              <div class="ui fluid icon input">
+                                <input formControlName="showFromString" [attr.disabled]="!dateChoices[9].isSelected?'':null">
+                              </div>
+                              @if (errors['date.showFromString']) {
+                                <div class="ui negative message">
+                                  {{errors['date.showFromString']}}
+                                </div>
+                              }
+                            </h4>
+                          </div>
+                          <div class="five wide column">
+                            <h4>
+                              {{txt['days']}} {{txt['after']}} {{txt['current_day']}}:
+                            </h4>
+                            <h4>
+                              <div class="ui fluid icon input">
+                                <input formControlName="showToString" [attr.disabled]="!dateChoices[9].isSelected?'':null">
+                              </div>
+                              @if ( errors['date.showToString']) {
+                                <div class="ui negative message">
+                                  {{errors['date.showToString']}
+                                </div>
+                              }
+                            </h4>
+                          </div>
+                        </div>
+                      </ng-container>
+                      <div class="row">
+                        <div class="eight wide column">
+                          <h4>{{txt['select_date_range']}}:</h4>
+                        </div>
+                        <div class="two wide column">
+                          <h4>
+                            <div class="ui checkbox">
+                              <input type="checkbox" [value]="dateChoices[10].value" [checked]="dateChoices[10].isSelected" (change)="setDate($event)">
+                              <label></label>
+                            </div>
+                          </h4>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="four wide column">
+                        </div>
+                        <div class="two wide column">
+                          <button class="ui icon button"
+                            [disabled]="!dateChoices[10].isSelected"
+                            type="button"  (click)="dp.toggleCalendar()">
+                            <i class="calendar alternate outline icon"></i>
+                          </button>
+                          <!-- with type="hidden" display of date input is  deactivated  -->
+                          <!-- ngModelOptions standalone - this input is outside of form!!  -->
+                        <input angular-mydatepicker name="mydate"
+                          [(ngModel)]="dpModel"  [options]="dateOpts" type="hidden"
+                          [ngModelOptions]="{standalone: true}"
+                          [locale]="locale" #dp="angular-mydatepicker"
+                          (dateChanged)="onDateChanged($event)"
+                          [attr.disabled]="dpDisabled?'':null"/>
+                        </div>
+                        <div class="eight wide column">
+                          {{dateRangeBegin|date:'dd.MM.yyyy'}} - {{dateRangeEnd|date:'dd.MM.yyyy'}}
+                        </div>
+                      </div>
+                    </div> <!-- end of grid container -->
+                  </div>  <!-- end of segment -->
+                </div>  <!-- end of 16 wide column-->
+              </div>
+              }  <!-- end of row -->
+              <!-- table with 5 columns for sortCriteria-->
+              <div class="row">
+                <div class="four wide column">
+                  <h3>{{txt['sortCriteria']}}:</h3>
+                </div>
+                <div class="ten wide column">
+                  <h4>
+                    @for (s of sortCriteriaSelected; track s; let i = $index) {
+                      @if (s.isSum || s.isSubTotal) {
+                        <span style="background-color:whitesmoke;">{{s.sortField}}</span>
+                      } @else {
+                        <span>{{s.sortField}}</span>
+                        }@if (i !== sortCriteriaSelected.length - 1) {
+                        <span>, </span>
+                      }
+                    }
+                  </h4>
+                </div>
+                <div class="two wide column">
+                  <button class="ui tiny right floated circular gray icon button"
+                    [attr.data-tooltip]="txt['show_menu'] + ' ' + txt['for'] + ' ' + txt['sortCriteria']"  data-position="bottom left"
+                    type="button" (click)="showSortCriteria()">
+                    <i class="ellipsis vertical icon"></i>
+                  </button>
+                </div>
+              </div>
+              @if (isShowSortCriteria) {
+                <div class="row">
+                  <div class="sixteen wide column">
+                    <div class="ui segment">
+                      <table class="ui celled structured table">
+                        <thead>
+                          <tr>
+                            <th class="one wide"></th>
+                            <th class="one wide">{{txt['nr']}}</th>
+                            <th class="four wide">{{txt['text']}}</th>
+                            <th class="one wide"></th>
+                            <th class="one wide">{{txt['sum']}}</th>
+                            <th class="one wide">{{txt['subTotal']}}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (s of sortCriteriaSelected; track s; let i = $index) {
+                            <tr>
+                              <!-- SHOW   sort criteria        selected        -->
+                              <td>
+                                <div class="center aligned">
+                                  @if (i > 0
+                                    && ((s.sortField !== 'issue' && s.sortField !== 'day' && s.sortField !== 'week')
+                                    || (s.sortField === 'issue' && sortCriteriaChoices[s.ix -1].sortField !== 'contact')
+                                    || (s.sortField === 'week' && sortCriteriaChoices[s.ix -1].sortField !== 'month')
+                                    || (s.sortField === 'day' && sortCriteriaChoices[s.ix -1].sortField !== 'month' && sortCriteriaChoices[s.ix -1].sortField !== 'week'))) {
+                                    <button class="ui tiny circular teal icon button"
+                                      [attr.data-tooltip]="txt['position_lower']" data-position="bottom center"
+                                      type="button" (click)="lowerIndex(s.ix)">
+                                      <i class="arrow up icon"></i>
+                                    </button>
+                                  }
+                                </div>
+                              </td>
+                              <td>{{s.ix}}</td>
+                              <td>{{s.sortField}}</td>
+                              <td>
+                                <div class="center aligned">
+                                  @if (i >=  sortCriteriaSelected.length - 1
+                                    || (s.sortField === 'month' && sortCriteriaChoices[s.ix + 1].sortField === 'week')
+                                    || (s.sortField === 'month' && sortCriteriaChoices[s.ix + 1].sortField === 'day')
+                                    || (s.sortField === 'week' && sortCriteriaChoices[s.ix + 1].sortField === 'day')
+                                    || (s.sortField === 'contact' && sortCriteriaChoices[s.ix + 1].sortField === 'issue')
+                                    ) {
+                                    <button class="ui tiny circular red icon button"
+                                      [attr.data-tooltip]="txt['reset']" data-position="bottom center"
+                                      type="button" (click)="setUnselected(s.ix)">
+                                      <i class="arrow down icon"></i>
+                                    </button>
+                                  } @else {
+                                    <button class="ui tiny circular teal icon button"
+                                      [attr.data-tooltip]="txt['position_raise']" data-position="bottom center"
+                                      type="button" (click)="raiseIndex(s.ix)">
+                                      <i class="arrow down icon"></i>
+                                    </button>
+                                  }
+                                  <ng-template #raise>
+                                    <button class="ui tiny circular teal icon button"
+                                      [attr.data-tooltip]="txt['position_raise']" data-position="bottom center"
+                                      type="button" (click)="raiseIndex(s.ix)">
+                                      <i class="arrow down icon"></i>
+                                    </button>
+                                  </ng-template>
+                                </div>
+                              </td>
+                              <td>
+                                @if (ixSubTotal === -1 || s.ix > ixSubTotal) {
+                                  <div class="ui radio checkbox">
+                                    <input type="radio"  [value]="s.ix" [checked]="s.isSum" (change)="setSum($event)">
+                                    <label></label>
+                                  </div>
+                                }
+                              </td>
+                              <td>
+                                @if (ixSum === -1 || s.ix < ixSum) {
+                                  <div class="ui radio checkbox">
+                                    <input type="radio"  [value]="s.ix" [checked]="s.isSubTotal" (change)="setSubTotal($event)">
+                                    <label></label>
+                                  </div>
+                                }
+                              </td>
+                            </tr>
+                          }
+                          <tr>
+                            <td colspan="6" style="background-color:whitesmoke;"></td>
+                          </tr>
+                          @for (s of sortCriteriaUnselected; track s; let i = $index) {
+                            <tr>
+                              <!-- SHOW   sort criteria      not  selected        -->
+                              <td>
+                                <div class="center aligned">
+                                  <button class="ui tiny circular green icon button"
+                                    [attr.data-tooltip]="txt['select']" data-position="bottom center"
+                                    type="button" (click)="setSelected(s.ix)">
+                                    <i class="arrow up icon"></i>
+                                  </button>
+                                </div>
+                              </td>
+                              <td>{{s.ix}}</td>
+                              <td>{{s.sortField}}</td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              }
+              <div class="ui divider"></div>
+              <div class="row">
+                <div class="four wide column"></div>
+                <div class="center aligned eight wide column">
+                  <button class="left aligned ui tiny circular red icon button"
+                    [attr.data-tooltip]="txt['cancel']" data-position="top center"
+                    type="button" (click)="cancelUpdates()">
+                    <i class="times icon"></i>
+                  </button>
+                  <button class="left aligned ui tiny circular green icon button"
+                    [attr.data-tooltip]="txt['submit']" data-position="top center"
+                    [disabled]="!thisForm.valid"
+                    type="submit">
+                    <i class="check icon"></i>
+                  </button>
+                  <button class="left aligned ui tiny circular gray icon button"
+                    [attr.data-tooltip]="txt['disable']" data-position="top center"
+                    type="button" (click)="setDelete()">
+                    <i class="trash alternate icon"></i>
+                  </button>
+                </div>
+              <div class="four wide column"></div>
+            </div>
+          </div> <!-- end of grid container -->
+        </div> <!-- end of segment -->
+      </div>
+    </div>
+

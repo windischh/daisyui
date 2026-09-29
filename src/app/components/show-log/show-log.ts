@@ -237,7 +237,7 @@ export class ShowLogComponent {
     }
     this.logPublisher = this.logPublisherChoices.filter(_ => _.isSelected)[0].text;
     // we set dateTo on today
-    const today = GlobalFunctions.getStartOfDay(new Date()) ?? new Date();
+    const today = GlobalFunctions.getStartOfDay(new Date());
     this.dateTo = today;
   }
 

@@ -4,7 +4,7 @@ import { ContactRaw } from './contact-raw';
 export class ContactFactory {
 
   static empty(): Contact {
-    return new Contact(0, 0,  '',  '', '', '', '',  '', '', 0, '', '', 0, '',
+    return new Contact(0, 0, 0,  '',  '', '', '', '',  '', '', 0, '', '', 0, '',
       '', '', '', '', '', '', '', '', '', 0, '', null, '', '', '', '', '', 0, '',  '', '', '',  '',
       /* from here we have fields which are according to vcf  */
       {value: ''},  '', {value: ''}, [], [],  [], '', '', {value: ''},'', '', null, '', '', '', '', [],
@@ -14,6 +14,7 @@ export class ContactFactory {
   static fromObject(rawContact: ContactRaw): Contact {
     return new Contact(
       rawContact.contactId,
+      rawContact.userId,
       rawContact.contactNr,
       rawContact.companyName,
       rawContact.longName,

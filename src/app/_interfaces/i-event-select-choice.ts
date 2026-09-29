@@ -5,7 +5,7 @@
  export interface IEventSelectChoice {
   nr: number,
   name: string,
-  custIssueNr?: string,
+  contactNr?: number,
   userName?: string,
   dateFrom: Date,
   dateTo: Date,

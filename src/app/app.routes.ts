@@ -12,6 +12,7 @@ import { DocumentComponent } from './components/document/document';
 import { ConfigurationComponent } from './components/configuration/configuration';
 import { ShowLogComponent } from './components/show-log/show-log';
 import { EventComponent } from './components/event/event';
+import { EventExportComponent } from './components/event-export/event-export';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'local', pathMatch: 'full'},
@@ -37,6 +38,8 @@ export const routes: Routes = [
       { path: 'contactImport', component: ContactImportComponent
       },
       { path: 'calendarExport', component: CalendarExportComponent
+      },
+      { path: 'eventExport', component: EventExportComponent
       },
       { path: 'contactExport', component: ContactExportComponent
       },

@@ -72,7 +72,7 @@ private buildAuthorizations(userId: number): Array<IAuthorization> {
     .map(_ => {
       const element = EventFactory.empty();
       element.summary = this.auth.cal[_.holidayText];
-      element.eventBegin = GlobalFunctions.getStartOfDay(_.holidayDate) ?? new Date();
+      element.eventBegin = GlobalFunctions.getStartOfDay(_.holidayDate);
       element.eventEnd = GlobalFunctions.addDays(element.eventBegin, 1);
       element.type = EventType.timeSpanCategory1;
       return element;

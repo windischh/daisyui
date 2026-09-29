@@ -10,12 +10,10 @@ export class Event {
      * which can be either on client or server
      */
     public eventId: number,
-    public mandantId: number,
     /**
      * userId refers to id of local user
      * (when creating event - might change for server events - we must use userId of
      *   server user instead when we get events for example in event.component)
-     * is not relevant at issue events
      */
     public userId: number,
     /*
@@ -23,12 +21,6 @@ export class Event {
       (with can have same userId) are booked
     */
     public userToken: number,
-    /*
-     we need userToken in case of issue event where event elements of a login
-     must be associated in case of renewing login user data ....
-    */
-    public externalUserId: string,
-    public serverUserToken: string,
     /*
       nr of contact to which event belongs
       - in case of issueProvider > 0 contactNr is set
@@ -83,37 +75,12 @@ export class Event {
     /*   id of event which has been imported as basis for this event
     */
     public eventImportId: number,
-    /*
-    * event entries which refer to an issue
-    ' must have issueProviderId > 0 (and  url, login to veriyf id!) and external id to identify issue
-      issueProviderId === 0 means no issue is joined to this event
-    */
-    public issueProviderId: number,
-    public providerUrl: string,
-    public login: string,
-    public nExternalIssueId: number,
-    public sExternalIssueId: string,
-    /*
-      externalEventId exist for event which refers to an issue,  in a system where
-      issue events are stored with an own id
-    */
-    public nExternalEventId: number,
-    public sExternalEventId: string,
-    /* used for event which belongs to an issue
-      - set true if event  update is successfully transferred to issueProvider as issue event
-      (only actual event is transferred)
-    */
-    public isStoredAtIssue: boolean,
     /* isExported is used at issue events
       true if event of an issue is already exported to a event collection system
       (therefor only actual event csn have this flag)
       issues where not all events are exported can not be disabed ...
       */
     public isExported: boolean,
-    /* invoiceOrderNr has oserNr if this event is invoiced
-      (used at events which belong to an issue)
-    */
-    public invoiceOrderNr: number,
     /* type 0 = planned  1 = actual, active  2 forecast (3-9 .. more forecasts) - not realized yet
       1x = special event types (future use) ...
       2x = time span (defined by begin, end, duration = 0) has no "amount of event"

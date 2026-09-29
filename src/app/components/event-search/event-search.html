@@ -1,0 +1,18 @@
+<!-- ATTENTION  [ngClass] is used to set css behaviour - in this case via semantic ui -->
+<div class="ui search"  [ngClass]="{ loading: isLoading }">
+  <div class="ui fluid icon input">
+    <input (keyup)="findEvents(searchTerm.value)" #searchTerm class="prompt" type="text" placeholder="{{auth.txt['search']}}... ">
+    <i class="search icon"></i>
+  </div>
+  <div class="results transition" [ngClass]="{ visible: foundEvents.length }">
+    @for (event of foundEvents; track event) {
+      <a href (click)="selectEvent(event); false" class="result">
+        <div class="content">
+          <div class="title">{{ event.eventBegin|date:'EEE dd.MM.yyyy' }}</div>
+          <div class="title" id="searchContent" [innerHTML]="event.summary.replace(this.text, '<mark>' + this.text + '</mark>')"></div>
+          <div [innerHTML]="event.description.substring(0,50).replace(this.text, '<mark>' + this.text + '</mark>')"></div>
+        </div>
+      </a>
+    }
+  </div>
+</div>

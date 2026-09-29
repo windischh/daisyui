@@ -15,7 +15,7 @@ export enum ConfigurationArea {
   timeSpanCategory = 7,
   // otdos are not implemented
   // todoCategory = 8,
-  calendarExport = 9,
+  eventExport = 9,
   documentCategory = 10
   }
 

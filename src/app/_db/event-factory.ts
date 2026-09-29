@@ -4,20 +4,16 @@ import { EventRaw } from './event-raw';
 export class EventFactory {
 
   static empty(): Event {
-    return new Event(0, 0, 0, 0, '', '', 0, new Date(), new Date(), 0,
-     '', '', '', 0, 0, 0, 0,
-     0, '', '', 0, '', 0, '', false, false, 0,
+    return new Event(0, 0, 0, 0, new Date(), new Date(), 0,
+     '', '', '', 0, 0, 0, 0, false,
      0, 0, new Date(), '', 0, null, '', 0, 0);
   }
 
   static fromObject(rawEvent: EventRaw): Event {
     return new Event(
       rawEvent.eventId,
-      rawEvent.mandantId,
       rawEvent.userId,
       rawEvent.userToken,
-      rawEvent.externalUserId,
-      rawEvent.serverUserToken,
       rawEvent.contactNr,
       typeof(rawEvent.eventBegin) === 'string' ?
       new Date(rawEvent.eventBegin) : rawEvent.eventBegin,
@@ -31,19 +27,7 @@ export class EventFactory {
       rawEvent.planId,
       rawEvent.doneId,
       rawEvent.eventImportId,
-      rawEvent.issueProviderId,
-      rawEvent.providerUrl,
-      rawEvent.login,
-      rawEvent.nExternalIssueId,
-      rawEvent.sExternalIssueId,
-      rawEvent.nExternalEventId,
-      rawEvent.sExternalEventId,
-      /* used in session event for derived changes
-        - true if update is  transferred to  issueProvider
-      */
-      rawEvent.isStoredAtIssue,
       rawEvent.isExported,
-      rawEvent.invoiceOrderNr,
       rawEvent.type,
       rawEvent.status,
       /* audit info - must be set by updating proccedures  */

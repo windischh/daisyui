@@ -169,7 +169,7 @@ export class AuthenticationService {
     session.language = GlobalFunctions.getDefaultLanguage(this.locale);
     // initialize all session variables
     session.contactNr = 0;
-    session.calendarDay = user?.calendarDay ?? GlobalFunctions.getStartOfDay(new Date()) ?? new Date();
+    session.calendarDay = user?.calendarDay ?? GlobalFunctions.getStartOfDay(new Date());
     session.serviceLevel = initServiceLevel;
     // config for session duration
     session.duration = this.sessionConfiguration.sessionDuration;
@@ -661,7 +661,7 @@ export class AuthenticationService {
    * @param eventSelectOption
    * @param comp name of component
    */
-     public setSessionEventSelectOption(eventSelectOption: EventSelectOption, comp: string) {
+     public setSessionEventSelectOption(eventSelectOption: EventSelectOption | null, comp: string) {
       // eventSelectOption may be null
       if (eventSelectOption === null || (eventSelectOption !== undefined &&  eventSelectOption !== null && typeof eventSelectOption === 'object' && eventSelectOption instanceof EventSelectOption)) {
         const session = this.getSession(comp);

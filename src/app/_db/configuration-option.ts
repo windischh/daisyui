@@ -4,7 +4,7 @@
 export class ConfigurationOption {
   constructor (
     public optionId: number,
-    public mandantId: number,
+    public userId: number,
     public optionName: string,
     public optionArea:  string,
     public optionNr:  number,

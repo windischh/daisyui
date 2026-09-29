@@ -1,1 +1,352 @@
-<p>calendar-import events!</p>
+@if (refreshCounterSignal() > 0) {
+  <div class="ui grid container">
+    <div class="row"> <!-- header line -->
+      <div class="two wide column">
+      </div>
+      <div class="twelve wide column">
+        <h2 class="ui center aligned header">  {{auth.txt['calendar_import']}} {{sourceReadySignal() === 0 ? '(.' + fileType + ')' : ''}}
+          {{sourceReadySignal() === 1 && importReadySignal() === 0 ? auth.txt['source'] : ''}} {{sourceCheckedSignal() === 1 && importReadySignal() === 0 ? auth.txt['checked'] : ''}} {{importReadySignal() === 1 ? auth.txt['ready_for_import'] : ''}}
+        </h2>
+      </div>
+      @if (resetableSignal() === 1) {
+        <div class="column">
+          <button class="ui tiny circular red icon button"
+            [attr.data-tooltip]="auth.txt['reset']"
+            (click)="resetImport()">
+            <i class="times icon"></i>
+          </button>
+        </div>
+      }
+    </div>
+    <div class="ui divider"></div>
+    <div class="row"> <!-- import process handling-->
+      <div class="two wide column"> <!-- open update area for  file name ....  -->
+        @if (sourceReadySignal() === 0 && !isUpdateFileType) {
+          <button class="ui tiny circular yellow icon button"
+            [attr.data-tooltip]="auth.txt['fileType'] + ' ' + auth.txt['update']"
+            (click)="setUpdateFileType()">
+            <i class="arrow down icon"></i>
+          </button>
+        }
+      </div>
+      <div class="eight wide column"> <!-- select local file by file name and type   -->
+        @if (file) {
+          <h4>
+            {{auth.txt['fileName']}}: {{extendedFileName}}
+          </h4>
+          @if (fileSize > 0) {
+            <h4>
+              {{auth.txt['fileSize']}}: {{fileSize/1000|number:'1.3-3'}}
+              @if (isLocalEvents && sourceCheckedSignal() === 0) {
+                <div class="ui checkbox">  <!-- we have recognized events with local timezone -->
+                  <input type="checkbox" [checked]="isImportLocalTimezone" (change)="toggleLocalTimezone($event)">
+                  <label><small>timezone:&nbsp;&nbsp; </small></label>
+                </div>
+                @if (isImportLocalTimezone) {
+                  <small>{{auth.txt['import_local_timezone'] }} </small>
+                }
+              }
+            </h4>
+          }
+        } @else {
+          <h4>
+            {{auth.txt['filePattern']}}: {{fileName + '.' + fileType}}
+          </h4>
+        }
+      </div>
+      <div class="five wide column"> <!-- prepare and check import          -->
+        @if (file && validIcsFileSignal() === 1 && sourceReadySignal() === 0 && !isUpdateFileType) {
+          <button class="ui tiny circular green icon button"
+            [attr.data-tooltip]="auth.txt['prepare_import']"
+            (click)="getIcsData()">
+            <i class="arrow right icon"></i>
+          </button>
+        }
+        @if (sourceReadySignal() === 1 && sourceCheckedSignal() === 0 && recordCount > 0) {
+          <button class="ui tiny circular green icon button"
+            [attr.data-tooltip]="auth.txt['check_source']"
+            (click)="setImportSourceChecked()">
+            <i class="arrow right icon"></i>
+          </button>
+        }
+        @if (sourceCheckedSignal() === 1 && importReadySignal() === 0) {
+          <button class="ui tiny circular yellow icon button"
+            [attr.data-tooltip]="auth.txt['go_back']"
+            (click)="resetImportSource()">
+            <i class="arrow left icon"></i>
+          </button>
+        }
+        @if (sourceCheckedSignal() === 1 && importReadySignal() === 0) {
+          <button class="ui tiny circular green icon button"
+            [attr.data-tooltip]="auth.txt['check_import']"
+            (click)="setImportOverlap()">
+            <i class="arrow right icon"></i>
+          </button>
+        }
+        @if (importReadySignal() === 1 && importFinishSignal() === 0) {
+          <button class="ui tiny circular yellow icon button"
+            [attr.data-tooltip]="auth.txt['go_back']"
+            (click)="resetImportOverlap()">
+            <i class="arrow left icon"></i>
+          </button>
+        }
+        @if (importReadySignal() === 1 && importFinishSignal() === 0 && recordCount > 0) {
+          <button class="ui tiny green button"
+            [attr.data-tooltip]="auth.txt['do_import']"
+            (click)="setImportFinished()">
+            IMPORT
+          </button>
+        }
+        @if (sourceReadySignal() === 1 && recordCount === 0) {
+          <h4>
+            &nbsp;&nbsp;{{auth.txt['no_records_to_import']}}
+          </h4>
+        }
+        @if (importFinishSignal() === 1) {
+          <h4>
+            &nbsp;&nbsp;{{importCount + ' ' + auth.txt['records_imported']}}
+          </h4>
+        }
+      </div>
+    </div>
+    @if (sourceReadySignal() === 1 && importFinishSignal() === 0 && recordCount > 0) {
+      @if (importReadySignal() === 0) {
+        <div class="row"> <!-- import date restriction-->
+          <div class="two wide column"></div>
+          <div class="six wide column">
+            <div class="ui tiny fluid labeled action input">
+              <div class="ui label" [attr.data-tooltip]="dateFrom ? (auth.txt['dateFrom'] + ' ' + auth.txt['is_set'] + ': ' +  GlobalFunctions.getDDMMYYYY(dateFrom)) : (auth.txt['dateFrom'] + ' ' + auth.txt['is_not_set'])">
+                {{auth.txt['dateFrom']}}:
+              </div>
+              @if (!dateFrom) {
+                <!-- we can enter date via enter or via pressing icon button  -->
+                <input (keyup)="setDateFromEntered(dateFromString.value)" (keyup.enter)="setDateFrom(dateFromString.value); dateFrom ? dateFromString.value=GlobalFunctions.getDDMMYYYY(dateFrom) ?? '' : ''" #dateFromString
+                  type="text" [placeholder]="auth.txt['date'] + '; dd.mm.yyyy'" [disabled]="dateFrom" data-testid="document-dateFrom">
+                <button class="ui small icon button" [ngClass]="isDateFromEntered ? 'green' : ''"
+                  type="button" (click)="setDateFrom(dateFromString.value); dateFrom ? dateFromString.value=GlobalFunctions.getDDMMYYYY(dateFrom) ?? '' : ''"
+                  [attr.data-tooltip]="auth.txt['set']  + ' ' + auth.txt['dateFrom'] " data-position="top center"
+                  data-testid="document-dateFrom-enter">
+                  <i class="check icon"></i>
+                </button>
+              } @else {
+                <input type="text" [value]="dateFrom|date:'dd.MM.yyyy'" readonly>
+                <button class="ui small red icon button"
+                  type="button" (click)="setDateFrom('')"
+                  [attr.data-tooltip]="auth.txt['reset']  + ' ' + auth.txt['dateFrom'] " data-position="bottom center">
+                  <i class="times icon"></i>
+                </button>
+              }
+            </div>
+          </div>
+          <div class="six wide column">
+            <div class="ui tiny fluid labeled action input">
+              <div class="ui label" [attr.data-tooltip]="dateTo ? (auth.txt['dateTo'] + ' ' + auth.txt['is_set'] + ': ' +  GlobalFunctions.getDDMMYYYY(dateTo)) : (auth.txt['dateTo'] + ' ' + auth.txt['is_not_set'])"
+                data-position="bottom center">
+                {{auth.txt['dateTo']}}:
+              </div>
+              @if (!dateTo) {
+                <!-- we can enter date via enter or via pressing icon button  -->
+                <input (keyup)="setDateToEntered(dateToString.value)" (keyup.enter)="setDateTo(dateToString.value); dateTo ? dateToString.value=GlobalFunctions.getDDMMYYYY(dateTo) ?? '' : ''" #dateToString
+                  type="text" [placeholder]="auth.txt['date'] + '; dd.mm.yyyy'" [disabled]="dateTo" data-testid="document-dateTo">
+                <button class="ui small icon button" [ngClass]="dateToString.value !== '' ? 'green' : ''"
+                  type="button" (click)="setDateTo(dateToString.value); dateTo ? dateToString.value=GlobalFunctions.getDDMMYYYY(dateTo) ?? '' : ''"
+                  [attr.data-tooltip]="auth.txt['set']  + ' ' + auth.txt['dateTo'] " data-position="bottom center"
+                  data-testid="document-dateTo-enter">
+                  <i class="check icon"></i>
+                </button>
+              } @else {
+                <input type="text" [value]="dateTo|date:'dd.MM.yyyy'" readonly>
+                <button class="ui small red icon button"
+                  type="button" (click)="setDateTo('')"
+                  [attr.data-tooltip]="auth.txt['reset']  + ' ' + auth.txt['dateTo'] " data-position="bottom center">
+                  <i class="times icon"></i>
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+      <div class="row"> <!-- import process messages-->
+        <div class="two wide column">
+        </div>
+        <div class="thirteen wide column">
+          <h4>
+            {{auth.txt['record_count'] + ': ' + recordCount}}&nbsp;&nbsp;{{errorCount > 0 ? auth.txt['from_this'] + ' ' + auth.txt['error_count'] + ': ' + errorCount : ''}}
+            <br>
+            @if (sourceReadySignal() === 1 && importFinishSignal() === 0 && recordCount > 0) {
+              <div class="ui checkbox">
+                <input type="checkbox" [checked]="isShowRemarked" (change)="toggleRemarked($event)">
+                <label><small>{{auth.txt['show_errors'] }} </small></label>
+              </div>
+              <br>
+            }
+            &nbsp;&nbsp;{{auth.txt['event_count'] + ': ' + (recordCount - errorCount - timeSpanCount)}}&nbsp;&nbsp;{{(rejected + completeOverlap) > 0 ? '( ' + auth.txt['not_accepted_count'] + ': ' + (rejected + completeOverlap).toString() + ')' : ''}} &nbsp;&nbsp;
+            @if (recordCount - timeSpanCount > 0) {
+            <div class="ui checkbox">
+              <input type="checkbox" [checked]="isShowEvent" (change)="toggleEvent($event)">
+              <label><small>{{auth.txt['show'] + ' ' + auth.txt['events'] }} </small></label>
+            </div>
+              @if (sourceCheckedSignal() === 1) {
+                <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;{{auth.txt['unchanged'] + ': ' + (recordCount - errorCount - timeSpanCount - modified - rejected)}}&nbsp;&nbsp;{{modified > 0 ? auth.txt['modified_count'] + ': ' + modified : ''}}&nbsp;&nbsp;{{rejected > 0 ? auth.txt['rejected_count'] + ': ' + rejected : ''}}
+                @if (importReadySignal() === 1) {
+                  <br>
+                  &nbsp;&nbsp;&nbsp;&nbsp;{{withoutOverlap > 0 ? auth.txt['not_overlap_count'] + ': ' + withoutOverlap : ''}}&nbsp;&nbsp;{{partiallyOverlap > 0 ? auth.txt['partially_overlap_count'] + ': ' + partiallyOverlap : ''}}&nbsp;&nbsp;{{completeOverlap > 0 ? auth.txt['complete_overlap_count'] + ': ' + completeOverlap : ''}}
+                }
+              }
+            }
+            @if (timeSpanCount > 0) {
+              <br>
+              &nbsp;&nbsp;{{auth.txt['time_spans'] + ': ' + timeSpanCount }}
+              &nbsp;&nbsp;{{timeSpanRejected > 0 ? '( ' + auth.txt['rejected_count'] + ': ' + timeSpanRejected + ')' : ''}}
+              &nbsp;&nbsp;{{timeSpanOverlap > 0 ? '( ' + auth.txt['complete_overlap_count'] + ': ' + timeSpanOverlap + ')' : ''}}
+              <div class="ui checkbox">
+                <input type="checkbox" [checked]="isShowTimeSpans" (change)="toggleTimeSpans($event)">
+                <label><small>{{auth.txt['show'] + ' ' + auth.txt['time_spans']  }} </small></label>
+              </div>
+              <br>
+              <select class="ui search dropdown"  [ngStyle]="timeSpanStyle"
+                (change)="selectTimeSpanCategory($event)">
+                @for (type of timeSpanTypeChoices; track type) {
+                  @if (type.value !== '1' && type.value !== '2') {
+                    <option [value]="type.value" [ngStyle]="type.style"
+                    [disabled]="importReadySignal() === 1"
+                    [selected]="type.isSelected">
+                    {{type.value}} - {{type.value === '0' ? auth.txt['rejected'] : type.text}}
+                  </option>
+                  }
+                }
+              </select>
+              @if (importReadySignal() === 1) {
+                &nbsp;&nbsp;{{auth.txt['time_spans_typed'] + ': ' + timeSpanIsTyped }}
+              }
+            }
+          </h4>
+        </div>
+      </div>
+    }
+    @if (isUpdateFileType) {
+      <!-- updating file type              -->
+      <div class="ui divider"></div>
+      <div class="row">
+        <div class="two wide column">
+          <h4> {{auth.txt['fileType']}}:</h4>
+        </div>
+        <div class="two wide column" >
+        </div>
+        <div class="six wide column" >
+          <h4>
+            <div class="ui fluid input">
+              <input (keyup.enter)="updateFileType(type.value)"
+                #type [value]="fileType" type="text" [placeholder]="auth.txt['fileType'] + '  ...'">
+              <button class="ui tiny green icon button"
+                [attr.data-tooltip]="auth.txt['submit']" data-position="top center"
+                (click)="updateFileType(type.value)">
+                <i class="check icon"></i>
+              </button>
+            </div>
+          </h4>
+        </div>
+      </div>
+    }
+    @if (!isUpdateFileType && sourceReadySignal() === 0) {
+      <div class="row">  <!-- select file for import     -->
+        <div class="ten wide column center aligned">
+        <input #selectedfiles type="file" name="calendars" [attr.accept]="(fileType !== '' ? '.' : '') + fileType"
+          (change)="selectedfiles.files ? fileAdded(selectedfiles.files) : ''"/>
+          @if (validIcsFileSignal() === 2) {
+            <div class="ui red label">
+              {{auth.txt['wrong_ics_format'] + ': ' + error}}
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+}
+
+@if (auth && showProgressSignal() > 0) {
+  <div class="ui indicating progress" [attr.data-percent]="progressPercent">
+    <div class="bar" [ngStyle]="progressStyle">
+      <div class="centered progress">{{progressValue + ' ' + ' records'}}</div>
+    </div>
+    <div class="label">{{progressPercent + '% ' + (importReadySignal() === 0 ? auth.txt['prepared'] :  auth.txt['uploaded']) }}</div>
+  </div>
+}
+
+
+@if (showProgressSignal() === 0 && sourceReadySignal() === 1 && validIcsFileSignal() === 1) {
+  <!-- table with import records                 -->
+  <ng-container *ngTemplateOutlet="paginator" ></ng-container>
+  <table class="ui compact celled structured table">
+    <thead>
+      <tr>
+        <th>{{auth.txt['date']}}</th>
+        <th>{{auth.txt['from']}}</th>
+        <th>{{auth.txt['to']}}</th>
+        <th></th>
+        <th>{{eventtxt['eventDuration']}}</th>
+        <th>{{eventtxt['summary']}}</th>
+        <th>{{eventtxt['location']}}</th>
+        <th>{{auth.txt['message']}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (event of shownEvents; track $index; let i = $index) {
+        <tr >
+          <!-- dateFrom, dateTo in eventSelectOption is set in every date criteria specifiction !!!-->
+          <td class="left aligned">{{event.eventBegin|date:'yyyy'}} {{event.eventBegin|date:'d.MMM'}}</td>
+          <td class="left aligned">{{event.eventBegin|date:'HH:mm'}}</td>
+          <td class="left aligned">{{event.eventEnd|date:'HH:mm'}}</td>
+          <!--- : ConfigurationOptionBasicFunctions.getOptionString(options, 'opt_span_' + event.type.toString()) ?? ''}} -->
+          <td class="left aligned" [ngStyle]="event.type < 0 || event.status >= 9 ? {'color': 'Red'} :  event.status > 0 ? {'color': 'Yellow'} : {}">
+            @if (event.type < 20) {
+              {{event.type < 0 ? 'error' : event.type === EventType.actual ? '' :  event.type === EventType.plan ? 'P' 
+              : event.type.toString()
+              }}
+              {{event.status >= 90 ? 'rejected' : event.status >= 9 ? 'overlap' :  event.status > 0 ? 'shift' : ''}}
+            } @else {
+              <select class="ui search dropdown"  [ngStyle]="event.style"
+                (change)="selectTimeSpanType($event, i)">
+                @for (type of event.typeChoices; track type) {
+                 @if (type.value !== '2') {
+                  <option [value]="type.value" [ngStyle]="type.style"
+                    [disabled]="importReadySignal() === 1"
+                    [selected]="type.isSelected">
+                    {{type.value}} - {{type.value === '0' ? auth.txt['rejected'] : type.value === '1' ?  'default: ' + (timeSpanType === EventType.timeSpanUndefined ? auth.txt['rejected'] : timeSpanText) : type.text}}
+                  </option>
+                }
+                }
+              </select>
+            }
+          </td>
+          <td class="left aligned">
+            {{GlobalFunctions.minutesDisplay(event.eventDuration)}}
+          </td>
+          <td class="left aligned">
+            {{event.summary|slice:0:30}}
+          </td>
+          <td class="left aligned">
+            {{event.location|slice:0:30}}
+          </td>
+          <td class="left aligned" [ngStyle]="event.type < 0 || event.status >= 9 ? {'background-color': 'LightSalmon'} : event.status > 0 ? {'background-color': 'LightYellow'} : {}">
+            {{event.name|slice:0:80}}
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  <!-- we must not use paginator as ng-template because ngModel usage does not allow it
+  <ng-container *ngTemplateOutlet="paginator; context:{ $implicit: isSelectedPageChanged}"></ng-container>
+  <ng-template #paginator let-selectedPageChanged>
+    -->
+  <ng-container *ngTemplateOutlet="paginator"></ng-container>
+}
+<ng-template #paginator> <!-- paginator selectedPage as ngModel -->
+  <dsy-paginator [(ngModel)]="selectedPage"
+    [externalSelectedPage]="selectedPage"
+    [total]="total" [limit]="limit" [abbrPlaces]="abbrPlaces"
+    [txt]="auth.txt" [elementName]="''"
+    [names]="names" (pageSelect)="onPageSelect($event)">
+  </dsy-paginator>
+</ng-template>

@@ -1951,29 +1951,31 @@ export class GlobalFunctions {
   }
 
   /** returns start of day  */
-  static getStartOfDay(date: Date): Date | null {
+  static getStartOfDay(date: Date): Date {
     if (date && date instanceof Date) {
-      const copy = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-      return copy;
-    } else return null;
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    } else {
+      const defaultDate = new Date();
+      return new Date(defaultDate.getFullYear(), defaultDate.getMonth(), defaultDate.getDate());
+    }
   }
 
   /** returns end of day as last minute of day (i.e. 23:59) */
-  static getEndOfDay(date: Date): Date | null {
-    if (date && date instanceof Date && this.getStartOfDay(date)) {
-      let copy: Date = this.getStartOfDay(date) ?? new Date();
-      copy = this.addDays(copy, 1);
-      copy = this.addMinutes(copy, -1);
-      return copy;
-    } else return null;
+  static getEndOfDay(date: Date): Date {
+    let copy: Date = this.getStartOfDay(date);
+    copy = this.addDays(copy, 1);
+    copy = this.addMinutes(copy, -1);
+    return copy;
   }
 
   /** returns start of month  */
-  static getStartOfMonth(date: Date): Date | null {
+  static getStartOfMonth(date: Date): Date {
     if (date && date instanceof Date) {
-      const copy = new Date(date.getFullYear(), date.getMonth(), 1);
-      return copy;
-    } else return null;
+      return new Date(date.getFullYear(), date.getMonth(), 1);
+    } else {
+      const defaultDate = new Date();
+      return new Date(defaultDate.getFullYear(), defaultDate.getMonth(), 1);
+    }
   }
 
 
@@ -1983,19 +1985,23 @@ export class GlobalFunctions {
   }
 
   /** returns start of year  */
-  static getStartOfYear(date: Date): Date | null {
+  static getStartOfYear(date: Date): Date {
     if (date && date instanceof Date) {
-      const copy = new Date(date.getFullYear(), 0, 1);
-      return copy;
-    } else return null;
+      return new Date(date.getFullYear(), 0, 1);
+    } else {
+      const defaultDate = new Date();
+      return new Date(defaultDate.getFullYear(), 0, 1);
+    }
   }
 
   /** returns last day of maonth */
-  static getEndOfMonth(date: Date): Date | null {
+  static getEndOfMonth(date: Date): Date {
     if (date && date instanceof Date) {
-      const copy = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-      return copy;
-    } else return null;
+      return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    } else {
+      const defaultDate = new Date();
+      return new Date(defaultDate.getFullYear(), defaultDate.getMonth() + 1, 0);
+    }
   }
 
 

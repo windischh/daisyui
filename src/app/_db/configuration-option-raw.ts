@@ -1,6 +1,6 @@
 export interface ConfigurationOptionRaw {
     optionId: number;
-    mandantId: number;
+    userId: number;
     optionName: string;
     optionArea:  string;
     optionNr:  number;

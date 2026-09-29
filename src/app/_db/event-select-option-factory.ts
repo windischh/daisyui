@@ -4,7 +4,7 @@ import { EventSelectOptionRaw } from './event-select-option-raw';
 export class EventSelectOptionFactory {
 
   static empty(): EventSelectOption {
-    return new EventSelectOption(0, '', 0, 0, '', '', 0, '', 0, '', '',
+    return new EventSelectOption(0, '', 0,  0, '',
      false, 0, false, []);
   }
 
@@ -13,25 +13,16 @@ export class EventSelectOptionFactory {
       rawEventSelectOption.nr,
       rawEventSelectOption.name,
       rawEventSelectOption.contactNr,
-      rawEventSelectOption.issueProviderId,
-      rawEventSelectOption.providerUrl,
-      rawEventSelectOption.login,
-      rawEventSelectOption.nExternalIssueId,
-      rawEventSelectOption.sExternalIssueId,
       rawEventSelectOption.userId,
-      rawEventSelectOption.externalUserId,
-      rawEventSelectOption.userLogin,
+      rawEventSelectOption.userName,
       rawEventSelectOption.isPlan,
       rawEventSelectOption.locationType,
       rawEventSelectOption.isShowDetails,
       rawEventSelectOption.sortCriterias,
-      rawEventSelectOption.userName,
-      rawEventSelectOption.custIssueNr,
       rawEventSelectOption.contactDisplayNr,
       rawEventSelectOption.contactName,
       rawEventSelectOption.contactColor,
-      rawEventSelectOption.issueDisplayNr,
-      rawEventSelectOption.issueText,
+      rawEventSelectOption.issueNr,
       rawEventSelectOption.isPreviousDay,
       rawEventSelectOption.isPreviousWeek,
       rawEventSelectOption.isPreviousMonth,

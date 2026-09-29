@@ -2,7 +2,6 @@
 
 export interface EventRaw {
     eventId: number;
-    mandantId: number;
     userId: number;
     userToken: number;
     externalUserId: string;

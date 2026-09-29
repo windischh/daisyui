@@ -19,7 +19,7 @@ import { AuthenticationService } from '../../_services/authentication.service';
 import { ErrorMessage } from '../../_validators/error-message';
 import { ConfigurationValidators } from '../../_validators/configuration.validators';
 import { OptionGroupCalendar } from '../../_enums/option-group-event-calendar.enum';
-import { OptionGroupCalendarExport } from '../../_enums/option-group-calendar-export.enum';
+import { OptionGroupEventExport } from '../../_enums/option-group-event-export.enum';
 
 
 @Component({
@@ -94,10 +94,10 @@ export class ConfigurationFormViewComponent implements OnInit {
     const enumStringType: { [key: string]: any } = OptionGroupCalendar;
     return {value: enumStringType[_] as number, text: _};
   });
-  groupChoicesCalendarExport = Object.keys(OptionGroupCalendarExport)
-  .filter((k: any) => typeof OptionGroupCalendarExport[k] === 'number')
+  groupChoicesEventExport = Object.keys(OptionGroupEventExport)
+  .filter((k: any) => typeof OptionGroupEventExport[k] === 'number')
   .map(_ => {
-    const enumStringType: { [key: string]: any } = OptionGroupCalendarExport;
+    const enumStringType: { [key: string]: any } = OptionGroupEventExport;
     return {value: enumStringType[_] as number, text: _};
   });
 
@@ -219,8 +219,8 @@ export class ConfigurationFormViewComponent implements OnInit {
           case 'calendar':
             this.groupChoices = this.groupChoicesCalendar;
             break;
-          case 'calendarExport':
-            this.groupChoices = this.groupChoicesCalendarExport;
+          case 'eventExport':
+            this.groupChoices = this.groupChoicesEventExport;
             break;
         }
         // groupChoice is possible if no element of this group exist in options or we have a stringSequence
@@ -310,7 +310,7 @@ export class ConfigurationFormViewComponent implements OnInit {
                 optionGroupName = OptionGroupCalendar[optionGroup];
                 break;
               case 'clalendarExport':
-                optionGroupName = OptionGroupCalendarExport[optionGroup];
+                optionGroupName = OptionGroupEventExport[optionGroup];
                 break;
             }
             optionGroupName = this.txt[optionGroupName] ? this.txt[optionGroupName] : optionGroupName;
