@@ -3,21 +3,20 @@
 <form [formGroup] = "thisForm"
   (ngSubmit)="submitForm()">
 
-  <!-- outer grid with empty margins on each side-->
-  <div class="container mx-auto p-4">
-    <div class="card bg-base-100 shadow-md">
-      <div class="card-body">
-        <!-- card to show an outlined form -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4" formGroupName="option">
-          <div class="md:col-span-1">
-          </div>
-          <div class="md:col-span-3">
+  <div class="card bg-base-100 shadow-md">
+    <div class="card-body">
+      <!-- fixed part of the form with formGroup-->
+      <div class="flex flex-col gap-4" formGroupName="option">
+        <div class="flex items-center gap-4">
+          <div class="w-1/4">
             <h2 class="text-2xl font-bold">{{optiontxt['className']}}</h2>
           </div>
-          <div class="md:col-span-1">
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="w-1/4">
             <h3>{{optiontxt['optionNr']}}</h3>
           </div>
-          <div class="md:col-span-3">
+          <div class="flex-1">
             <input formControlName="nrString" class="input input-bordered w-full">
             @if (errors['option.nrString']) {
               <div class="alert alert-error mt-2">
@@ -25,16 +24,20 @@
               </div>
             }
           </div>
-          <div class="md:col-span-1">
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="w-1/4">
             <h3>{{optiontxt['optionName']}}</h3>
           </div>
-          <div class="md:col-span-3">
+          <div class="flex-1">
             <input formControlName="name" class="input input-bordered w-full">
           </div>
-          <div class="md:col-span-1">
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="w-1/4">
             <h3>{{txt['event_selection']}}:</h3>
           </div>
-          <div class="md:col-span-3 flex flex-wrap gap-4">
+          <div class="flex-1 flex flex-wrap gap-4">
             @for (p of planChoices; track p) {
               <div class="form-control">
                 <label class="label cursor-pointer gap-2">
@@ -44,17 +47,21 @@
               </div>
             }
           </div>
-          <div class="md:col-span-1">
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="w-1/4">
             <h3>{{txt['show']}} {{txt['detail']}}:</h3>
           </div>
-          <div class="md:col-span-3">
+          <div class="flex-1">
             <input type="checkbox" formControlName="isShowDetails" class="checkbox checkbox-sm">
           </div>
-          <!-- location type selection  -->
-          <div class="md:col-span-1">
+        </div>
+        <!-- location type selection  -->
+        <div class="flex items-center gap-4">
+          <div class="w-1/4">
             <h3>{{eventtxt['locationType']}}:</h3>
           </div>
-          <div class="md:col-span-3">
+          <div class="flex-1">
             <select class="select select-primary w-full" formControlName="locationType">
               @for (c of locationTypeChoices; track c) {
                 <option [ngValue]="c.value"
@@ -64,11 +71,13 @@
               }
             </select>
           </div>
-          <!-- user selection  -->
-          <div class="md:col-span-1">
+        </div>
+        <!-- user selection  -->
+        <div class="flex items-center gap-4">
+          <div class="w-1/4">
             <h3>{{txt['select_user']}}:</h3>
           </div>
-          <div class="md:col-span-3">
+          <div class="flex-1">
             @if (session.app === App.admin) {
               <select class="select select-primary w-full" formControlName="userId">
                 @for (u of userChoices; track u) {
@@ -80,19 +89,24 @@
               </select>
             }
           </div>
-        </div> <!-- end of grid for fixed part of the form with formGroup-->
-        <div class="grid grid-cols-1 gap-4 mt-4">
-          <!-- contact/issue selection  -->
-          <div class="border rounded-box p-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+        </div>
+      </div> <!-- end of fixed part of the form with formGroup-->
+
+      <div class="flex flex-col gap-4 mt-4">
+        <!-- contact/issue selection  -->
+        <div class="border rounded-box p-4">
+          <div class="flex flex-col gap-2">
+            <div class="flex gap-4">
+              <div class="w-1/2">
                 <h4>{{txt['contact']}}:</h4>
               </div>
-              <div>
+              <div class="w-1/2">
                 <h4>{{txt['issue']}}:</h4>
               </div>
-              @for (c of contactChoices; track c) {
-                <div>
+            </div>
+            @for (c of contactChoices; track c) {
+              <div class="flex gap-4 items-center">
+                <div class="w-1/2">
                   <div class="form-control">
                     <label class="label cursor-pointer gap-2">
                       <input type="checkbox" [value]="c.value" [checked]="c.isSelected" (change)="setContact($event)" class="checkbox checkbox-sm">
@@ -100,254 +114,317 @@
                     </label>
                   </div>
                 </div>
-                <div>
+                <div class="w-1/2">
                   <input formControlName="issueNrString" class="input input-bordered w-full">
                 </div>
-              }
-            </div> <!-- end of grid -->
-          </div>  <!-- end of bordered box -->
+              </div>
+            }
+          </div>
+        </div>  <!-- end of bordered box -->
 
-            <!-- 11 choices - 9 for previous/current/next date, interval selection, absolute date range selection with  datePicker -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-              <div>
-                <h3>{{txt['date']}}:</h3>
+        <!-- 11 choices - 9 for previous/current/next date, interval selection, absolute date range selection with  datePicker -->
+        <div class="flex items-center gap-4">
+          <div class="w-1/4">
+            <h3>{{txt['date']}}:</h3>
+          </div>
+          <div class="flex-1">
+            {{dateChoices[0].isSelected?txt['previous_day']:dateChoices[1].isSelected?txt['previous_week']:dateChoices[2].isSelected?txt['previous_month']
+            :dateChoices[3].isSelected?txt['current_day']:dateChoices[4].isSelected?txt['current_week']:dateChoices[5].isSelected?txt['current_month']
+            :dateChoices[6].isSelected?txt['next_day']:dateChoices[7].isSelected?txt['next_week']:dateChoices[8].isSelected?txt['next_month']
+            :dateChoices[9].isSelected?txt['date_interval']:txt['date_range']}}: {{dateFrom|date:'dd.MM.yyyy'}}
+            @if (!dateChoices[0].isSelected) {
+              <span> - {{dateTo|date:'dd.MM.yyyy'}}</span>
+            }
+          </div>
+          <div>
+            <button class="btn btn-xs btn-circle btn-neutral text-primary-content tooltip tooltip-left tooltip-accent"
+              [attr.data-tip]="txt['show_menu'] + ' ' + txt['for'] + ' ' + txt['date']"
+              type="button" (click)="showDateChoices()">
+              <i class="fas fa-ellipsis-vertical"></i>
+            </button>
+          </div>
+        </div>
+
+        @if (isShowDateChoices) {
+          <div class="border rounded-box p-4">
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center gap-4">
+                <div class="w-1/4">
+                  <h4>{{txt['select_relative_date']}}:</h4>
+                </div>
+                <div class="form-control">
+                  <label class="label cursor-pointer gap-2">
+                    <input type="checkbox" [value]="dateChoices[0].value" [checked]="dateChoices[0].isSelected" (change)="setDate($event)" class="checkbox checkbox-sm">
+                    <span class="label-text">{{txt['previous_day']}}</span>
+                  </label>
+                </div>
+                <div class="form-control">
+                  <label class="label cursor-pointer gap-2">
+                    <input type="checkbox" [value]="dateChoices[1].value" [checked]="dateChoices[1].isSelected" (change)="setDate($event)" class="checkbox checkbox-sm">
+                    <span class="label-text">{{txt['previous_week']}}</span>
+                  </label>
+                </div>
+                <div class="form-control">
+                  <label class="label cursor-pointer gap-2">
+                    <input type="checkbox" [value]="dateChoices[2].value" [checked]="dateChoices[2].isSelected" (change)="setDate($event)" class="checkbox checkbox-sm">
+                    <span class="label-text">{{txt['previous_month']}}</span>
+                  </label>
+                </div>
               </div>
-              <div class="md:col-span-2">
-                {{dateChoices[0].isSelected?txt['previous_day']:dateChoices[1].isSelected?txt['previous_week']:dateChoices[2].isSelected?txt['previous_month']
-                :dateChoices[3].isSelected?txt['current_day']:dateChoices[4].isSelected?txt['current_week']:dateChoices[5].isSelected?txt['current_month']
-                :dateChoices[6].isSelected?txt['next_day']:dateChoices[7].isSelected?txt['next_week']:dateChoices[8].isSelected?txt['next_month']
-                :dateChoices[9].isSelected?txt['date_interval']:txt['date_range']}}: {{dateFrom|date:'dd.MM.yyyy'}}
-                @if (!dateChoices[0].isSelected) {
-                  <span> - {{dateTo|date:'dd.MM.yyyy'}}</span>
-                }
+              <div class="flex items-center gap-4">
+                <div class="w-1/4">
+                </div>
+                <div class="form-control">
+                  <label class="label cursor-pointer gap-2">
+                    <input type="checkbox" [value]="dateChoices[3].value" [checked]="dateChoices[3].isSelected" (change)="setDate($event)" class="checkbox checkbox-sm">
+                    <span class="label-text">{{txt['current_day']}}</span>
+                  </label>
+                </div>
+                <div class="form-control">
+                  <label class="label cursor-pointer gap-2">
+                    <input type="checkbox" [value]="dateChoices[4].value" [checked]="dateChoices[4].isSelected" (change)="setDate($event)" class="checkbox checkbox-sm">
+                    <span class="label-text">{{txt['current_week']}}</span>
+                  </label>
+                </div>
+                <div class="form-control">
+                  <label class="label cursor-pointer gap-2">
+                    <input type="checkbox" [value]="dateChoices[5].value" [checked]="dateChoices[5].isSelected" (change)="setDate($event)" class="checkbox checkbox-sm">
+                    <span class="label-text">{{txt['current_month']}}</span>
+                  </label>
+                </div>
               </div>
-              <div class="flex justify-end">
-                <button class="btn btn-xs btn-circle btn-neutral text-primary-content tooltip tooltip-left tooltip-accent"
-                  [attr.data-tip]="txt['show_menu'] + ' ' + txt['for'] + ' ' + txt['date']"
-                  type="button" (click)="showDateChoices()">
-                  <i class="fas fa-ellipsis-vertical"></i>
-                </button>
+              <div class="flex items-center gap-4">
+                <div class="w-1/4">
+                </div>
+                <div class="form-control">
+                  <label class="label cursor-pointer gap-2">
+                    <input type="checkbox" [value]="dateChoices[6].value" [checked]="dateChoices[6].isSelected" (change)="setDate($event)" class="checkbox checkbox-sm">
+                    <span class="label-text">{{txt['next_day']}}</span>
+                  </label>
+                </div>
+                <div class="form-control">
+                  <label class="label cursor-pointer gap-2">
+                    <input type="checkbox" [value]="dateChoices[7].value" [checked]="dateChoices[7].isSelected" (change)="setDate($event)" class="checkbox checkbox-sm">
+                    <span class="label-text">{{txt['next_week']}}</span>
+                  </label>
+                </div>
+                <div class="form-control">
+                  <label class="label cursor-pointer gap-2">
+                    <input type="checkbox" [value]="dateChoices[8].value" [checked]="dateChoices[8].isSelected" (change)="setDate($event)" class="checkbox checkbox-sm">
+                    <span class="label-text">{{txt['next_month']}}</span>
+                  </label>
+                </div>
+              </div>
+              <ng-container  formGroupName="date">
+                <div class="flex items-center gap-4">
+                  <div class="w-1/2">
+                    <h4>{{txt['select_date_interval']}}:</h4>
+                  </div>
+                  <div>
+                    <input type="checkbox" [value]="dateChoices[9].value" [checked]="dateChoices[9].isSelected" (change)="setDate($event)" class="checkbox checkbox-sm">
+                  </div>
+                </div>
+                <div class="flex items-start gap-4 mt-2">
+                  <div class="w-1/4">
+                  </div>
+                  <div class="flex-1">
+                    {{txt['days']}} {{txt['before']}} {{txt['current_day']}}:
+                    <input formControlName="showFromString" [attr.disabled]="!dateChoices[9].isSelected?'':null" class="input input-bordered w-full mt-2">
+                    @if (errors['date.showFromString']) {
+                      <div class="alert alert-error mt-2">
+                        {{errors['date.showFromString']}}
+                      </div>
+                    }
+                  </div>
+                  <div class="flex-1">
+                    {{txt['days']}} {{txt['after']}} {{txt['current_day']}}:
+                    <input formControlName="showToString" [attr.disabled]="!dateChoices[9].isSelected?'':null" class="input input-bordered w-full mt-2">
+                    @if ( errors['date.showToString']) {
+                      <div class="alert alert-error mt-2">
+                        {{errors['date.showToString']}}
+                      </div>
+                    }
+                  </div>
+                </div>
+              </ng-container>
+              <div class="flex items-center gap-4 mt-2">
+                <div class="w-1/2">
+                  <h4>{{txt['select_date_range']}}:</h4>
+                </div>
+                <div>
+                  <input type="checkbox" [value]="dateChoices[10].value" [checked]="dateChoices[10].isSelected" (change)="setDate($event)" class="checkbox checkbox-sm">
+                </div>
+              </div>
+              <div class="flex items-center gap-4 mt-2">
+                <div class="w-1/4">
+                  <button class="btn btn-sm"
+                    [disabled]="!dateChoices[10].isSelected"
+                    type="button"  (click)="dp.toggleCalendar()">
+                    <i class="fas fa-calendar-days"></i>
+                  </button>
+                  <!-- with type="hidden" display of date input is  deactivated  -->
+                  <!-- ngModelOptions standalone - this input is outside of form!!  -->
+                  <input angular-mydatepicker name="mydate"
+                    [(ngModel)]="dpModel"  [options]="dateOpts" type="hidden"
+                    [ngModelOptions]="{standalone: true}"
+                    [locale]="locale" #dp="angular-mydatepicker"
+                    (dateChanged)="onDateChanged($event)"
+                    [attr.disabled]="dpDisabled?'':null"/>
+                </div>
+                <div class="flex-1">
+                  {{dateRangeBegin|date:'dd.MM.yyyy'}} - {{dateRangeEnd|date:'dd.MM.yyyy'}}
+                </div>
               </div>
             </div>
-            @if (isShowDateChoices) {
-              <div class="border rounded-box p-4">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <h4>{{txt['select_relative_date']}}:</h4>
-                  </div>
-                  @for (d of dateChoices.slice(0, 9); track d; let di = $index) {
-                    <div class="form-control">
-                      <label class="label cursor-pointer gap-2">
-                        <input type="checkbox" [value]="d.value" [checked]="d.isSelected" (change)="setDate($event)" class="checkbox checkbox-sm">
-                        <span class="label-text">{{txt['previous_day'] && d.text ? d.text : ''}}</span>
-                      </label>
-                    </div>
-                  }
-                  <ng-container  formGroupName="date">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                      <div>
-                        <h4>{{txt['select_date_interval']}}:</h4>
-                      </div>
-                      <div>
-                        <input type="checkbox" [value]="dateChoices[9].value" [checked]="dateChoices[9].isSelected" (change)="setDate($event)" class="checkbox checkbox-sm">
-                      </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                      <div>
-                        {{txt['days']}} {{txt['before']}} {{txt['current_day']}}:
-                        <input formControlName="showFromString" [attr.disabled]="!dateChoices[9].isSelected?'':null" class="input input-bordered w-full mt-2">
-                        @if (errors['date.showFromString']) {
-                          <div class="alert alert-error mt-2">
-                            {{errors['date.showFromString']}}
-                          </div>
-                        }
-                      </div>
-                      <div>
-                        {{txt['days']}} {{txt['after']}} {{txt['current_day']}}:
-                        <input formControlName="showToString" [attr.disabled]="!dateChoices[9].isSelected?'':null" class="input input-bordered w-full mt-2">
-                        @if ( errors['date.showToString']) {
-                          <div class="alert alert-error mt-2">
-                            {{errors['date.showToString']}}
-                          </div>
-                        }
-                      </div>
-                    </div>
-                  </ng-container>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div>
-                      <h4>{{txt['select_date_range']}}:</h4>
-                    </div>
-                    <div>
-                      <input type="checkbox" [value]="dateChoices[10].value" [checked]="dateChoices[10].isSelected" (change)="setDate($event)" class="checkbox checkbox-sm">
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 items-center">
-                    <div>
-                      <button class="btn btn-sm"
-                        [disabled]="!dateChoices[10].isSelected"
-                        type="button"  (click)="dp.toggleCalendar()">
-                        <i class="fas fa-calendar-days"></i>
-                      </button>
-                      <!-- with type="hidden" display of date input is  deactivated  -->
-                      <!-- ngModelOptions standalone - this input is outside of form!!  -->
-                      <input angular-mydatepicker name="mydate"
-                        [(ngModel)]="dpModel"  [options]="dateOpts" type="hidden"
-                        [ngModelOptions]="{standalone: true}"
-                        [locale]="locale" #dp="angular-mydatepicker"
-                        (dateChanged)="onDateChanged($event)"
-                        [attr.disabled]="dpDisabled?'':null"/>
-                    </div>
-                    <div class="md:col-span-3">
-                      {{dateRangeBegin|date:'dd.MM.yyyy'}} - {{dateRangeEnd|date:'dd.MM.yyyy'}}
-                    </div>
-                  </div>
-                </div> <!-- end of grid -->
-              </div>  <!-- end of bordered box -->
-              <!-- table with 5 columns for sortCriteria-->
-              <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center mt-4">
-                <div>
-                  <h3>{{txt['sortCriteria']}}:</h3>
-                </div>
-                <div class="md:col-span-2">
-                  @for (s of sortCriteriaSelected; track s; let i = $index) {
-                    @if (s.isSum || s.isSubTotal) {
-                      <span class="badge badge-neutral">{{s.sortField}}</span>
-                    } @else {
-                      <span>{{s.sortField}}</span>
-                      }@if (i !== sortCriteriaSelected.length - 1) {
-                      <span>, </span>
-                    }
-                  }
-                </div>
-                <div class="flex justify-end">
-                  <button class="btn btn-xs btn-circle btn-neutral text-primary-content tooltip tooltip-bottom tooltip-accent"
-                    [attr.data-tip]="txt['show_menu'] + ' ' + txt['for'] + ' ' + txt['sortCriteria']"
-                    type="button" (click)="showSortCriteria()">
-                    <i class="fas fa-ellipsis-vertical"></i>
-                  </button>
-                </div>
-              </div>
-              @if (isShowSortCriteria) {
-                <div class="border rounded-box p-4 mt-4 overflow-x-auto">
-                  <table class="table table-zebra w-full">
-                    <thead>
-                      <tr>
-                        <th></th>
-                        <th>{{txt['nr']}}</th>
-                        <th>{{txt['text']}}</th>
-                        <th></th>
-                        <th>{{txt['sum']}}</th>
-                        <th>{{txt['subTotal']}}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @for (s of sortCriteriaSelected; track s; let i = $index) {
-                        <tr>
-                          <!-- SHOW   sort criteria        selected        -->
-                          <td class="text-center">
-                            @if (i > 0
-                              && ((s.sortField !== 'issue' && s.sortField !== 'day' && s.sortField !== 'week')
-                              || (s.sortField === 'issue' && sortCriteriaChoices[s.ix -1].sortField !== 'contact')
-                              || (s.sortField === 'week' && sortCriteriaChoices[s.ix -1].sortField !== 'month')
-                              || (s.sortField === 'day' && sortCriteriaChoices[s.ix -1].sortField !== 'month' && sortCriteriaChoices[s.ix -1].sortField !== 'week'))) {
-                              <button class="btn btn-xs btn-circle btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
-                                [attr.data-tip]="txt['position_lower']"
-                                type="button" (click)="lowerIndex(s.ix)">
-                                <i class="fas fa-arrow-up"></i>
-                              </button>
-                            }
-                          </td>
-                          <td>{{s.ix}}</td>
-                          <td>{{s.sortField}}</td>
-                          <td class="text-center">
-                            @if (i >=  sortCriteriaSelected.length - 1
-                              || (s.sortField === 'month' && sortCriteriaChoices[s.ix + 1].sortField === 'week')
-                              || (s.sortField === 'month' && sortCriteriaChoices[s.ix + 1].sortField === 'day')
-                              || (s.sortField === 'week' && sortCriteriaChoices[s.ix + 1].sortField === 'day')
-                              || (s.sortField === 'contact' && sortCriteriaChoices[s.ix + 1].sortField === 'issue')
-                              ) {
-                              <button class="btn btn-xs btn-circle btn-error text-primary-content tooltip tooltip-bottom tooltip-accent"
-                                [attr.data-tip]="txt['reset']"
-                                type="button" (click)="setUnselected(s.ix)">
-                                <i class="fas fa-arrow-down"></i>
-                              </button>
-                            } @else {
-                              <button class="btn btn-xs btn-circle btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
-                                [attr.data-tip]="txt['position_raise']"
-                                type="button" (click)="raiseIndex(s.ix)">
-                                <i class="fas fa-arrow-down"></i>
-                              </button>
-                            }
-                            <ng-template #raise>
-                              <button class="btn btn-xs btn-circle btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
-                                [attr.data-tip]="txt['position_raise']"
-                                type="button" (click)="raiseIndex(s.ix)">
-                                <i class="fas fa-arrow-down"></i>
-                              </button>
-                            </ng-template>
-                          </td>
-                          <td>
-                            @if (ixSubTotal === -1 || s.ix > ixSubTotal) {
-                              <input type="radio"  [value]="s.ix" [checked]="s.isSum" (change)="setSum($event)" name="sum" class="radio radio-sm">
-                            }
-                          </td>
-                          <td>
-                            @if (ixSum === -1 || s.ix < ixSum) {
-                              <input type="radio"  [value]="s.ix" [checked]="s.isSubTotal" (change)="setSubTotal($event)" name="subtotal" class="radio radio-sm">
-                            }
-                          </td>
-                        </tr>
-                      }
-                      <tr>
-                        <td colspan="6" class="bg-base-200"></td>
-                      </tr>
-                      @for (s of sortCriteriaUnselected; track s; let i = $index) {
-                        <tr>
-                          <!-- SHOW   sort criteria      not  selected        -->
-                          <td class="text-center">
-                            <button class="btn btn-xs btn-circle btn-success text-primary-content tooltip tooltip-bottom tooltip-accent"
-                              [attr.data-tip]="txt['select']"
-                              type="button" (click)="setSelected(s.ix)">
-                              <i class="fas fa-arrow-up"></i>
-                            </button>
-                          </td>
-                          <td>{{s.ix}}</td>
-                          <td>{{s.sortField}}</td>
-                          <td></td>
-                          <td></td>
-                          <td></td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              }
-              <div class="divider"></div>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                <div></div>
-                <div class="flex justify-center gap-4">
-                  <button class="btn btn-sm btn-circle btn-error text-primary-content tooltip tooltip-top tooltip-accent"
-                    [attr.data-tip]="txt['cancel']"
-                    type="button" (click)="cancelUpdates()">
-                    <i class="fas fa-times"></i>
-                  </button>
-                  <button class="btn btn-sm btn-circle btn-success text-primary-content tooltip tooltip-top tooltip-accent"
-                    [attr.data-tip]="txt['submit']"
-                    [disabled]="!thisForm.valid"
-                    type="submit">
-                    <i class="fas fa-check"></i>
-                  </button>
-                  <button class="btn btn-sm btn-circle btn-neutral text-primary-content tooltip tooltip-top tooltip-accent"
-                    [attr.data-tip]="txt['disable']"
-                    type="button" (click)="setDelete()">
-                    <i class="fas fa-trash-can"></i>
-                  </button>
-                </div>
-                <div></div>
-              </div>
-          </div> <!-- end of grid -->
-        </div> <!-- end of card-body -->
-      </div>
-    </div>
-</form>
+          </div>  <!-- end of bordered box -->
+        }
 
+        <!-- table with 5 columns for sortCriteria-->
+        <div class="flex items-center gap-4">
+          <div class="w-1/4">
+            <h3>{{txt['sortCriteria']}}:</h3>
+          </div>
+          <div class="flex-1">
+            @for (s of sortCriteriaSelected; track s; let i = $index) {
+              @if (s.isSum || s.isSubTotal) {
+                <span class="badge badge-neutral">{{s.sortField}}</span>
+              } @else {
+                <span>{{s.sortField}}</span>
+                }@if (i !== sortCriteriaSelected.length - 1) {
+                <span>, </span>
+              }
+            }
+          </div>
+          <div>
+            <button class="btn btn-xs btn-circle btn-neutral text-primary-content tooltip tooltip-bottom tooltip-accent"
+              [attr.data-tip]="txt['show_menu'] + ' ' + txt['for'] + ' ' + txt['sortCriteria']"
+              type="button" (click)="showSortCriteria()">
+              <i class="fas fa-ellipsis-vertical"></i>
+            </button>
+          </div>
+        </div>
+
+        @if (isShowSortCriteria) {
+          <div class="border rounded-box p-4 mt-2 overflow-x-auto">
+            <table class="table table-zebra w-full">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>{{txt['nr']}}</th>
+                  <th>{{txt['text']}}</th>
+                  <th></th>
+                  <th>{{txt['sum']}}</th>
+                  <th>{{txt['subTotal']}}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of sortCriteriaSelected; track s; let i = $index) {
+                  <tr>
+                    <!-- SHOW   sort criteria        selected        -->
+                    <td class="text-center">
+                      @if (i > 0
+                        && ((s.sortField !== 'issue' && s.sortField !== 'day' && s.sortField !== 'week')
+                        || (s.sortField === 'issue' && sortCriteriaChoices[s.ix -1].sortField !== 'contact')
+                        || (s.sortField === 'week' && sortCriteriaChoices[s.ix -1].sortField !== 'month')
+                        || (s.sortField === 'day' && sortCriteriaChoices[s.ix -1].sortField !== 'month' && sortCriteriaChoices[s.ix -1].sortField !== 'week'))) {
+                        <button class="btn btn-xs btn-circle btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+                          [attr.data-tip]="txt['position_lower']"
+                          type="button" (click)="lowerIndex(s.ix)">
+                          <i class="fas fa-arrow-up"></i>
+                        </button>
+                      }
+                    </td>
+                    <td>{{s.ix}}</td>
+                    <td>{{s.sortField}}</td>
+                    <td class="text-center">
+                      @if (i >=  sortCriteriaSelected.length - 1
+                        || (s.sortField === 'month' && sortCriteriaChoices[s.ix + 1].sortField === 'week')
+                        || (s.sortField === 'month' && sortCriteriaChoices[s.ix + 1].sortField === 'day')
+                        || (s.sortField === 'week' && sortCriteriaChoices[s.ix + 1].sortField === 'day')
+                        || (s.sortField === 'contact' && sortCriteriaChoices[s.ix + 1].sortField === 'issue')
+                        ) {
+                        <button class="btn btn-xs btn-circle btn-error text-primary-content tooltip tooltip-bottom tooltip-accent"
+                          [attr.data-tip]="txt['reset']"
+                          type="button" (click)="setUnselected(s.ix)">
+                          <i class="fas fa-arrow-down"></i>
+                        </button>
+                      } @else {
+                        <button class="btn btn-xs btn-circle btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+                          [attr.data-tip]="txt['position_raise']"
+                          type="button" (click)="raiseIndex(s.ix)">
+                          <i class="fas fa-arrow-down"></i>
+                        </button>
+                      }
+                      <ng-template #raise>
+                        <button class="btn btn-xs btn-circle btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+                          [attr.data-tip]="txt['position_raise']"
+                          type="button" (click)="raiseIndex(s.ix)">
+                          <i class="fas fa-arrow-down"></i>
+                        </button>
+                      </ng-template>
+                    </td>
+                    <td>
+                      @if (ixSubTotal === -1 || s.ix > ixSubTotal) {
+                        <input type="radio"  [value]="s.ix" [checked]="s.isSum" (change)="setSum($event)" name="sum" class="radio radio-sm">
+                      }
+                    </td>
+                    <td>
+                      @if (ixSum === -1 || s.ix < ixSum) {
+                        <input type="radio"  [value]="s.ix" [checked]="s.isSubTotal" (change)="setSubTotal($event)" name="subtotal" class="radio radio-sm">
+                      }
+                    </td>
+                  </tr>
+                }
+                <tr>
+                  <td colspan="6" class="bg-base-200"></td>
+                </tr>
+                @for (s of sortCriteriaUnselected; track s; let i = $index) {
+                  <tr>
+                    <!-- SHOW   sort criteria      not  selected        -->
+                    <td class="text-center">
+                      <button class="btn btn-xs btn-circle btn-success text-primary-content tooltip tooltip-bottom tooltip-accent"
+                        [attr.data-tip]="txt['select']"
+                        type="button" (click)="setSelected(s.ix)">
+                        <i class="fas fa-arrow-up"></i>
+                      </button>
+                    </td>
+                    <td>{{s.ix}}</td>
+                    <td>{{s.sortField}}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+        <div class="divider"></div>
+        <div class="flex items-center gap-4">
+          <div class="w-1/3">
+          </div>
+          <div class="w-1/3 flex justify-center gap-4">
+            <button class="btn btn-sm btn-circle btn-error text-primary-content tooltip tooltip-top tooltip-accent"
+              [attr.data-tip]="txt['cancel']"
+              type="button" (click)="cancelUpdates()">
+              <i class="fas fa-times"></i>
+            </button>
+            <button class="btn btn-sm btn-circle btn-success text-primary-content tooltip tooltip-top tooltip-accent"
+              [attr.data-tip]="txt['submit']"
+              [disabled]="!thisForm.valid"
+              type="submit">
+              <i class="fas fa-check"></i>
+            </button>
+            <button class="btn btn-sm btn-circle btn-neutral text-primary-content tooltip tooltip-top tooltip-accent"
+              [attr.data-tip]="txt['disable']"
+              type="button" (click)="setDelete()">
+              <i class="fas fa-trash-can"></i>
+            </button>
+          </div>
+          <div class="w-1/3">
+          </div>
+        </div>
+      </div> <!-- end of flex container -->
+    </div> <!-- end of card-body -->
+  </div>
+</form>

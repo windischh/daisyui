@@ -1,13 +1,13 @@
 <br>
 @if (eventsReadySignal() >= 0 && auth && auth.txt && session) {
   <div class="container mx-auto p-4">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="flex flex-col md:flex-row gap-4">
       <!-- at left side we show issue and contact select -->
-      <div>
+      <div class="md:w-1/4 flex flex-col items-start gap-2">
         @if (eventContact.contactNr > 0) {
           @if (!isEventContactAutoSelected) {
             <div class="form-control">
-              <label class="label cursor-pointer">
+              <label class="label cursor-pointer gap-2">
                 <input type="checkbox" [checked]="isEventContactSelected" (change)="setShowContact($event)" class="checkbox checkbox-sm">
                 <span class="label-text">{{auth.txt['contact']}}</span>
               </label>
@@ -42,17 +42,19 @@
       </div>
       <!-- at central column we show header, user and event select options
       -->
-      <div>
+      <div class="md:w-1/2 flex flex-col gap-2">
         <h2 class="text-2xl font-bold">{{session.serviceLevel.contact === 1 ? auth.txt['event_list'] : auth.txt['event_list']}} </h2>
-        {{session.serviceLevel.contact === 1 ? auth.txt['events'] : auth.txt['events']}}
-        @if (eventSelectOption.userName) {
-          <span> {{auth.txt['of']}}: {{eventSelectOption.userName}} - </span>
-        }
-        @if ((eventSelectOption.isPlan === null && session.isPlan) || eventSelectOption.isPlan) {
-          <span>{{auth.txt['plan']}}</span>
-        } @else {
-          {{auth.txt['actual']}}
-        }
+        <div>
+          {{session.serviceLevel.contact === 1 ? auth.txt['events'] : auth.txt['events']}}
+          @if (eventSelectOption.userName) {
+            <span> {{auth.txt['of']}}: {{eventSelectOption.userName}} - </span>
+          }
+          @if ((eventSelectOption.isPlan === null && session.isPlan) || eventSelectOption.isPlan) {
+            <span>{{auth.txt['plan']}}</span>
+          } @else {
+            {{auth.txt['actual']}}
+          }
+        </div>
         <div class="divider my-2"></div>
         <div class="flex items-center gap-2">
           <!-- without label cause of saving space
@@ -109,15 +111,15 @@
       </div>
       <!-- at right side we show dates
       -->
-      <div>
+      <div class="md:w-1/4 flex flex-col items-start md:items-end gap-1">
         <h2 class="text-2xl font-bold">{{dateFromDisplay}}@if (dateToDisplay) {
           <span> - {{dateToDisplay}}</span>
         }</h2>
         @if (listDayChoices.length > 0) {
-          <div class="flex flex-col items-end gap-1">
+          <div class="flex flex-col gap-1">
             @for (l of listDayChoices; track $index; let i = $index) {
               <div class="form-control">
-                <label class="label cursor-pointer">
+                <label class="label cursor-pointer gap-2">
                   <input type="radio" [value]="l.value" [checked] = "l.isChecked"
                     (change)="setListDay($event)" name="listday" class="radio radio-sm">
                   <span class="label-text ml-2">{{l.value}}</span>
@@ -138,7 +140,6 @@
       </div>
     </div>
   </div>
-  }
   <!-- we use eventSelectOption for maintenance -->
   @if (selectViewSignal() === 1 && auth && auth.txt && users) {
     <dsy-event-select-form-view
