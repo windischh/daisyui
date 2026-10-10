@@ -7,16 +7,16 @@ import { GlobalFunctions } from '../../_globals/global-functions';
 
 import { LocationType } from '../../_enums/location-type.enum';
 import { UpdateType } from '../../_enums/update-type.enum';
-import { OptionGroupWorkCalendar } from '../../_enums/option-group-work-calendar.enum';
-import { WorkType } from '../../_enums/work-type.enum';
+import { OptionGroupEventCalendar } from '../../_enums/option-group-event-calendar.enum';
+import { EventType } from '../../_enums/event-type.enum';
 
 import { ConfigurationOption } from '../../_db/configuration-option';
-import { Work } from '../../_db/work';
-import { WorkFactory } from '../../_db/work-factory';
+import { Event } from '../../_db/event';
+import { EventFactory } from '../../_db/event-factory';
 import { Session } from '../../_db/session';
 
-import { IUserWorkOptions } from '../../_interfaces/i-user-work-options';
-import { IWorkGridElement } from '../../_interfaces/i-work-grid-element';
+import { IUserEventOptions } from '../../_interfaces/i-user-event-options';
+import { IEventGridElement } from '../../_interfaces/i-event-grid-element';
 import { IChoice } from '../../_interfaces/i-choice';
 import { NgStyle, NgClass, SlicePipe, DatePipe } from '@angular/common';
 
@@ -28,9 +28,9 @@ import { NgStyle, NgClass, SlicePipe, DatePipe } from '@angular/common';
   styleUrl: './calendar-day-grid-view.css',
   imports: [NgStyle, NgClass, SlicePipe, DatePipe]
 })
-export class WorkDayGridViewComponent implements OnInit {
+export class EventDayGridViewComponent implements OnInit {
 
-  public name = 'WorkDayGridViewComponent';
+  public name = 'EventDayGridViewComponent';
 
   @Input({required: true}) session: Session;
 
@@ -38,33 +38,33 @@ export class WorkDayGridViewComponent implements OnInit {
   @Input({required: true}) locale: string;
 
   @Input({required: true}) txt: { [key: string]: string };
-  @Input({required: true}) worktxt: { [key: string]: string };
+  @Input({required: true}) eventtxt: { [key: string]: string };
 
-  @Input({required: true}) timeSpans: Array<Work>;
-  @Input({required: true}) linkedTimeSpans: Array<Work>;
+  @Input({required: true}) timeSpans: Array<Event>;
+  @Input({required: true}) linkedTimeSpans: Array<Event>;
 
-  @Input({required: true}) actualWorks: Array<Work>;
-  @Input({required: true}) planWorks: Array<Work>;
-  @Input({required: true}) linkedUserWorks: Array<Work>;
-  @Input({required: true}) worksChangeCounter: number;
+  @Input({required: true}) actualEvents: Array<Event>;
+  @Input({required: true}) planEvents: Array<Event>;
+  @Input({required: true}) linkedUserEvents: Array<Event>;
+  @Input({required: true}) eventsChangeCounter: number;
   @Input({required: true}) timeSpanChangeCounter: number;
 
   @Input({required: true}) isSelecting: boolean;
 
   @Input({required: true}) options: Array<ConfigurationOption>;
-  // startHour, timeSlize, defaultIntervalSize are model parameters, managed by work-day-component
-  @Input({required: true}) userOpts: IUserWorkOptions;
+  // startHour, timeSlize, defaultIntervalSize are model parameters, managed by event-day-component
+  @Input({required: true}) userOpts: IUserEventOptions;
 
   // categories are indexed by type-part x in time spans with types 2x
   @Input({required: true}) timeSpanTypeColors: Array<{text: string, color: string}>;
 
   @Output() sessionPlanUpdate = new EventEmitter<Session>();
 
-  @Output() workSelect = new EventEmitter<{isSelect: boolean, id: number}>();
+  @Output() eventSelect = new EventEmitter<{isSelect: boolean, id: number}>();
 
   @Output() linkedUserSet = new EventEmitter<boolean>();
 
-  @Output() cardFormViewEnabled = new EventEmitter<{updateType: UpdateType, work: Work, d: Date}>();
+  @Output() cardFormViewEnabled = new EventEmitter<{updateType: UpdateType, event: Event, d: Date}>();
 
   GlobalFunctions: typeof GlobalFunctions = GlobalFunctions;
 
@@ -73,21 +73,21 @@ export class WorkDayGridViewComponent implements OnInit {
   WINDOW_WIDTH_TABLET = WINDOW_WIDTH_TABLET;
   WINDOW_WIDTH_MOBILE = WINDOW_WIDTH_MOBILE;
 
-  // day of work - 00:00 in browser timezone
+  // day of event - 00:00 in browser timezone
   // can be selected by user
-  // workDay is in opts @Input({required: true}) workDay: Date;
-  workDayDisplay = '';
+  // eventDay is in opts @Input({required: true}) eventDay: Date;
+  eventDayDisplay = '';
   dateString = '';
 
   locationTypeEnum: typeof LocationType = LocationType;
 
-  timeSpanGrid: Array<{recurring: IWorkGridElement, timeSpan: IWorkGridElement, linkedTimeSpan: IWorkGridElement}> = [];
-  grid: Array<{actual: IWorkGridElement, plan: IWorkGridElement, linked: IWorkGridElement}> = [];
+  timeSpanGrid: Array<{recurring: IEventGridElement, timeSpan: IEventGridElement, linkedTimeSpan: IEventGridElement}> = [];
+  grid: Array<{actual: IEventGridElement, plan: IEventGridElement, linked: IEventGridElement}> = [];
 
   isShowBeforeStartHour = false;
   isShowAfterLastHour = false;
 
-  // styles are set from optionGroupWorkCalendar - here we set just the default options:
+  // styles are set from optionGroupEventCalendar - here we set just the default options:
   styles = {
     // 010
     tableBgStyle:  {
@@ -123,7 +123,7 @@ export class WorkDayGridViewComponent implements OnInit {
       'background-color': LIGHT_CORAL
     },
     // 401
-    workElementStyle : {
+    eventElementStyle : {
       'background-color': POWDER_BLUE
     },
     // 402
@@ -137,7 +137,7 @@ export class WorkDayGridViewComponent implements OnInit {
       'font-size': '60%'
     },
     // 404
-    workStyle : {
+    eventStyle : {
       // 'position': 'relative',
       // left margin not used, we need all space for text  'left': '30px',
       // fonr-size and font-weight not necessary, will be overwritten ...
@@ -155,7 +155,7 @@ export class WorkDayGridViewComponent implements OnInit {
       'font-weight': 'normal'
     },
     // 407
-    // attn: background-color is set from color scheme of customer
+    // attn: background-color is set from color scheme of contact
     custStyle : {
       'font-size': '50%',
       'font-weight': 'bold'
@@ -179,11 +179,11 @@ export class WorkDayGridViewComponent implements OnInit {
     'margin-left' : '-10px'
   }
 
-  workElementStyle: { [key: string]: any };
-  linkedWorkElementStyle: { [key: string]: any };
-  actualWorkStyle: { [key: string]: any };
-  planWorkStyle: { [key: string]: any };
-  linkedWorkStyle: { [key: string]: any };
+  eventElementStyle: { [key: string]: any };
+  linkedEventElementStyle: { [key: string]: any };
+  actualEventStyle: { [key: string]: any };
+  planEventStyle: { [key: string]: any };
+  linkedEventStyle: { [key: string]: any };
 
   locationStyle: { [key: string]: any };
   descriptionStyle: { [key: string]: any };
@@ -209,9 +209,9 @@ export class WorkDayGridViewComponent implements OnInit {
   constructor() { }
 
   ngOnInit() {
-    if (this.session.workDay) {
+    if (this.session.eventDay) {
       this.loadOptions();
-      if (this.actualWorks  && this.planWorks  && this.timeSpans) {
+      if (this.actualEvents  && this.planEvents  && this.timeSpans) {
         this.buildGrids();
       }
     }
@@ -219,24 +219,24 @@ export class WorkDayGridViewComponent implements OnInit {
 
 
   ngOnChanges(changes: {[propKey: string]: SimpleChange}) {
-    let isSetWorks = false;
+    let isSetEvents = false;
     for (const [propKey, propValue] of Object.entries(changes)) {
-      if (propKey === 'opts' || propKey === 'options' || propKey === 'worksChangeCounter') {
+      if (propKey === 'opts' || propKey === 'options' || propKey === 'eventsChangeCounter') {
         // this.opts = propValue.currentValue;
-        if (this.session.workDay && this.userOpts) {
+        if (this.session.eventDay && this.userOpts) {
           this.loadOptions();
-          isSetWorks = true;
+          isSetEvents = true;
         }
       }
       if (propKey === 'timeSpanChangeCounter') {
-        if (this.session.workDay && this.userOpts) {
-          isSetWorks = true;
+        if (this.session.eventDay && this.userOpts) {
+          isSetEvents = true;
         }
       }
-      // console.log('work-day-grid propkey: ', propKey, 'propvalue: ', JSON.stringify(propValue));
+      // console.log('event-day-grid propkey: ', propKey, 'propvalue: ', JSON.stringify(propValue));
     }
-    if (isSetWorks) {
-      if (this.actualWorks  && this.planWorks  && this.timeSpans) {
+    if (isSetEvents) {
+      if (this.actualEvents  && this.planEvents  && this.timeSpans) {
         this.buildGrids();
       }
     }
@@ -260,19 +260,19 @@ export class WorkDayGridViewComponent implements OnInit {
 
       // we override some styles
 
-      const {...workElementStyles} = this.styles.workElementStyle;
+      const {...eventElementStyles} = this.styles.eventElementStyle;
       // we override cursor behaviour
-      this.workElementStyle = {...workElementStyles, 'cursor':  'pointer'};
-      this.linkedWorkElementStyle = {...workElementStyles};
+      this.eventElementStyle = {...eventElementStyles, 'cursor':  'pointer'};
+      this.linkedEventElementStyle = {...eventElementStyles};
 
-      const {...workStyles} = this.styles.workStyle;
+      const {...eventStyles} = this.styles.eventStyle;
       // we override font-weight according to isPlan selected or not
       // and margin-left to shift text at the left border of element (in the moment not ative)
-      // this.actualWorkStyle = this.session.isPlan? {...workStyles, 'font-weight':  'normal', 'margin-left' : '-6px'} : {...workStyles, 'font-weight':  'bold', 'margin-left' : '-6px'};
-      this.actualWorkStyle = this.session.isPlan? {...workStyles, 'font-weight':  'normal'} : {...workStyles, 'font-weight':  'bold'};
-      this.planWorkStyle = this.session.isPlan? {...workStyles, 'font-weight':  'bold'} : {...workStyles, 'font-weight':  'normal'};
-      // we reduce font size of linkked work
-      this.linkedWorkStyle = {...workStyles, 'font-size':  '80%'};
+      // this.actualEventStyle = this.session.isPlan? {...eventStyles, 'font-weight':  'normal', 'margin-left' : '-6px'} : {...eventStyles, 'font-weight':  'bold', 'margin-left' : '-6px'};
+      this.actualEventStyle = this.session.isPlan? {...eventStyles, 'font-weight':  'normal'} : {...eventStyles, 'font-weight':  'bold'};
+      this.planEventStyle = this.session.isPlan? {...eventStyles, 'font-weight':  'bold'} : {...eventStyles, 'font-weight':  'normal'};
+      // we reduce font size of linkked event
+      this.linkedEventStyle = {...eventStyles, 'font-size':  '80%'};
 
       const {...locationStyles} = this.styles.locationStyle;
       this.locationStyle =  {...locationStyles,  'margin-top': '-10px'};
@@ -301,26 +301,26 @@ export class WorkDayGridViewComponent implements OnInit {
    *  optionGroup is  defined for each option when calling this.auth.get...)
    */
   private getOptions(style: number) {
-    // option group names: see enum OptionGroupWorkCalendar
+    // option group names: see enum OptionGroupEventCalendar
     // option group types: see util getStyleOptionType
 
-    const area = 'workCalendar';
+    const area = 'eventCalendar';
     // no default group 100
     const isStylesHaveDefault = false;
-    const enumStringType: { [key: string]: any } = OptionGroupWorkCalendar;
+    const enumStringType: { [key: string]: any } = OptionGroupEventCalendar;
     const stylesStrinKeys: { [key: string]: any } = this.styles;
-    // set this.styles from workCalendar options
+    // set this.styles from eventCalendar options
     Object.keys(this.styles)
     .forEach((k: any) => {
       if (k.startsWith('is') && typeof stylesStrinKeys[k] === 'boolean') {
         const s = ConfigurationOptionBasicFunctions.getStyleOptionBoolean(this.options, area, style,
-          enumStringType['opt_workCalendar_' + k]);
+          enumStringType['opt_eventCalendar_' + k]);
         if (s !== undefined) {
           stylesStrinKeys[k] = s;
         }
       } else if (typeof stylesStrinKeys[k] === 'object') {
         const s = ConfigurationOptionBasicFunctions.getStyleOptionSeq(this.options, area, style,
-          enumStringType['opt_workCalendar_' + k], isStylesHaveDefault);
+          enumStringType['opt_eventCalendar_' + k], isStylesHaveDefault);
         if (s !== undefined) {
           stylesStrinKeys[k] = s;
         }
@@ -335,8 +335,8 @@ export class WorkDayGridViewComponent implements OnInit {
     elStyle = {
       'background-color': WHITE_SMOKE
     };
-    const recGrid = this.buildTimeSpanGrid(this.timeSpans.filter(_ => _.type <= 22),  this.session.workDay, elStyle);
-    const spanGrid = this.buildTimeSpanGrid(this.timeSpans.filter(_ => _.type > 22),  this.session.workDay, elStyle);
+    const recGrid = this.buildTimeSpanGrid(this.timeSpans.filter(_ => _.type <= 22),  this.session.eventDay, elStyle);
+    const spanGrid = this.buildTimeSpanGrid(this.timeSpans.filter(_ => _.type > 22),  this.session.eventDay, elStyle);
     // style for linked time spans if not shown in detail
     if (this.session.linkedUserId > 0 && this.session.isShowLinkedUser === false) {
       elStyle = {
@@ -345,7 +345,7 @@ export class WorkDayGridViewComponent implements OnInit {
         ...elStyle
       }
     }
-    const linkedSpanGrid = this.buildTimeSpanGrid(this.linkedTimeSpans.filter(_ => _.type > 22),  this.session.workDay, elStyle);
+    const linkedSpanGrid = this.buildTimeSpanGrid(this.linkedTimeSpans.filter(_ => _.type > 22),  this.session.eventDay, elStyle);
     for (let i = 0; i < Math.max(recGrid.length, spanGrid.length, linkedSpanGrid.length); i++) {
       const recurring = i < recGrid.length ? recGrid[i] : null;
       const timeSpan = i < spanGrid.length ? spanGrid[i] : null;
@@ -353,12 +353,12 @@ export class WorkDayGridViewComponent implements OnInit {
       this.timeSpanGrid.push({recurring, timeSpan, linkedTimeSpan});
     }
     this.grid = [];
-    const actualGrid = this.buildGrid(GlobalFunctions.buildWorks(this.actualWorks,  this.session.workDay, true, false),
-      this.session.workDay, this.workElementStyle);
-    const planGrid = this.buildGrid(GlobalFunctions.buildWorks(this.planWorks, this.session.workDay, true, false),
-      this.session.workDay, this.workElementStyle);
-    const linkedGrid = this.buildGrid(GlobalFunctions.buildWorks(this.linkedUserWorks, this.session.workDay, true, false),
-      this.session.workDay, this.linkedWorkElementStyle);
+    const actualGrid = this.buildGrid(GlobalFunctions.buildEvents(this.actualEvents,  this.session.eventDay, true, false),
+      this.session.eventDay, this.eventElementStyle);
+    const planGrid = this.buildGrid(GlobalFunctions.buildEvents(this.planEvents, this.session.eventDay, true, false),
+      this.session.eventDay, this.eventElementStyle);
+    const linkedGrid = this.buildGrid(GlobalFunctions.buildEvents(this.linkedUserEvents, this.session.eventDay, true, false),
+      this.session.eventDay, this.linkedEventElementStyle);
     // actualGrid, planGrid and linkedGrid are of same length and same time-infrastructure ....
     actualGrid.forEach((_, ix) => this.grid.push({actual: _, plan: planGrid[ix], linked: linkedGrid[ix]}) );
   }
@@ -366,40 +366,40 @@ export class WorkDayGridViewComponent implements OnInit {
   /**
    * buildTimeSpanGrid builds a grid for tiem spans
    * @param timeSpans array of time spans  (for week)
-   * @param workDay  day for the grid
+   * @param eventDay  day for the grid
    * @param elStyle  style object which should by adjected to the elemnts built
    * @returns arrray of elements for 1 day
    */
-  private buildTimeSpanGrid(works: Work[], workDay: Date, elStyle: {}): IWorkGridElement[] {
-    // console.log(works, cat);
-    const grid: IWorkGridElement[]= [];
-    // build elements with  custOrder data, customer color, category
-    works.forEach(_ => {
-      if (GlobalFunctions.getDateInMinutes(_.workBegin) < GlobalFunctions.getDateInMinutes(GlobalFunctions.addDays(workDay, 1))
-      && GlobalFunctions.getDateInMinutes(_.workEnd) > GlobalFunctions.getDateInMinutes(workDay)  ) {
+  private buildTimeSpanGrid(events: Event[], eventDay: Date, elStyle: {}): IEventGridElement[] {
+    // console.log(events, cat);
+    const grid: IEventGridElement[]= [];
+    // build elements with  custOrder data, contact color, category
+    events.forEach(_ => {
+      if (GlobalFunctions.getDateInMinutes(_.eventBegin) < GlobalFunctions.getDateInMinutes(GlobalFunctions.addDays(eventDay, 1))
+      && GlobalFunctions.getDateInMinutes(_.eventEnd) > GlobalFunctions.getDateInMinutes(eventDay)  ) {
         let custIssueNr = '';
         let custIssueName = '';
         let leftCustStyle = {};
         let rightCustStyle = {};
-        let workElementStyle: {} = GlobalFunctions.clone(elStyle);
+        let eventElementStyle: {} = GlobalFunctions.clone(elStyle);
         const category = this.timeSpanTypeColors[_.type % 10].text;
         const color = this.timeSpanTypeColors[_.type % 10].color;
-        if ( _.customerNr && _.customerNr > 0) {
-          custIssueNr = _.workInfo.customerDisplayNr;
-          custIssueName = _.workInfo.customerName;
-          const custStyle = StyleFactory.getBgColorStyle(_.workInfo.customerColor, 0, 0, GlobalFunctions.clone(this.styles.custStyle));
+        if ( _.contactNr && _.contactNr > 0) {
+          custIssueNr = _.eventInfo.contactDisplayNr;
+          custIssueName = _.eventInfo.contactName;
+          const custStyle = StyleFactory.getBgColorStyle(_.eventInfo.contactColor, 0, 0, GlobalFunctions.clone(this.styles.custStyle));
           // leftOrderStyle and rightOrderStyle define position for custOrderLabel - independent of font size, as far as possible
           leftCustStyle = {...custStyle, 'margin-right' : '5px'};
           rightCustStyle = {...custStyle, 'margin-left' : '10px'};
-          workElementStyle = StyleFactory.getBgColorStyle(_.workInfo.customerColor, 90, 0, workElementStyle);
+          eventElementStyle = StyleFactory.getBgColorStyle(_.eventInfo.contactColor, 90, 0, eventElementStyle);
          } else if (color !== '') {
           // we set color from time span category
-          workElementStyle = StyleFactory.getBgColorStyle(color, 80, 2, workElementStyle);
+          eventElementStyle = StyleFactory.getBgColorStyle(color, 80, 2, eventElementStyle);
         }
-        const element: IWorkGridElement = {minutes: 0, roundedMinutes: 0, timeElement: '', timeBegins: true, timeRowSpan: 0, work: _,
-        workBegins: true, workEnds: true, workDurationDisplay: '', workRowSpan: 0,
+        const element: IEventGridElement = {minutes: 0, roundedMinutes: 0, timeElement: '', timeBegins: true, timeRowSpan: 0, event: _,
+        eventBegins: true, eventEnds: true, eventDurationDisplay: '', eventRowSpan: 0,
         custIssueNr, custIssueName, category,
-        leftCustStyle, rightCustStyle, workElementStyle
+        leftCustStyle, rightCustStyle, eventElementStyle
         };
         grid.push(element);
       }
@@ -408,47 +408,47 @@ export class WorkDayGridViewComponent implements OnInit {
   }
 
   /**
-   * buildGrid builds a 1 day 5min grid - code is equivalent to work-day-week-view
+   * buildGrid builds a 1 day 5min grid - code is equivalent to event-day-week-view
    *
-   * @param works array of works for a day
-   * @param workDay  day for the grid
+   * @param events array of events for a day
+   * @param eventDay  day for the grid
    * @param elStyle  style object which should by adjected to the elemnts built
    * @returns arrray of 5min elements for 1 day
    */
-  private buildGrid(works: Array<Work>,  workDay: Date, elStyle: {}): Array<IWorkGridElement>  {
-    // we check works of this day ....
-    const isWorkBeforeStartHour = works?.filter(_ => GlobalFunctions.getDateInMinutes(_.workEnd) > GlobalFunctions.getDateInMinutes(workDay)
-      && GlobalFunctions.getDateInMinutes(_.workEnd) < GlobalFunctions.getDateInMinutes(workDay) + 24 * 60
-      && GlobalFunctions.getDateInMinutes(_.workBegin) < GlobalFunctions.getDateInMinutes(workDay) + this.userOpts.startHour* 60).length > 0;
-    const isWorkAfterLastHour = works?.filter(_ => GlobalFunctions.getDateInMinutes(_.workBegin) >= GlobalFunctions.getDateInMinutes(workDay)
-      && GlobalFunctions.getDateInMinutes(_.workBegin) < GlobalFunctions.getDateInMinutes(workDay) + 24 * 60
-      && GlobalFunctions.getDateInMinutes(_.workEnd) > GlobalFunctions.getDateInMinutes(workDay) + this.userOpts.lastHour * 60).length > 0;
-    const styleStringKey: { [key: string]: any } = this.workElementStyle;
-    const workColor = styleStringKey['background-color'];
-    const grid: IWorkGridElement[] = [];
+  private buildGrid(events: Array<Event>,  eventDay: Date, elStyle: {}): Array<IEventGridElement>  {
+    // we check events of this day ....
+    const isEventBeforeStartHour = events?.filter(_ => GlobalFunctions.getDateInMinutes(_.eventEnd) > GlobalFunctions.getDateInMinutes(eventDay)
+      && GlobalFunctions.getDateInMinutes(_.eventEnd) < GlobalFunctions.getDateInMinutes(eventDay) + 24 * 60
+      && GlobalFunctions.getDateInMinutes(_.eventBegin) < GlobalFunctions.getDateInMinutes(eventDay) + this.userOpts.startHour* 60).length > 0;
+    const isEventAfterLastHour = events?.filter(_ => GlobalFunctions.getDateInMinutes(_.eventBegin) >= GlobalFunctions.getDateInMinutes(eventDay)
+      && GlobalFunctions.getDateInMinutes(_.eventBegin) < GlobalFunctions.getDateInMinutes(eventDay) + 24 * 60
+      && GlobalFunctions.getDateInMinutes(_.eventEnd) > GlobalFunctions.getDateInMinutes(eventDay) + this.userOpts.lastHour * 60).length > 0;
+    const styleStringKey: { [key: string]: any } = this.eventElementStyle;
+    const eventColor = styleStringKey['background-color'];
+    const grid: IEventGridElement[] = [];
     const gridBegin = this.isShowBeforeStartHour  ? 0 : this.userOpts.startHour * 60;
     const gridEnd = this.isShowAfterLastHour  ? 24 * 60 - 5  : this.userOpts.lastHour * 60 - 5;
     for (let i = gridBegin; i <= gridEnd; i += 5) {
-      let work: Work;
+      let event: Event;
       let minutesBefore: number;
       let minutesAfter: number;
-      if (works && works.length > 0) {
+      if (events && events.length > 0) {
         let ix: number;
-        ix = works.findIndex(_ =>
-          GlobalFunctions.getDateInMinutes(_.workBegin)
-            - GlobalFunctions.getDateInMinutes(workDay) <= i &&
-          GlobalFunctions.getDateInMinutes(_.workEnd)
-            - GlobalFunctions.getDateInMinutes(workDay) >= (i + 5)
+        ix = events.findIndex(_ =>
+          GlobalFunctions.getDateInMinutes(_.eventBegin)
+            - GlobalFunctions.getDateInMinutes(eventDay) <= i &&
+          GlobalFunctions.getDateInMinutes(_.eventEnd)
+            - GlobalFunctions.getDateInMinutes(eventDay) >= (i + 5)
         );
         if (ix >= 0) {
-          work = works[ix];
+          event = events[ix];
           if (ix > 0) {
-            minutesBefore = GlobalFunctions.getDateInMinutes(works[ix - 1].workEnd)
-            - GlobalFunctions.getDateInMinutes(workDay);
+            minutesBefore = GlobalFunctions.getDateInMinutes(events[ix - 1].eventEnd)
+            - GlobalFunctions.getDateInMinutes(eventDay);
           }
-          if (ix < works.length - 1) {
-            minutesAfter = GlobalFunctions.getDateInMinutes(works[ix + 1].workBegin)
-            - GlobalFunctions.getDateInMinutes(workDay);
+          if (ix < events.length - 1) {
+            minutesAfter = GlobalFunctions.getDateInMinutes(events[ix + 1].eventBegin)
+            - GlobalFunctions.getDateInMinutes(eventDay);
           }
         }
       }
@@ -456,28 +456,28 @@ export class WorkDayGridViewComponent implements OnInit {
       let custIssueName = '';
       let leftCustStyle = {};
       let rightCustStyle = {};
-      let workElementStyle: {} = GlobalFunctions.clone(elStyle);
-      if (work && work?.workInfo) {
-        // we set color via custStyle - if no customer defined, style is set to light grey via StyleFactory
-        const custStyle = StyleFactory.getBgColorStyle(work.workInfo.customerColor, 0, 0, GlobalFunctions.clone(this.styles.custStyle));
+      let eventElementStyle: {} = GlobalFunctions.clone(elStyle);
+      if (event && event?.eventInfo) {
+        // we set color via custStyle - if no contact defined, style is set to light grey via StyleFactory
+        const custStyle = StyleFactory.getBgColorStyle(event.eventInfo.contactColor, 0, 0, GlobalFunctions.clone(this.styles.custStyle));
         // leftCustStyle and rightCustStyle define position for custIssueLabel - independent of font size, as far as possible
         leftCustStyle = {...custStyle, 'margin-right' : '5px'};
         rightCustStyle = {...custStyle, 'margin-left' : '10px'};
-        workElementStyle = StyleFactory.getBgColorStyle(work.workInfo.customerColor, 90, 0, workElementStyle);
-        let customerName = work.workInfo.customerName && work.workInfo.customerName !== ''
-          ? work.workInfo.customerName
-          : work.workInfo.customerNr > 0
-            ? (this.session.serviceLevel.customer === 1 ? this.txt['contact'] : this.txt['customer']) + ': ' + work.workInfo.customerNr.toString()
+        eventElementStyle = StyleFactory.getBgColorStyle(event.eventInfo.contactColor, 90, 0, eventElementStyle);
+        let contactName = event.eventInfo.contactName && event.eventInfo.contactName !== ''
+          ? event.eventInfo.contactName
+          : event.eventInfo.contactNr > 0
+            ? (this.session.serviceLevel.contact === 1 ? this.txt['contact'] : this.txt['contact']) + ': ' + event.eventInfo.contactNr.toString()
             : '';
-        if (work.customerNr > 0 && work.issueProviderId > 0) {
-          custIssueNr =  work.workInfo.issueDisplayNr;
-          custIssueName = work.workInfo.issueText?.substring(0,30) + '|' + customerName.substring(0,20);
-        } else if (work.customerNr > 0) {
-          custIssueNr = work.workInfo.customerDisplayNr;
-          custIssueName = customerName.substring(0,30);
-        } else if (work.issueProviderId > 0) {
-          custIssueNr =  work.workInfo.issueDisplayNr;
-          custIssueName = work.workInfo.issueText?.substring(0,30);
+        if (event.contactNr > 0 && event.issueProviderId > 0) {
+          custIssueNr =  event.eventInfo.issueDisplayNr;
+          custIssueName = event.eventInfo.issueText?.substring(0,30) + '|' + contactName.substring(0,20);
+        } else if (event.contactNr > 0) {
+          custIssueNr = event.eventInfo.contactDisplayNr;
+          custIssueName = contactName.substring(0,30);
+        } else if (event.issueProviderId > 0) {
+          custIssueNr =  event.eventInfo.issueDisplayNr;
+          custIssueName = event.eventInfo.issueText?.substring(0,30);
         }
       }
       const timeElementStyle = i < (this.userOpts.startHour * 60) || i >= (this.userOpts.lastHour * 60) ? this.styles.timeElementOutsideStyle : this.styles.timeElementStyle;
@@ -493,16 +493,16 @@ export class WorkDayGridViewComponent implements OnInit {
       let roundedMinutes = Math.round(i / borderUnit) * borderUnit;
       roundedMinutes = roundedMinutes < minutesBefore ? (roundedMinutes + borderUnit > minutesAfter ? i : roundedMinutes + borderUnit)
         : roundedMinutes > minutesAfter ? (roundedMinutes - borderUnit < minutesBefore ? i : roundedMinutes - borderUnit) : roundedMinutes;
-      const rowElementStyle = i === gridBegin && isWorkBeforeStartHour && !this.isShowBeforeStartHour ? {
+      const rowElementStyle = i === gridBegin && isEventBeforeStartHour && !this.isShowBeforeStartHour ? {
           'border-top-width' :  'thick',
           'border-top-style' :  'solid',
-          'border-top-color' :  workColor,
+          'border-top-color' :  eventColor,
           'padding' : '0.1em'
         }
-        : i === gridEnd && isWorkAfterLastHour && !this.isShowAfterLastHour ? {
+        : i === gridEnd && isEventAfterLastHour && !this.isShowAfterLastHour ? {
           'border-bottom-width' : 'thick',
           'border-bottom-style' : 'solid',
-          'border-bottom-color' : workColor,
+          'border-bottom-color' : eventColor,
           'padding' : '0.1em'
         }
         : {
@@ -511,31 +511,31 @@ export class WorkDayGridViewComponent implements OnInit {
           'padding' : '0.1em'
         };
       const timeUnit =  Number(this.userOpts.timeSlize) === 5 ? 15 : Number(this.userOpts.timeSlize) === 10 ? 30 : Number(this.userOpts.timeSlize);
-      let workBegin = 0;
-      let workEnd = 0;
+      let eventBegin = 0;
+      let eventEnd = 0;
       let assocTxt = '';
-      if (work) {
-        workBegin = GlobalFunctions.getDateInMinutes(work.workBegin) - GlobalFunctions.getDateInMinutes(workDay);
-        workBegin = workBegin < gridBegin ? gridBegin : workBegin;
-        workEnd = GlobalFunctions.getDateInMinutes(work.workEnd) - GlobalFunctions.getDateInMinutes(workDay);
-        workEnd = workEnd > gridEnd + 5 ? gridEnd + 5 : workEnd;
-        if (work.assocWorkBegin && work.assocWorkEnd && (GlobalFunctions.getDateInMinutes(work.assocWorkBegin) !== GlobalFunctions.getDateInMinutes(work.workBegin)
-        || GlobalFunctions.getDateInMinutes(work.assocWorkEnd) !== GlobalFunctions.getDateInMinutes(work.workEnd))) {
-          assocTxt = GlobalFunctions.getTimeFormatted(GlobalFunctions.getDateInMinutes(work.assocWorkBegin)
-          - GlobalFunctions.getDateInMinutes(workDay)) + ' - ' + GlobalFunctions.getTimeFormatted(GlobalFunctions.getDateInMinutes(work.assocWorkEnd)
-          - GlobalFunctions.getDateInMinutes(workDay));
+      if (event) {
+        eventBegin = GlobalFunctions.getDateInMinutes(event.eventBegin) - GlobalFunctions.getDateInMinutes(eventDay);
+        eventBegin = eventBegin < gridBegin ? gridBegin : eventBegin;
+        eventEnd = GlobalFunctions.getDateInMinutes(event.eventEnd) - GlobalFunctions.getDateInMinutes(eventDay);
+        eventEnd = eventEnd > gridEnd + 5 ? gridEnd + 5 : eventEnd;
+        if (event.assocEventBegin && event.assocEventEnd && (GlobalFunctions.getDateInMinutes(event.assocEventBegin) !== GlobalFunctions.getDateInMinutes(event.eventBegin)
+        || GlobalFunctions.getDateInMinutes(event.assocEventEnd) !== GlobalFunctions.getDateInMinutes(event.eventEnd))) {
+          assocTxt = GlobalFunctions.getTimeFormatted(GlobalFunctions.getDateInMinutes(event.assocEventBegin)
+          - GlobalFunctions.getDateInMinutes(eventDay)) + ' - ' + GlobalFunctions.getTimeFormatted(GlobalFunctions.getDateInMinutes(event.assocEventEnd)
+          - GlobalFunctions.getDateInMinutes(eventDay));
         }
       }
-      const element: IWorkGridElement = {minutes: i,
+      const element: IEventGridElement = {minutes: i,
         roundedMinutes,
         timeElement: i % timeUnit === 0 ? GlobalFunctions.getTimeFormatted(i) : '',
         timeRowSpan: timeUnit / 5,
         timeBegins:  i % timeUnit === 0 ? true : false,
-        work,
-        workBegins: work ? workBegin === i : false,
-        workEnds: work ? workEnd === i + 5 : false,
-        workDurationDisplay: work ? GlobalFunctions.minutesDisplay(work.workDuration) : '',
-        workRowSpan:  work ? (workEnd - i) / 5 : 0,
+        event,
+        eventBegins: event ? eventBegin === i : false,
+        eventEnds: event ? eventEnd === i + 5 : false,
+        eventDurationDisplay: event ? GlobalFunctions.minutesDisplay(event.eventDuration) : '',
+        eventRowSpan:  event ? (eventEnd - i) / 5 : 0,
         custIssueNr,
         custIssueName,
         tableRowStyle,
@@ -544,7 +544,7 @@ export class WorkDayGridViewComponent implements OnInit {
         rowElementStyle,
         leftCustStyle,
         rightCustStyle,
-        workElementStyle,
+        eventElementStyle,
         assocTxt
         };
       grid.push(element);
@@ -561,7 +561,7 @@ export class WorkDayGridViewComponent implements OnInit {
 
   /** ------------------------  public methods --------------------------------------------------- */
 
-  // set a pointer in a td element without work
+  // set a pointer in a td element without event
   public setPointer(style: {}, isActive: boolean) {
     // console.log('setPointer: ', isActive, style);
     if (isActive) {
@@ -569,7 +569,7 @@ export class WorkDayGridViewComponent implements OnInit {
       if (this.windowWidth >= WINDOW_WIDTH_MOBILE) {
         pointerStyle = {...style, 'cursor':  'pointer'};
       } else {
-        // in case of mobile size we planned to have have only 1 row - we place time in rows without work ...
+        // in case of mobile size we planned to have have only 1 row - we place time in rows without event ...
         // pointerStyle = {...style, ...this.styles.timeInTimeElementStyle, 'cursor':  'pointer'};
         // not realized, we stay with
         pointerStyle = {...style, 'cursor':  'pointer'};
@@ -598,7 +598,7 @@ export class WorkDayGridViewComponent implements OnInit {
       this.linkedUserSet.emit(!this.session.isShowLinkedUser);
     }
     else {
-      // no work-day component action, we trigger build grids directly
+      // no event-day component action, we trigger build grids directly
       this.session.isShowLinkedUser = false;
       this.buildGrids();
     }
@@ -607,37 +607,37 @@ export class WorkDayGridViewComponent implements OnInit {
    this.linkedUserSet.emit(!this.session.isShowLinkedUser);
   }
 
-  // work can also be a timeSpan
-  public enableWorkCard(work: Work) {
-    this.cardFormViewEnabled.emit({updateType: UpdateType.update, work, d: null});
+  // event can also be a timeSpan
+  public enableEventCard(event: Event) {
+    this.cardFormViewEnabled.emit({updateType: UpdateType.update, event, d: null});
   }
 
   public insertTimeSpan() {
-    const work = WorkFactory.empty();
-    work.type = WorkType.timeSpanUndefined;
-    this.cardFormViewEnabled.emit({updateType: UpdateType.insert, work,
-      d: this.session.workDay});
+    const event = EventFactory.empty();
+    event.type = EventType.timeSpanUndefined;
+    this.cardFormViewEnabled.emit({updateType: UpdateType.insert, event,
+      d: this.session.eventDay});
   }
 
-  public insertWorkCard(minutes: number) {
-    // console.log('insert work card at: ', minutes);
-    // we allow insert of actual works unlimited - actual is disabled at view after today !!
-    if (!this.session.isPlan|| GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date())) <= GlobalFunctions.getDateInMinutes(this.session.workDay)) {
-      let isInsertWork = true;
+  public insertEventCard(minutes: number) {
+    // console.log('insert event card at: ', minutes);
+    // we allow insert of actual events unlimited - actual is disabled at view after today !!
+    if (!this.session.isPlan|| GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date())) <= GlobalFunctions.getDateInMinutes(this.session.eventDay)) {
+      let isInsertEvent = true;
       const startOfPreviousMonth = GlobalFunctions.addMonths(GlobalFunctions.getStartOfMonth(new Date()), -1);
-      if (GlobalFunctions.getDateInMinutes(this.session.workDay) < GlobalFunctions.getDateInMinutes(startOfPreviousMonth)) {
-      if (!confirm(this.txt['new_work_before_previous_month'] + '?')) {
-          isInsertWork = false;
+      if (GlobalFunctions.getDateInMinutes(this.session.eventDay) < GlobalFunctions.getDateInMinutes(startOfPreviousMonth)) {
+      if (!confirm(this.txt['new_event_before_previous_month'] + '?')) {
+          isInsertEvent = false;
         }
       }
-      if (isInsertWork) {
-        // work is inserted with default type (0 = plan)
-        const work = WorkFactory.empty();
+      if (isInsertEvent) {
+        // event is inserted with default type (0 = plan)
+        const event = EventFactory.empty();
         // we round to multiple of timeSlize (max. 30)
         const timeUnit = Number(this.userOpts.timeSlize) > 30 ? 30 : Number(this.userOpts.timeSlize);
         minutes = Math.round(minutes/timeUnit) * timeUnit;
-        this.cardFormViewEnabled.emit({updateType: UpdateType.insert, work,
-          d: GlobalFunctions.addMinutes(this.session.workDay, minutes)});
+        this.cardFormViewEnabled.emit({updateType: UpdateType.insert, event,
+          d: GlobalFunctions.addMinutes(this.session.eventDay, minutes)});
       }
     } else if (this.session.isPlan) {
       alert(this.txt['no_new_plan_past_today']);
@@ -663,13 +663,13 @@ export class WorkDayGridViewComponent implements OnInit {
   }
 
 
-  public selectWork(work: Work) {
-    if (work.isSelected) {
-      work.isSelected = false;
+  public selectEvent(event: Event) {
+    if (event.isSelected) {
+      event.isSelected = false;
     } else {
-      work.isSelected = true;
+      event.isSelected = true;
     }
-    this.workSelect.emit({isSelect: work.isSelected, id: work.workId});
+    this.eventSelect.emit({isSelect: event.isSelected, id: event.eventId});
   }
 
 }

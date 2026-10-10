@@ -6,26 +6,26 @@ import { GlobalFunctions } from '../../_globals/global-functions';
 import { StyleFactory } from '../../_globals/style-factory';
 import { MAX_MONTHS, MAX_INTERVAL_LENGTH, POWDER_BLUE } from '../../_globals/constants';
 
-import { Work } from '../../_db/work';
+import { Event } from '../../_db/event';
 import { Session } from '../../_db/session';
-import { Customer } from '../../_db/customer';
+import { Contact } from '../../_db/contact';
 import { Issue } from '../../_db/issue';
 import { ConfigurationOption } from '../../_db/configuration-option';
 
 import { IIssueChoice } from '../../_interfaces/i-issue-choice';
-import { IWorkOptions } from '../../_interfaces/i-work-options';
-import { IUserWorkOptions } from '../../_interfaces/i-user-work-options';
+import { IEventOptions } from '../../_interfaces/i-event-options';
+import { IUserEventOptions } from '../../_interfaces/i-user-event-options';
 import { IChoice } from '../../_interfaces/i-choice';
 
 import { LocationType } from '../../_enums/location-type.enum';
 import { UpdateType } from '../../_enums/update-type.enum';
-import { WorkType } from '../../_enums/work-type.enum';
+import { EventType } from '../../_enums/event-type.enum';
 
 
 import { ErrorMessage } from '../../_validators/error-message';
 
 import { IAngularMyDpOptions, IMyDate, IMyDateModel, IMyDateRange, IMyInputFieldChanged, AngularMyDatePickerDirective, AngularMyDatePickerModule } from '@nodro7/angular-mydatepicker';
-import { WorkDayTimeChangeComponent } from '../work-day-time-change/work-day-time-change.component';
+import { EventDayTimeChangeComponent } from '../event-day-time-change/event-day-time-change.component';
 
 
 
@@ -33,11 +33,11 @@ import { WorkDayTimeChangeComponent } from '../work-day-time-change/work-day-tim
   selector: 'dsy-calendar-day-card-form-view',
   templateUrl: './calendar-day-card-form-view.html',
   styleUrl: './calendar-day-card-form-view.css',
-  imports: [FormsModule, ReactiveFormsModule, NgClass, AngularMyDatePickerModule, WorkDayTimeChangeComponent, NgTemplateOutlet, NgStyle, SlicePipe, DatePipe]
+  imports: [FormsModule, ReactiveFormsModule, NgClass, AngularMyDatePickerModule, EventDayTimeChangeComponent, NgTemplateOutlet, NgStyle, SlicePipe, DatePipe]
 })
-export class WorkDayCardFormViewComponent implements OnInit {
+export class EventDayCardFormViewComponent implements OnInit {
 
-  public name = 'WorkDayCardFormViewComponent';
+  public name = 'EventDayCardFormViewComponent';
 
   @Input({required: true}) session: Session;
 
@@ -47,49 +47,49 @@ export class WorkDayCardFormViewComponent implements OnInit {
   @Input({required: true}) txt: { [key: string]: string };
   @Input({required: true}) custtxt: { [key: string]: string };
   @Input({required: true}) issuetxt: { [key: string]: string };
-  @Input({required: true}) worktxt: { [key: string]: string };
+  @Input({required: true}) eventtxt: { [key: string]: string };
 
-  @Input({required: true}) timeSpans: Array<Work>;
+  @Input({required: true}) timeSpans: Array<Event>;
 
   @Input({required: true}) options: Array<ConfigurationOption>;
-  // startHour, timeSlize, defaultIntervalSize are model parameters, managed by work-day-component
-  @Input({required: true}) opts: IWorkOptions;
-  @Input({required: true}) userOpts: IUserWorkOptions;
+  // startHour, timeSlize, defaultIntervalSize are model parameters, managed by event-day-component
+  @Input({required: true}) opts: IEventOptions;
+  @Input({required: true}) userOpts: IUserEventOptions;
 
-  // customer and issue which are selected for work entry
-  @Input({required: true}) workCustomer: Customer;
-  @Input({required: true}) workIssue: Issue;
-  @Input({required: true}) workIssues: Array<Issue>;
+  // contact and issue which are selected for event entry
+  @Input({required: true}) eventContact: Contact;
+  @Input({required: true}) eventIssue: Issue;
+  @Input({required: true}) eventIssues: Array<Issue>;
 
-  // workContainer is the container (work itself,  date) for the work which is to be updated
-  @Input({required: true}) workContainer: {updateType: UpdateType, work: Work, d: Date};
+  // eventContainer is the container (event itself,  date) for the event which is to be updated
+  @Input({required: true}) eventContainer: {updateType: UpdateType, event: Event, d: Date};
 
-  @Input({required: true}) works: Array<Work>;
-  @Input({required: true}) worksChangeCounter: number;
+  @Input({required: true}) events: Array<Event>;
+  @Input({required: true}) eventsChangeCounter: number;
 
-  // if work is to be shifted to another date we use targetWorks and targetWorkDay
-  @Input({required: true}) targetWorks: Array<Work>;
-  @Input({required: true}) targetWorkDay: Date;
+  // if event is to be shifted to another date we use targetEvents and targetEventDay
+  @Input({required: true}) targetEvents: Array<Event>;
+  @Input({required: true}) targetEventDay: Date;
 
   // categories are type-part x in time spans with types 2x
   @Input({required: true}) timeSpanTypeChoices: Array<IChoice>;
 
 
-  @Output() workDaySelected = new EventEmitter<Date>();
-  @Output() timeSpanUpdate = new EventEmitter<{updateType: UpdateType, work: Work}>();
-  @Output() workUpdate = new EventEmitter<{updateType: UpdateType, work: Work}>();
-  @Output() workUpdateAssoc = new EventEmitter<{updateType: UpdateType, work: Work}>();
+  @Output() eventDaySelected = new EventEmitter<Date>();
+  @Output() timeSpanUpdate = new EventEmitter<{updateType: UpdateType, event: Event}>();
+  @Output() eventUpdate = new EventEmitter<{updateType: UpdateType, event: Event}>();
+  @Output() eventUpdateAssoc = new EventEmitter<{updateType: UpdateType, event: Event}>();
   @Output() cardFormCancel = new EventEmitter();
 
   GlobalFunctions: typeof GlobalFunctions = GlobalFunctions;
 
-  WorkType: typeof WorkType = WorkType;
+  EventType: typeof EventType = EventType;
   UpdateType: typeof UpdateType = UpdateType;
 
-  // day of work - 00:00 in browser timezone
-  // workDay comes first from opts
-  workDay: Date;
-  workDayDisplay = '';
+  // day of event - 00:00 in browser timezone
+  // eventDay comes first from opts
+  eventDay: Date;
+  eventDayDisplay = '';
   dateString = '';
 
   // in case of time spans:
@@ -98,18 +98,18 @@ export class WorkDayCardFormViewComponent implements OnInit {
   days: number;
 
   isAfterToday = false;
-  isCustomerInfo = false;
+  isContactInfo = false;
   isIssueInfo = false;
 
-  // work contains a new work object (in case of insert) or cloned from workContainer.work
-  work: Work;
-  // if work is timeSpan, it may have a style
+  // event contains a new event object (in case of insert) or cloned from eventContainer.event
+  event: Event;
+  // if event is timeSpan, it may have a style
   style: {};
-  // cardFormWorks are surroundingworks on workDay (or targetWorkDay, if choosen), built from this.works or this.targetWorks
-  cardFormWorks: Array<Work>;
+  // cardFormEvents are surroundingevents on eventDay (or targetEventDay, if choosen), built from this.events or this.targetEvents
+  cardFormEvents: Array<Event>;
 
   issueChoices: Array<IIssueChoice>;
-  // ixSet is the issueChoices array index of the element which is actually joined to work
+  // ixSet is the issueChoices array index of the element which is actually joined to event
   ixSet: number;
   // isSelected is the issueChoices array index of the element which is shown as selected element
   ixSelected: number;
@@ -157,21 +157,21 @@ export class WorkDayCardFormViewComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.getWorkParameters();
+    this.getEventParameters();
     this.setLocationTypeChoices();
     this.setIssueChoices();
-    const {updateType, work, d} = this.workContainer;
-    if (work.type < WorkType.timeSpanUndefined) {
-      // we assure that only works of this day, previous day, reaching to this day and first work of next day are in allWorks
-      this.cardFormWorks = GlobalFunctions.buildWorks(this.works, this.workDay, true, true);
+    const {updateType, event, d} = this.eventContainer;
+    if (event.type < EventType.timeSpanUndefined) {
+      // we assure that only events of this day, previous day, reaching to this day and first event of next day are in allEvents
+      this.cardFormEvents = GlobalFunctions.buildEvents(this.events, this.eventDay, true, true);
     }
-    // console.log('work-container', this.workContainer);
+    // console.log('event-container', this.eventContainer);
     switch (updateType) {
       case UpdateType.update:
-        this.prepareUpdate(work);
+        this.prepareUpdate(event);
         break;
       case UpdateType.insert:
-          this.prepareInsert(work, d);
+          this.prepareInsert(event, d);
           break;
     }
     this.loadErrorMessages();
@@ -182,45 +182,45 @@ export class WorkDayCardFormViewComponent implements OnInit {
   ngOnChanges(changes: {[propKey: string]: SimpleChange}) {
     let isNewTarget = false;
     for (const [propKey, propValue] of Object.entries(changes)) {
-      if (propKey === 'works') {
-        const {updateType, work, d} = this.workContainer;
-        if (work.type < WorkType.timeSpanUndefined && this.workDay) {
-          // we assure that only works of this day, previous day, reaching to this day and first work of next day are in allWorks
-          this.cardFormWorks = GlobalFunctions.buildWorks(this.works, this.workDay, true, true);
+      if (propKey === 'events') {
+        const {updateType, event, d} = this.eventContainer;
+        if (event.type < EventType.timeSpanUndefined && this.eventDay) {
+          // we assure that only events of this day, previous day, reaching to this day and first event of next day are in allEvents
+          this.cardFormEvents = GlobalFunctions.buildEvents(this.events, this.eventDay, true, true);
         }
       }
-      if (propKey === 'targetWorkDay' || propKey === 'targetWorks') {
-        // console.log('targetWorkDay: ', this.targetWorkDay);
-        // console.log('tminutes: ', GlobalFunctions.getDateInMinutes(this.targetWorkDay));
-        // console.log('targetworks: ', this.targetWorks);
+      if (propKey === 'targetEventDay' || propKey === 'targetEvents') {
+        // console.log('targetEventDay: ', this.targetEventDay);
+        // console.log('tminutes: ', GlobalFunctions.getDateInMinutes(this.targetEventDay));
+        // console.log('targetevents: ', this.targetEvents);
         isNewTarget = true;
       }
     }
-    if (isNewTarget && this.workContainer.work.type < WorkType.timeSpanUndefined
-    && GlobalFunctions.getDateInMinutes(this.targetWorkDay) > 0 && this.workContainer?.updateType === this.updateTypeEnum.update
-    && GlobalFunctions.getDateInMinutes(this.workDay) > 0
-    && GlobalFunctions.getDateInMinutes(this.workDay) !== GlobalFunctions.getDateInMinutes(this.targetWorkDay)
-    && this.targetWorks !== undefined && this.targetWorks !== null) {
+    if (isNewTarget && this.eventContainer.event.type < EventType.timeSpanUndefined
+    && GlobalFunctions.getDateInMinutes(this.targetEventDay) > 0 && this.eventContainer?.updateType === this.updateTypeEnum.update
+    && GlobalFunctions.getDateInMinutes(this.eventDay) > 0
+    && GlobalFunctions.getDateInMinutes(this.eventDay) !== GlobalFunctions.getDateInMinutes(this.targetEventDay)
+    && this.targetEvents !== undefined && this.targetEvents !== null) {
       this.prepareUpdateForTarget();
     }
   }
 
-  private getWorkParameters() {
+  private getEventParameters() {
     // defaultIntervlLength is taken from opts in "prepareInsert()"
-    this.workDay = this.session.workDay;
-    this.workDayDisplay = formatDate(this.workDay, 'EEE d.MM.yyyy', this.locale);
+    this.eventDay = this.session.eventDay;
+    this.eventDayDisplay = formatDate(this.eventDay, 'EEE d.MM.yyyy', this.locale);
     const today = GlobalFunctions.getStartOfDay(new Date());
     const tomorrow = GlobalFunctions.addDays(today, 1);;
-    this.isAfterToday = GlobalFunctions.getDateInMinutes(this.workDay) >= GlobalFunctions.getDateInMinutes(tomorrow);
-    // in case of plan and actual we must check work-day
-    const {updateType, work, d} = this.workContainer;
-    this.addDpOptions(work);
+    this.isAfterToday = GlobalFunctions.getDateInMinutes(this.eventDay) >= GlobalFunctions.getDateInMinutes(tomorrow);
+    // in case of plan and actual we must check event-day
+    const {updateType, event, d} = this.eventContainer;
+    this.addDpOptions(event);
   }
 
   // dateOpts are built
-  private addDpOptions(work: Work) {
+  private addDpOptions(event: Event) {
 
-    // utils.clone would not work
+    // utils.clone would not event
     this.dateOpts = this.getCopyOfDpOptions(this.myDatepickerOptions);
 
     this.dateOpts.todayTxt = this.txt['today'];
@@ -235,12 +235,12 @@ export class WorkDayCardFormViewComponent implements OnInit {
     let disableSince = GlobalFunctions.addMonths(GlobalFunctions.getStartOfDay(new Date()), MAX_MONTHS);
     let disableUntil = GlobalFunctions.addMonths(GlobalFunctions.getStartOfDay(new Date()), MAX_MONTHS * -1);
 
-    if (work?.type === WorkType.actual) {
-      disableSince = GlobalFunctions.addDays(this.workDay, 1);
-    } else if (work?.type === WorkType.plan) {
-      disableUntil = GlobalFunctions.addDays(this.workDay, -1);;
+    if (event?.type === EventType.actual) {
+      disableSince = GlobalFunctions.addDays(this.eventDay, 1);
+    } else if (event?.type === EventType.plan) {
+      disableUntil = GlobalFunctions.addDays(this.eventDay, -1);;
     } else {
-      disableSince = work?.workEnd;
+      disableSince = event?.eventEnd;
     }
 
     this.dateOpts.disableSince = {
@@ -254,7 +254,7 @@ export class WorkDayCardFormViewComponent implements OnInit {
       this.timeSpans.forEach(_ => {
         if (_.type === 21) {
           const holiday = {
-            year: _.workBegin.getFullYear(), month: _.workBegin.getMonth() + 1, day: _.workBegin.getDate()
+            year: _.eventBegin.getFullYear(), month: _.eventBegin.getMonth() + 1, day: _.eventBegin.getDate()
           }
           this.highlightDates.push(holiday);
         }
@@ -267,7 +267,7 @@ export class WorkDayCardFormViewComponent implements OnInit {
     this.dateEndOpts = this.getCopyOfDpOptions(this.dateOpts);
 
     disableSince = GlobalFunctions.addMonths(GlobalFunctions.getStartOfDay(new Date()), MAX_MONTHS);
-    disableUntil = GlobalFunctions.addDays(GlobalFunctions.getStartOfDay(work?.workBegin), -1);
+    disableUntil = GlobalFunctions.addDays(GlobalFunctions.getStartOfDay(event?.eventBegin), -1);
 
     this.dateEndOpts.disableSince = {
       year: disableSince.getFullYear(), month: disableSince.getMonth() + 1, day: disableSince.getDate()
@@ -298,124 +298,124 @@ export class WorkDayCardFormViewComponent implements OnInit {
     this.issueChoices = [];
     this.ixSelected = -1;
     this.ixSet = 0;
-    const {updateType, work, d} = this.workContainer;
-    // choice value 1 is work is not assigned exists anyway
-    this.issueChoices.push({value: 1, customerNr: 0,
+    const {updateType, event, d} = this.eventContainer;
+    // choice value 1 is event is not assigned exists anyway
+    this.issueChoices.push({value: 1, contactNr: 0,
     isSelected: false, displayText: this.txt['not_assigned']});
-    // choice value 2 is customer of work, if work is assigned direct to customer, without issue
-    // choice value 3 is issue of work
-    if (updateType === UpdateType.update && (work.customerNr > 0 || work.issueProviderId > 0)) {
-      let customerName = work.workInfo.customerName && work.workInfo.customerName !== ''
-          ? work.workInfo.customerName
-          : work.workInfo.customerNr > 0
-            ? (this.session.serviceLevel.customer === 1 ? this.txt['contact'] : this.txt['customer']) + ': ' + work.workInfo.customerNr.toString()
+    // choice value 2 is contact of event, if event is assigned direct to contact, without issue
+    // choice value 3 is issue of event
+    if (updateType === UpdateType.update && (event.contactNr > 0 || event.issueProviderId > 0)) {
+      let contactName = event.eventInfo.contactName && event.eventInfo.contactName !== ''
+          ? event.eventInfo.contactName
+          : event.eventInfo.contactNr > 0
+            ? (this.session.serviceLevel.contact === 1 ? this.txt['contact'] : this.txt['contact']) + ': ' + event.eventInfo.contactNr.toString()
             : '';
-      this.issueChoices.push({value: work.customerNr > 0 && work.issueProviderId === 0 ? 2 : 3,
-        customerNr: work.workInfo.customerNr,
-        customerName : customerName.substring(0,20),
-        displayNr: work.issueProviderId > 0 ? work.workInfo.issueDisplayNr : work.workInfo.customerDisplayNr,
-        issueText: work.workInfo.issueText?.substring(0,30),
-        externalId: work.workInfo.sExternalIssueId,
-        text: work.workInfo.issueNote?.substring(0,50),
-        // TODO customer/issue based default locationType
-        defaultLocationType:  work.customerNr > 0 ? LocationType.onSite : null,
-        isSelected: work.issueProviderId === 0 && work.customerNr === this.workCustomer.customerNr ? true
-        : this.workIssue.issueProviderId === work.issueProviderId
-        && this.workIssue.nExternalIssueId === work.workInfo?.nExternalIssueId
-        && this.workIssue.sExternalIssueId === work.workInfo?.sExternalIssueId
+      this.issueChoices.push({value: event.contactNr > 0 && event.issueProviderId === 0 ? 2 : 3,
+        contactNr: event.eventInfo.contactNr,
+        contactName : contactName.substring(0,20),
+        displayNr: event.issueProviderId > 0 ? event.eventInfo.issueDisplayNr : event.eventInfo.contactDisplayNr,
+        issueText: event.eventInfo.issueText?.substring(0,30),
+        externalId: event.eventInfo.sExternalIssueId,
+        text: event.eventInfo.issueNote?.substring(0,50),
+        // TODO contact/issue based default locationType
+        defaultLocationType:  event.contactNr > 0 ? LocationType.onSite : null,
+        isSelected: event.issueProviderId === 0 && event.contactNr === this.eventContact.contactNr ? true
+        : this.eventIssue.issueProviderId === event.issueProviderId
+        && this.eventIssue.nExternalIssueId === event.eventInfo?.nExternalIssueId
+        && this.eventIssue.sExternalIssueId === event.eventInfo?.sExternalIssueId
         ? true
         : false,
-        displayText:  work.workInfo.issueProviderId > 0
-        ? (work.workInfo.issueDisplayNr)
-          + '|' + work.workInfo.issueText?.substring(0,30)
-          + (work.workInfo.customerNr > 0
-          ? ('|' + customerName.substring(0,20))
+        displayText:  event.eventInfo.issueProviderId > 0
+        ? (event.eventInfo.issueDisplayNr)
+          + '|' + event.eventInfo.issueText?.substring(0,30)
+          + (event.eventInfo.contactNr > 0
+          ? ('|' + contactName.substring(0,20))
           : '')
-        : work.workInfo.customerNr > 0
-        ? ( (this.session.serviceLevel.customer === 1 ? this.txt['contact'] : this.txt['customer']) + ': ' +  work.workInfo.customerDisplayNr + '|' + customerName.substring(0,30))
+        : event.eventInfo.contactNr > 0
+        ? ( (this.session.serviceLevel.contact === 1 ? this.txt['contact'] : this.txt['contact']) + ': ' +  event.eventInfo.contactDisplayNr + '|' + contactName.substring(0,30))
         : ''
       });
       if (this.issueChoices[this.issueChoices.length - 1].isSelected) {
         this.ixSelected = this.issueChoices.length - 1;
       }
-      // ixSet is set to the legacy joined customer or issue
+      // ixSet is set to the legacy joined contact or issue
       this.ixSet = this.issueChoices.length - 1;
     }
 
-    // choice value 4 choice for workCustomer selected in this session - if not already shown as customer
-    if (this.workCustomer?.customerNr > 0) {
-      if (work.type >= WorkType.timeSpanUndefined) {
-        if (this.workCustomer.customerNr !== work.customerNr) {
+    // choice value 4 choice for eventContact selected in this session - if not already shown as contact
+    if (this.eventContact?.contactNr > 0) {
+      if (event.type >= EventType.timeSpanUndefined) {
+        if (this.eventContact.contactNr !== event.contactNr) {
           this.issueChoices.push({value: 4,
-            customerNr: this.workCustomer.customerNr,
-            customerName: this.workCustomer.name?.substring(0,30),
-            displayNr: this.workCustomer.displayNr,
+            contactNr: this.eventContact.contactNr,
+            contactName: this.eventContact.name?.substring(0,30),
+            displayNr: this.eventContact.displayNr,
             isSelected: true,
-            displayText: this.workCustomer.displayNr + '|' + this.workCustomer.name?.substring(0,30)
+            displayText: this.eventContact.displayNr + '|' + this.eventContact.name?.substring(0,30)
           });
           if (this.issueChoices[this.issueChoices.length - 1].isSelected) {
             this.ixSelected = this.issueChoices.length - 1;
           }
         }
       } else {
-        // a choice with value 4 is built if customer is not the joined customer of work  - and customer is chooseable if booking is allowed
-        if ((this.workCustomer.customerNr !== work.customerNr || work.workInfo.issueProviderId > 0) && this.opts.isCustomerBooking) {
+        // a choice with value 4 is built if contact is not the joined contact of event  - and contact is chooseable if booking is allowed
+        if ((this.eventContact.contactNr !== event.contactNr || event.eventInfo.issueProviderId > 0) && this.opts.isContactBooking) {
           this.issueChoices.push({value: 4,
-            customerNr: this.workCustomer.customerNr,
-            customerName: this.workCustomer.name?.substring(0,30),
-            displayNr: this.workCustomer.displayNr,
+            contactNr: this.eventContact.contactNr,
+            contactName: this.eventContact.name?.substring(0,30),
+            displayNr: this.eventContact.displayNr,
             issueText: this.txt['without_issue'],
-            isSelected: this.workIssue.issueProviderId === 0,
-            displayText:  (this.session.serviceLevel.customer === 1 ? this.txt['contact'] : this.txt['customer']) + ': ' + this.workCustomer.displayNr + '|' + this.workCustomer.name?.substring(0,30)});
+            isSelected: this.eventIssue.issueProviderId === 0,
+            displayText:  (this.session.serviceLevel.contact === 1 ? this.txt['contact'] : this.txt['contact']) + ': ' + this.eventContact.displayNr + '|' + this.eventContact.name?.substring(0,30)});
           if (this.issueChoices[this.issueChoices.length - 1].isSelected) {
             this.ixSelected = this.issueChoices.length - 1;
           }
         }
 
       } // end else type >= timeSpanUndefined
-    } // end if customerId > 0
-    // choice value >= 5 other issues of the same customer (workIssues are built in work-day from all customer issues,  only if isChooseAllCustomerIssues
-    // - but workIssue itself is among them anyway)
-    if (this.workIssues?.length > 0 && work.type < WorkType.timeSpanUndefined) {
+    } // end if contactId > 0
+    // choice value >= 5 other issues of the same contact (eventIssues are built in event-day from all contact issues,  only if isChooseAllContactIssues
+    // - but eventIssue itself is among them anyway)
+    if (this.eventIssues?.length > 0 && event.type < EventType.timeSpanUndefined) {
       // from issues  we build issueChoices
-      for (let ix = 0; ix < this.workIssues.length; ix++) {
-        if (work.issueProviderId === 0
-          || this.workIssues[ix].issueProviderId !== work.issueProviderId
-          || this.workIssues[ix].nExternalIssueId !== work.workInfo?.nExternalIssueId
-          || this.workIssues[ix].sExternalIssueId !== work.workInfo?.sExternalIssueId
-          || this.workIssues[ix].providerUrl !== work.workInfo?.providerUrl
-          || this.workIssues[ix].login !== work.workInfo?.login) {
-          let customerName = this.workCustomer.name && this.workCustomer.name !== ''
-          ? this.workCustomer.name
-          : this.workIssues[ix].customerNr > 0
-            ? (this.session.serviceLevel.customer === 1 ? this.txt['contact'] : this.txt['customer']) + ': ' + this.workIssues[ix].customerNr.toString()
+      for (let ix = 0; ix < this.eventIssues.length; ix++) {
+        if (event.issueProviderId === 0
+          || this.eventIssues[ix].issueProviderId !== event.issueProviderId
+          || this.eventIssues[ix].nExternalIssueId !== event.eventInfo?.nExternalIssueId
+          || this.eventIssues[ix].sExternalIssueId !== event.eventInfo?.sExternalIssueId
+          || this.eventIssues[ix].providerUrl !== event.eventInfo?.providerUrl
+          || this.eventIssues[ix].login !== event.eventInfo?.login) {
+          let contactName = this.eventContact.name && this.eventContact.name !== ''
+          ? this.eventContact.name
+          : this.eventIssues[ix].contactNr > 0
+            ? (this.session.serviceLevel.contact === 1 ? this.txt['contact'] : this.txt['contact']) + ': ' + this.eventIssues[ix].contactNr.toString()
             : '';
-          this.issueChoices.push({value: 5 + ix, customerNr: this.workIssues[ix].customerNr,
-            customerName: customerName.substring(0,20),
-            displayNr: this.workIssues[ix].displayNr,
-            issueText: this.workIssues[ix].summary?.substring(0,30),
-            externalId: this.workIssues[ix].sExternalIssueId,
-            text: this.workIssues[ix].description?.substring(0,50),
-            // TODO customer/issue based default locationType
+          this.issueChoices.push({value: 5 + ix, contactNr: this.eventIssues[ix].contactNr,
+            contactName: contactName.substring(0,20),
+            displayNr: this.eventIssues[ix].displayNr,
+            issueText: this.eventIssues[ix].summary?.substring(0,30),
+            externalId: this.eventIssues[ix].sExternalIssueId,
+            text: this.eventIssues[ix].description?.substring(0,50),
+            // TODO contact/issue based default locationType
             defaultLocationType: null,
-            // style: this.workIssues[ix].style,
-            workIssuesIndex: ix,
-            // workIssue is selected
-            isSelected: this.workIssues[ix].issueProviderId === this.workIssue.issueProviderId
-            && this.workIssues[ix].nExternalIssueId === this.workIssue.nExternalIssueId
-            && this.workIssues[ix].sExternalIssueId === this.workIssue.sExternalIssueId,
-            displayText: this.workIssues[ix].displayNr
-              + '|' + this.workIssues[ix].summary?.substring(0,30)
-              + (this.workIssues[ix].customerNr > 0
-              ? ('|' + customerName.substring(0,20))
+            // style: this.eventIssues[ix].style,
+            eventIssuesIndex: ix,
+            // eventIssue is selected
+            isSelected: this.eventIssues[ix].issueProviderId === this.eventIssue.issueProviderId
+            && this.eventIssues[ix].nExternalIssueId === this.eventIssue.nExternalIssueId
+            && this.eventIssues[ix].sExternalIssueId === this.eventIssue.sExternalIssueId,
+            displayText: this.eventIssues[ix].displayNr
+              + '|' + this.eventIssues[ix].summary?.substring(0,30)
+              + (this.eventIssues[ix].contactNr > 0
+              ? ('|' + contactName.substring(0,20))
               : '')
           });
           if (this.issueChoices[this.issueChoices.length - 1].isSelected) {
             this.ixSelected = this.issueChoices.length - 1;
           }
         } // end if issueProviderId ...
-      } // end for workIssues
-    } // end check workIssues length
+      } // end for eventIssues
+    } // end check eventIssues length
 
     if (this.ixSelected < 0 && this.issueChoices.length > 0 && UpdateType.update) {
       this.ixSelected = 0;
@@ -425,30 +425,30 @@ export class WorkDayCardFormViewComponent implements OnInit {
 
 
   /**
-   * prepareUpdate - first preparation of original work which is beeing updated
-   * @param work (from workContainer), is cloned to have a new object for updating the model
-   *   special handling if work.type >= WorkType.timeSpanUndefined (time span, without begin time and end time)
+   * prepareUpdate - first preparation of original event which is beeing updated
+   * @param event (from eventContainer), is cloned to have a new object for updating the model
+   *   special handling if event.type >= EventType.timeSpanUndefined (time span, without begin time and end time)
    */
-   private prepareUpdate(work: Work) {
-    this.work = GlobalFunctions.clone(work);
+   private prepareUpdate(event: Event) {
+    this.event = GlobalFunctions.clone(event);
     let spaceBefore = 0;
     let spaceAfter = 0;
-    const workDurationDisplay = GlobalFunctions.minutesDisplay(this.work.workDuration);
-    if (work.type < WorkType.timeSpanUndefined) {
-      spaceBefore = GlobalFunctions.getSpaceBefore(this.work.workBegin, this.cardFormWorks,  this.workDay, this.work.workId);
-      spaceAfter = GlobalFunctions.getSpaceAfter(this.work.workEnd, this.cardFormWorks,  this.workDay, this.work.workId);
+    const eventDurationDisplay = GlobalFunctions.minutesDisplay(this.event.eventDuration);
+    if (event.type < EventType.timeSpanUndefined) {
+      spaceBefore = GlobalFunctions.getSpaceBefore(this.event.eventBegin, this.cardFormEvents,  this.eventDay, this.event.eventId);
+      spaceAfter = GlobalFunctions.getSpaceAfter(this.event.eventEnd, this.cardFormEvents,  this.eventDay, this.event.eventId);
     } else {
-      this.days = GlobalFunctions.getDateInDays(this.work.workEnd) - GlobalFunctions.getDateInDays(this.work.workBegin);
-      this.beginDisplay = formatDate(this.work.workBegin, 'EEE d.MM.yyyy', this.locale);
-      this.endDisplay = formatDate(GlobalFunctions.addDays(this.work.workEnd, -1), 'EEE d.MM.yyyy', this.locale);
-      this.addDpOptions(work);
+      this.days = GlobalFunctions.getDateInDays(this.event.eventEnd) - GlobalFunctions.getDateInDays(this.event.eventBegin);
+      this.beginDisplay = formatDate(this.event.eventBegin, 'EEE d.MM.yyyy', this.locale);
+      this.endDisplay = formatDate(GlobalFunctions.addDays(this.event.eventEnd, -1), 'EEE d.MM.yyyy', this.locale);
+      this.addDpOptions(event);
     }
-    this.work.cardElement = {spaceBefore, spaceAfter,
-       isTemporary: false, isSummaryUpdated: false, workDurationDisplay, custIssueNr: '', custIssueName: ''};
-    if (work.type < WorkType.timeSpanUndefined) {
+    this.event.cardElement = {spaceBefore, spaceAfter,
+       isTemporary: false, isSummaryUpdated: false, eventDurationDisplay, custIssueNr: '', custIssueName: ''};
+    if (event.type < EventType.timeSpanUndefined) {
       this.buildShiftChoices();
     } else {
-      const category = work.type % 10;
+      const category = event.type % 10;
       const ix = this.timeSpanTypeChoices.findIndex(_ => Number(_.value) === category);
       if (ix >= 0) {
         this.style = this.timeSpanTypeChoices[ix].style;
@@ -460,69 +460,69 @@ export class WorkDayCardFormViewComponent implements OnInit {
 
   /**
    * prepareInsert
-   * @param work (from workContainer - can contain summary, locationType from entries in other views ...)
-   *   special handling if work.type >= WorkType.timeSpanUndefined (time span, without begin time and end time)
-   * @param d date and time for insertion of new work, entered in other views ...
+   * @param event (from eventContainer - can contain summary, locationType from entries in other views ...)
+   *   special handling if event.type >= EventType.timeSpanUndefined (time span, without begin time and end time)
+   * @param d date and time for insertion of new event, entered in other views ...
    */
-  private prepareInsert(work: Work, d: Date) {
-    this.work = work;
-    if (this.work.type < WorkType.timeSpanUndefined) {
-      // if we have empty work from grid or temporary inserted work from workCard
-      if (this.work.workDuration === undefined || work.workDuration === null || work.workDuration === 0) {
-        this.work.type = this.session.isPlan ? WorkType.plan : WorkType.actual;
-        this.work.workBegin = d;
-        this.work.workDuration = this.opts.defaultIntervalLength;
-        this.work.workEnd = GlobalFunctions.addMinutes(this.work.workBegin, this.work.workDuration);
+  private prepareInsert(event: Event, d: Date) {
+    this.event = event;
+    if (this.event.type < EventType.timeSpanUndefined) {
+      // if we have empty event from grid or temporary inserted event from eventCard
+      if (this.event.eventDuration === undefined || event.eventDuration === null || event.eventDuration === 0) {
+        this.event.type = this.session.isPlan ? EventType.plan : EventType.actual;
+        this.event.eventBegin = d;
+        this.event.eventDuration = this.opts.defaultIntervalLength;
+        this.event.eventEnd = GlobalFunctions.addMinutes(this.event.eventBegin, this.event.eventDuration);
       }
-      const nextWork: Work = GlobalFunctions.getNextWork(this.cardFormWorks, this.work.workBegin);
-      if (nextWork && GlobalFunctions.isMinuteEarlier(nextWork.workBegin, this.work.workEnd )) {
-        this.work.workEnd = nextWork.workBegin;
+      const nextEvent: Event = GlobalFunctions.getNextEvent(this.cardFormEvents, this.event.eventBegin);
+      if (nextEvent && GlobalFunctions.isMinuteEarlier(nextEvent.eventBegin, this.event.eventEnd )) {
+        this.event.eventEnd = nextEvent.eventBegin;
       }
-      this.work.workDuration = GlobalFunctions.getDateInMinutes(this.work.workEnd)
-      - GlobalFunctions.getDateInMinutes(this.work.workBegin);
-      // @deprecated this.work.isUpdated = true;
-      const workDurationDisplay = GlobalFunctions.minutesDisplay(this.work.workDuration);
-      const spaceBefore = GlobalFunctions.getSpaceBefore(this.work.workBegin, this.cardFormWorks,  this.workDay);
-      const spaceAfter = GlobalFunctions.getSpaceAfter(this.work.workEnd, this.cardFormWorks,  this.workDay);
-      this.work.cardElement = {isTemporary: false, isSummaryUpdated: false, spaceBefore, spaceAfter, workDurationDisplay,
+      this.event.eventDuration = GlobalFunctions.getDateInMinutes(this.event.eventEnd)
+      - GlobalFunctions.getDateInMinutes(this.event.eventBegin);
+      // @deprecated this.event.isUpdated = true;
+      const eventDurationDisplay = GlobalFunctions.minutesDisplay(this.event.eventDuration);
+      const spaceBefore = GlobalFunctions.getSpaceBefore(this.event.eventBegin, this.cardFormEvents,  this.eventDay);
+      const spaceAfter = GlobalFunctions.getSpaceAfter(this.event.eventEnd, this.cardFormEvents,  this.eventDay);
+      this.event.cardElement = {isTemporary: false, isSummaryUpdated: false, spaceBefore, spaceAfter, eventDurationDisplay,
         custIssueNr: '', custIssueName: ''};
     } else {
-      this.work.workBegin = GlobalFunctions.getStartOfDay(d);
-      // duration in time span is built dynamically - work.workDuration is set to 0
-      this.work.workDuration = 0;
+      this.event.eventBegin = GlobalFunctions.getStartOfDay(d);
+      // duration in time span is built dynamically - event.eventDuration is set to 0
+      this.event.eventDuration = 0;
       // end is set to begin of next day
-      this.work.workEnd = GlobalFunctions.addDays(this.work.workBegin, 1);
-      this.beginDisplay = formatDate(this.work.workBegin, 'EEE d.MM.yyyy', this.locale);
+      this.event.eventEnd = GlobalFunctions.addDays(this.event.eventBegin, 1);
+      this.beginDisplay = formatDate(this.event.eventBegin, 'EEE d.MM.yyyy', this.locale);
       this.days = 1;
-      const workDurationDisplay = GlobalFunctions.minutesDisplay(GlobalFunctions.getDateInMinutes(this.work.workEnd) - GlobalFunctions.getDateInMinutes(this.work.workBegin));
-      this.work.cardElement = {isTemporary: false, isSummaryUpdated: false, spaceBefore: 0, spaceAfter: 0, workDurationDisplay,
+      const eventDurationDisplay = GlobalFunctions.minutesDisplay(GlobalFunctions.getDateInMinutes(this.event.eventEnd) - GlobalFunctions.getDateInMinutes(this.event.eventBegin));
+      this.event.cardElement = {isTemporary: false, isSummaryUpdated: false, spaceBefore: 0, spaceAfter: 0, eventDurationDisplay,
         custIssueNr: '', custIssueName: ''};
-      this.addDpOptions(work);
+      this.addDpOptions(event);
     }
   }
 
-  // only used at real works to have choices when shifting this works
+  // only used at real events to have choices when shifting this events
   private buildShiftChoices() {
-    // for shift before (= before work which is before selected works)
-    const earlierBegin = GlobalFunctions.getPreviousBegin(this.work.workBegin, this.work.workDuration, this.cardFormWorks, this.workDay);
-    this.work.cardElement.shiftSpaceBefore = earlierBegin ? GlobalFunctions.getDateInMinutes(this.work.workBegin) - GlobalFunctions.getDateInMinutes(earlierBegin) : 0;
+    // for shift before (= before event which is before selected events)
+    const earlierBegin = GlobalFunctions.getPreviousBegin(this.event.eventBegin, this.event.eventDuration, this.cardFormEvents, this.eventDay);
+    this.event.cardElement.shiftSpaceBefore = earlierBegin ? GlobalFunctions.getDateInMinutes(this.event.eventBegin) - GlobalFunctions.getDateInMinutes(earlierBegin) : 0;
     // console.log('shiftSpaceBefore', this.shiftSpaceBefore);
 
-    // for shift after (= after work which is after selected works)
-    const laterBegin = GlobalFunctions.getNextBegin(this.work.workBegin, this.work.workDuration, this.cardFormWorks, this.workDay);
-    this.work.cardElement.shiftSpaceAfter = laterBegin ? GlobalFunctions.getDateInMinutes(laterBegin) - GlobalFunctions.getDateInMinutes(this.work.workBegin) : 0;
+    // for shift after (= after event which is after selected events)
+    const laterBegin = GlobalFunctions.getNextBegin(this.event.eventBegin, this.event.eventDuration, this.cardFormEvents, this.eventDay);
+    this.event.cardElement.shiftSpaceAfter = laterBegin ? GlobalFunctions.getDateInMinutes(laterBegin) - GlobalFunctions.getDateInMinutes(this.event.eventBegin) : 0;
     // console.log('shiftSpaceAfter', this.shiftSpaceAfter);
 
   }
 
   private loadErrorMessages(): void {
     this.thisFormErrorMessages = [
-      new ErrorMessage('bodyGroup.summary', 'required',  this.worktxt['summary'] + ' ' + this.txt['must_be_entered']),
-      new ErrorMessage('bodyGroup.summary', 'minlength', this.worktxt['summary']
+      new ErrorMessage('bodyGroup.summary', 'required',  this.eventtxt['summary'] + ' ' + this.txt['must_be_entered']),
+      new ErrorMessage('bodyGroup.summary', 'minlength', this.eventtxt['summary']
       + ' ' + this.txt['must_have_at_least'] + ' 1 ' + this.txt['positions_containing']),
-      new ErrorMessage('bodyGroup.summary', 'maxlength', this.worktxt['summary']
+      new ErrorMessage('bodyGroup.summary', 'maxlength', this.eventtxt['summary']
       + ' ' + this.txt['must_have_not_more'] + ' 255 ' + this.txt['positions_containing']),
-      new ErrorMessage('bodyGroup.location', 'maxlength', this.worktxt['location']
+      new ErrorMessage('bodyGroup.location', 'maxlength', this.eventtxt['location']
       + ' ' + this.txt['must_have_not_more'] + ' 255 ' + this.txt['positions_containing'])
     ];
   }
@@ -536,27 +536,27 @@ export class WorkDayCardFormViewComponent implements OnInit {
    private initThisForm() {
     this.thisForm = this.fb.group({
       bodyGroup: this.fb.group({
-        // summary: [this.workContainer.updateType === UpdateType.insert ? '' : this.work.summary, [
-        summary: [this.work?.summary, [
+        // summary: [this.eventContainer.updateType === UpdateType.insert ? '' : this.event.summary, [
+        summary: [this.event?.summary, [
           Validators.required,
           Validators.minLength(1),
           Validators.maxLength(255)
           ]
         ],
-        locationType: [this.work?.locationType],
-        description: [this.workContainer.updateType === UpdateType.insert ? '' : this.work.description],
-        location: [this.workContainer.updateType === UpdateType.insert ? '' : this.work.location, [
+        locationType: [this.event?.locationType],
+        description: [this.eventContainer.updateType === UpdateType.insert ? '' : this.event.description],
+        location: [this.eventContainer.updateType === UpdateType.insert ? '' : this.event.location, [
           Validators.maxLength(255)
           ]
         ],
-        category: [this.work?.type >= WorkType.timeSpanUndefined ? (this.work.type % 10).toString() : '']
+        category: [this.event?.type >= EventType.timeSpanUndefined ? (this.event.type % 10).toString() : '']
       })
     });
-    this.onChangesWorkType();
+    this.onChangesEventType();
     this.thisForm.statusChanges.subscribe(() => this.updateErrorMessages());
   }
 
-private onChangesWorkType() {
+private onChangesEventType() {
     this.thisForm.get('bodyGroup.category').valueChanges
     .subscribe(category => {
       const ix = this.timeSpanTypeChoices.findIndex(_ => _.value === category);
@@ -578,23 +578,23 @@ private onChangesWorkType() {
 
 
   /**
-   * when time is updated, we must check if another work is after and end time has to be adjusted
-   * - works must not overlap
+   * when time is updated, we must check if another event is after and end time has to be adjusted
+   * - events must not overlap
    *
    * @param begin new begin time
    * @param end new end time
-   * @param workId id of processed work
+   * @param eventId id of processed event
    * @returns eventually corrected end time
    */
-  private getNewEnd(begin: Date, end: Date, workId: number): Date {
-    let nextWork: Work = GlobalFunctions.getNextWork(this.cardFormWorks, begin);
-    // if we get this processed work as next work we search for real next work
-    if (nextWork && workId === nextWork.workId) {
-      nextWork = GlobalFunctions.getNextWork(this.cardFormWorks, GlobalFunctions.addMinutes(nextWork.workBegin, 1));
+  private getNewEnd(begin: Date, end: Date, eventId: number): Date {
+    let nextEvent: Event = GlobalFunctions.getNextEvent(this.cardFormEvents, begin);
+    // if we get this processed event as next event we search for real next event
+    if (nextEvent && eventId === nextEvent.eventId) {
+      nextEvent = GlobalFunctions.getNextEvent(this.cardFormEvents, GlobalFunctions.addMinutes(nextEvent.eventBegin, 1));
     }
-    // if overlapping, workEnd is set to begin of next work, duration is shortened
-    if (nextWork && GlobalFunctions.isMinuteEarlier(nextWork.workBegin, end )) {
-      end = nextWork.workBegin;
+    // if overlapping, eventEnd is set to begin of next event, duration is shortened
+    if (nextEvent && GlobalFunctions.isMinuteEarlier(nextEvent.eventBegin, end )) {
+      end = nextEvent.eventBegin;
     }
     // duration must not exceed this.opts.maxIntervalLength
     if (GlobalFunctions.isMinuteEarlier(GlobalFunctions.addMinutes(begin, this.opts.maxIntervalLength), end)) {
@@ -605,32 +605,32 @@ private onChangesWorkType() {
 
 
   /**
-   * prepareUpdateForTarget -  preparation of original work for a target date
+   * prepareUpdateForTarget -  preparation of original event for a target date
    */
    private prepareUpdateForTarget() {
     const shiftMinutes = this.searchTargetBegin();
     if (shiftMinutes !== undefined && shiftMinutes !== null) {
-      let minutesDiff = GlobalFunctions.getDateInMinutes(this.targetWorkDay) - GlobalFunctions.getDateInMinutes(this.workDay);
+      let minutesDiff = GlobalFunctions.getDateInMinutes(this.targetEventDay) - GlobalFunctions.getDateInMinutes(this.eventDay);
       // no shift or user accepts shifted begin
-      if (shiftMinutes === 0 || confirm(this.txt['work_shifted_to']  + ' '
-      + formatDate(GlobalFunctions.addMinutes(this.work.workBegin, minutesDiff + shiftMinutes), 'HH:mm', this.locale) + '?')) {
-        // we set the surrounding works to targetWorks
-        this.cardFormWorks = GlobalFunctions.buildWorks(this.targetWorks, this.targetWorkDay, true, true);
-        // we set new workBegin and workEnd
-        this.work.workBegin = GlobalFunctions.addMinutes(this.work.workBegin, minutesDiff + shiftMinutes);
-        this.work.workEnd = GlobalFunctions.addMinutes(this.work.workEnd, minutesDiff + shiftMinutes);
-        this.work.cardElement.spaceBefore = GlobalFunctions.getSpaceBefore(this.work.workBegin, this.cardFormWorks,
-          this.targetWorkDay, this.work.workId);
-        this.work.cardElement.spaceAfter = GlobalFunctions.getSpaceAfter(this.work.workEnd, this.cardFormWorks,
-          this.targetWorkDay, this.work.workId);
-        // now we set this workDay
-        this.workDay = this.targetWorkDay;
-        // we build shiftChices for target workDay
+      if (shiftMinutes === 0 || confirm(this.txt['event_shifted_to']  + ' '
+      + formatDate(GlobalFunctions.addMinutes(this.event.eventBegin, minutesDiff + shiftMinutes), 'HH:mm', this.locale) + '?')) {
+        // we set the surrounding events to targetEvents
+        this.cardFormEvents = GlobalFunctions.buildEvents(this.targetEvents, this.targetEventDay, true, true);
+        // we set new eventBegin and eventEnd
+        this.event.eventBegin = GlobalFunctions.addMinutes(this.event.eventBegin, minutesDiff + shiftMinutes);
+        this.event.eventEnd = GlobalFunctions.addMinutes(this.event.eventEnd, minutesDiff + shiftMinutes);
+        this.event.cardElement.spaceBefore = GlobalFunctions.getSpaceBefore(this.event.eventBegin, this.cardFormEvents,
+          this.targetEventDay, this.event.eventId);
+        this.event.cardElement.spaceAfter = GlobalFunctions.getSpaceAfter(this.event.eventEnd, this.cardFormEvents,
+          this.targetEventDay, this.event.eventId);
+        // now we set this eventDay
+        this.eventDay = this.targetEventDay;
+        // we build shiftChices for target eventDay
         this.buildShiftChoices();
-        this.workDayDisplay = formatDate(this.workDay, 'EEE d.MM.yyyy', this.locale);
+        this.eventDayDisplay = formatDate(this.eventDay, 'EEE d.MM.yyyy', this.locale);
         const today = GlobalFunctions.getStartOfDay(new Date());
         const tomorrow = GlobalFunctions.addDays(today, 1);;
-        this.isAfterToday = GlobalFunctions.getDateInMinutes(this.workDay) >= GlobalFunctions.getDateInMinutes(tomorrow);
+        this.isAfterToday = GlobalFunctions.getDateInMinutes(this.eventDay) >= GlobalFunctions.getDateInMinutes(tomorrow);
       }
     } else {
       alert(this.txt['notPossible']  + '!');
@@ -638,54 +638,54 @@ private onChangesWorkType() {
   }
 
 
-  // returns minutes later (pr earlier, if negative) for a begin (relative to rangeBegin) in targetWorks
+  // returns minutes later (pr earlier, if negative) for a begin (relative to rangeBegin) in targetEvents
   // returns 0 if rangeBegin is unchanged, return null if no begin is possible
   private searchTargetBegin(): number {
     // ramgBegin rangeEnd are begin and end of range at target day
     let rangeBegin: Date;
     let rangeEnd: Date;
-    let minutesDiff = GlobalFunctions.getDateInMinutes(this.targetWorkDay) - GlobalFunctions.getDateInMinutes(this.workDay);
+    let minutesDiff = GlobalFunctions.getDateInMinutes(this.targetEventDay) - GlobalFunctions.getDateInMinutes(this.eventDay);
     // now we have begin and end at target day
-    rangeBegin = GlobalFunctions.addMinutes(this.work.workBegin, minutesDiff);
-    rangeEnd = GlobalFunctions.addMinutes(this.work.workEnd, minutesDiff);
+    rangeBegin = GlobalFunctions.addMinutes(this.event.eventBegin, minutesDiff);
+    rangeEnd = GlobalFunctions.addMinutes(this.event.eventEnd, minutesDiff);
     const rangeDuration = GlobalFunctions.getDateInMinutes(rangeEnd) - GlobalFunctions.getDateInMinutes(rangeBegin);
     // 1. we check if we can leave begin unchanged
-    if (this.targetWorks.filter(_ => _.workBegin <= rangeBegin && _.workEnd > rangeBegin).length === 0
-      && this.targetWorks.filter(_ => _.workBegin < rangeEnd && _.workEnd >= rangeEnd).length === 0
-      && this.targetWorks.filter(_ => _.workBegin > rangeBegin && _.workEnd < rangeEnd).length === 0) {
+    if (this.targetEvents.filter(_ => _.eventBegin <= rangeBegin && _.eventEnd > rangeBegin).length === 0
+      && this.targetEvents.filter(_ => _.eventBegin < rangeEnd && _.eventEnd >= rangeEnd).length === 0
+      && this.targetEvents.filter(_ => _.eventBegin > rangeBegin && _.eventEnd < rangeEnd).length === 0) {
       return 0;
     }
     // 2. we check if the space  before and after begin is enough to place whole range
     // so we would get earlier begin - this we do before we check later begin, bu not if we copy at today
-    const spaceBefore = GlobalFunctions.getSpaceBefore(rangeBegin,this.targetWorks,this.targetWorkDay);
-    const spaceAfter = GlobalFunctions.getSpaceAfter(rangeBegin,this.targetWorks,this.targetWorkDay);
+    const spaceBefore = GlobalFunctions.getSpaceBefore(rangeBegin,this.targetEvents,this.targetEventDay);
+    const spaceAfter = GlobalFunctions.getSpaceAfter(rangeBegin,this.targetEvents,this.targetEventDay);
     if (spaceBefore + spaceAfter >= rangeDuration
-      && !GlobalFunctions.isMinuteSame(this.targetWorkDay, this.workDay)) {
+      && !GlobalFunctions.isMinuteSame(this.targetEventDay, this.eventDay)) {
       // we need no check for same/next day bacause here we get earlier
         return spaceAfter - rangeDuration;
     } else {
-      // 3. if  begin is covered by a work, we try if spaceAfter end of this work is OK
-      const workAtBegin = this.targetWorks.find(_ => _.workBegin <= rangeBegin && _.workEnd > rangeBegin);
-      if (workAtBegin) {
-        const spaceAfterWorkAtBegin = GlobalFunctions.getSpaceAfter(workAtBegin.workEnd, this.targetWorks,this.targetWorkDay);
-        const shiftAtBegin = GlobalFunctions.getDateInMinutes(workAtBegin.workEnd) - GlobalFunctions.getDateInMinutes(rangeBegin);
-        if (spaceAfterWorkAtBegin >= rangeDuration
-        && GlobalFunctions.getDateInMinutes(rangeBegin) - GlobalFunctions.getDateInMinutes(this.targetWorkDay) + shiftAtBegin < 24 * 60) {
+      // 3. if  begin is covered by a event, we try if spaceAfter end of this event is OK
+      const eventAtBegin = this.targetEvents.find(_ => _.eventBegin <= rangeBegin && _.eventEnd > rangeBegin);
+      if (eventAtBegin) {
+        const spaceAfterEventAtBegin = GlobalFunctions.getSpaceAfter(eventAtBegin.eventEnd, this.targetEvents,this.targetEventDay);
+        const shiftAtBegin = GlobalFunctions.getDateInMinutes(eventAtBegin.eventEnd) - GlobalFunctions.getDateInMinutes(rangeBegin);
+        if (spaceAfterEventAtBegin >= rangeDuration
+        && GlobalFunctions.getDateInMinutes(rangeBegin) - GlobalFunctions.getDateInMinutes(this.targetEventDay) + shiftAtBegin < 24 * 60) {
           return shiftAtBegin;
         }
       }
-      // 4. if not, maybe we can shift after a next work
-      const laterDate = GlobalFunctions.getNextBegin(rangeBegin, rangeDuration, this.targetWorks,this.targetWorkDay);
+      // 4. if not, maybe we can shift after a next event
+      const laterDate = GlobalFunctions.getNextBegin(rangeBegin, rangeDuration, this.targetEvents,this.targetEventDay);
       if (laterDate) {
         return GlobalFunctions.getDateInMinutes(laterDate) - GlobalFunctions.getDateInMinutes(rangeBegin);
       }
     }
-    // 5. here we are if we must shift earlier - first we try method 2. at workDay
+    // 5. here we are if we must shift earlier - first we try method 2. at eventDay
     if (spaceBefore + spaceAfter >= rangeDuration) {
         return spaceAfter - rangeDuration;
     }
-    // 6. if not, maybe we can shift before a previous work
-    const earlierDate = GlobalFunctions.getPreviousBegin(rangeBegin, rangeDuration, this.targetWorks,this.targetWorkDay);
+    // 6. if not, maybe we can shift before a previous event
+    const earlierDate = GlobalFunctions.getPreviousBegin(rangeBegin, rangeDuration, this.targetEvents,this.targetEventDay);
     if (earlierDate) {
       return GlobalFunctions.getDateInMinutes(earlierDate) - GlobalFunctions.getDateInMinutes(rangeBegin);
     }
@@ -695,57 +695,57 @@ private onChangesWorkType() {
 
   /** ------------------------  public methods --------------------------------------------------- */
 
-  public setCustomerBgColorStyle (customerColor: string) {
-    return StyleFactory.getBgColorStyle(customerColor, 0);
+  public setContactBgColorStyle (contactColor: string) {
+    return StyleFactory.getBgColorStyle(contactColor, 0);
   }
 
   public shiftBefore() {
-    this.work.workBegin = GlobalFunctions.addMinutes(new Date(this.work.workBegin), this.work.cardElement.shiftSpaceBefore * -1);
-    this.work.workEnd = GlobalFunctions.addMinutes(new Date(this.work.workEnd), this.work.cardElement.shiftSpaceBefore * -1);
-    this.work.cardElement.spaceBefore = GlobalFunctions.getSpaceBefore(this.work.workBegin, this.cardFormWorks,
-      this.workDay, this.work.workId);
-    this.work.cardElement.spaceAfter = GlobalFunctions.getSpaceAfter(this.work.workEnd, this.cardFormWorks,
-     this.workDay, this.work.workId);
+    this.event.eventBegin = GlobalFunctions.addMinutes(new Date(this.event.eventBegin), this.event.cardElement.shiftSpaceBefore * -1);
+    this.event.eventEnd = GlobalFunctions.addMinutes(new Date(this.event.eventEnd), this.event.cardElement.shiftSpaceBefore * -1);
+    this.event.cardElement.spaceBefore = GlobalFunctions.getSpaceBefore(this.event.eventBegin, this.cardFormEvents,
+      this.eventDay, this.event.eventId);
+    this.event.cardElement.spaceAfter = GlobalFunctions.getSpaceAfter(this.event.eventEnd, this.cardFormEvents,
+     this.eventDay, this.event.eventId);
     this.buildShiftChoices();
   }
 
   public shiftAfter() {
-    this.work.workBegin = GlobalFunctions.addMinutes(this.work.workBegin, this.work.cardElement.shiftSpaceAfter);
-    this.work.workEnd = GlobalFunctions.addMinutes(this.work.workEnd, this.work.cardElement.shiftSpaceAfter);
-    this.work.cardElement.spaceBefore = GlobalFunctions.getSpaceBefore(this.work.workBegin, this.cardFormWorks,
-      this.workDay, this.work.workId);
-    this.work.cardElement.spaceAfter = GlobalFunctions.getSpaceAfter(this.work.workEnd, this.cardFormWorks,
-     this.workDay, this.work.workId);
+    this.event.eventBegin = GlobalFunctions.addMinutes(this.event.eventBegin, this.event.cardElement.shiftSpaceAfter);
+    this.event.eventEnd = GlobalFunctions.addMinutes(this.event.eventEnd, this.event.cardElement.shiftSpaceAfter);
+    this.event.cardElement.spaceBefore = GlobalFunctions.getSpaceBefore(this.event.eventBegin, this.cardFormEvents,
+      this.eventDay, this.event.eventId);
+    this.event.cardElement.spaceAfter = GlobalFunctions.getSpaceAfter(this.event.eventEnd, this.cardFormEvents,
+     this.eventDay, this.event.eventId);
     this.buildShiftChoices();
   }
 
   public setShowTimeChange(type: number) {
     this.changeType = type;
-    this.work.cardElement.isShowTimeChange = true;
+    this.event.cardElement.isShowTimeChange = true;
   }
 
-  public timeUpdate(event: {updateType: UpdateType, work: Work, id: number}) {
-    this.work = event.work;
-    this.work.workEnd = this.getNewEnd(event.work.workBegin, event.work.workEnd, event.work.workId);
+  public timeUpdate(event: {updateType: UpdateType, event: Event, id: number}) {
+    this.event = event.event;
+    this.event.eventEnd = this.getNewEnd(event.event.eventBegin, event.event.eventEnd, event.event.eventId);
     // it could happen that we get new end due to a following event - we must update duration
-    this.work.workDuration = GlobalFunctions.getDateInMinutes(this.work.workEnd)
-    - GlobalFunctions.getDateInMinutes(this.work.workBegin);
-    this.work.cardElement.workDurationDisplay = GlobalFunctions.minutesDisplay(this.work.workDuration);
-    // this.work.workId can be 0 in case of insert ....
-    this.work.cardElement.spaceBefore = GlobalFunctions.getSpaceBefore(this.work.workBegin, this.cardFormWorks,
-       this.workDay, this.work.workId);
-    this.work.cardElement.spaceAfter = GlobalFunctions.getSpaceAfter(this.work.workEnd, this.cardFormWorks,
-      this.workDay, this.work.workId);
-    this.work.cardElement.isShowTimeChange = false;
+    this.event.eventDuration = GlobalFunctions.getDateInMinutes(this.event.eventEnd)
+    - GlobalFunctions.getDateInMinutes(this.event.eventBegin);
+    this.event.cardElement.eventDurationDisplay = GlobalFunctions.minutesDisplay(this.event.eventDuration);
+    // this.event.eventId can be 0 in case of insert ....
+    this.event.cardElement.spaceBefore = GlobalFunctions.getSpaceBefore(this.event.eventBegin, this.cardFormEvents,
+       this.eventDay, this.event.eventId);
+    this.event.cardElement.spaceAfter = GlobalFunctions.getSpaceAfter(this.event.eventEnd, this.cardFormEvents,
+      this.eventDay, this.event.eventId);
+    this.event.cardElement.isShowTimeChange = false;
   }
 
-  public cancelTimeChangeView(event: {updateType: UpdateType, work: Work, id: number}) {
-    this.work.cardElement.isShowTimeChange = false;
+  public cancelTimeChangeView(event: {updateType: UpdateType, event: Event, id: number}) {
+    this.event.cardElement.isShowTimeChange = false;
   }
 
 
-  public setCustomerInfo() {
-    this.isCustomerInfo = !this.isCustomerInfo;
+  public setContactInfo() {
+    this.isContactInfo = !this.isContactInfo;
   }
 
   public setIssueInfo() {
@@ -759,23 +759,23 @@ private onChangesWorkType() {
 
   public onDateChanged(event: IMyDateModel): void {
     // console.log('onDateChanged(): ', event);
-    if (this.work.type < WorkType.timeSpanUndefined) {
+    if (this.event.type < EventType.timeSpanUndefined) {
       // in this surrounding we do not set isRange
-      if (!event.isRange && this.workContainer.updateType !== UpdateType.insert) {
+      if (!event.isRange && this.eventContainer.updateType !== UpdateType.insert) {
         const choosenDate = event.singleDate.jsDate;
-        if (GlobalFunctions.getDateInMinutes(this.workDay) !== GlobalFunctions.getDateInMinutes(choosenDate)) {
-          this.workDaySelected.emit(choosenDate);
+        if (GlobalFunctions.getDateInMinutes(this.eventDay) !== GlobalFunctions.getDateInMinutes(choosenDate)) {
+          this.eventDaySelected.emit(choosenDate);
         }
-        // we need no delay - we process targetWorkDay at ngOnChange
+        // we need no delay - we process targetEventDay at ngOnChange
         // setTimeout(() => {console.log('1 second finished!')}, 1000);
       }
     } else {
       const choosenDate = event.singleDate.jsDate;
-      this.work.workBegin = GlobalFunctions.getStartOfDay(choosenDate);
-      this.days = GlobalFunctions.getDateInDays(this.work.workEnd) - GlobalFunctions.getDateInDays(this.work.workBegin);
-      this.beginDisplay = formatDate(this.work.workBegin, 'EEE d.MM.yyyy', this.locale);
-      this.work.cardElement.workDurationDisplay = GlobalFunctions.minutesDisplay(GlobalFunctions.getDateInMinutes(this.work.workEnd) - GlobalFunctions.getDateInMinutes(this.work.workBegin));
-      this.addDpOptions(this.work);
+      this.event.eventBegin = GlobalFunctions.getStartOfDay(choosenDate);
+      this.days = GlobalFunctions.getDateInDays(this.event.eventEnd) - GlobalFunctions.getDateInDays(this.event.eventBegin);
+      this.beginDisplay = formatDate(this.event.eventBegin, 'EEE d.MM.yyyy', this.locale);
+      this.event.cardElement.eventDurationDisplay = GlobalFunctions.minutesDisplay(GlobalFunctions.getDateInMinutes(this.event.eventEnd) - GlobalFunctions.getDateInMinutes(this.event.eventBegin));
+      this.addDpOptions(this.event);
     }
   }
 
@@ -787,16 +787,16 @@ private onChangesWorkType() {
 
   public onEndDateChanged(event: IMyDateModel): void {
     // console.log('onDateChanged(): ', event);
-    if (this.work.type < WorkType.timeSpanUndefined) {
+    if (this.event.type < EventType.timeSpanUndefined) {
       // not possible - end date is defined automatically
     } else {
       const choosenDate = event.singleDate.jsDate;
-      // user choses date as last day of the time span - we store start of next day as workEnd
-      this.work.workEnd = GlobalFunctions.addDays(GlobalFunctions.getStartOfDay(choosenDate), 1);
-      this.days = GlobalFunctions.getDateInDays(this.work.workEnd) - GlobalFunctions.getDateInDays(this.work.workBegin);
-      this.endDisplay = formatDate(GlobalFunctions.addDays(this.work.workEnd, -1), 'EEE d.MM.yyyy', this.locale);
-      this.work.cardElement.workDurationDisplay = GlobalFunctions.minutesDisplay(GlobalFunctions.getDateInMinutes(this.work.workEnd) - GlobalFunctions.getDateInMinutes(this.work.workBegin));
-      this.addDpOptions(this.work);
+      // user choses date as last day of the time span - we store start of next day as eventEnd
+      this.event.eventEnd = GlobalFunctions.addDays(GlobalFunctions.getStartOfDay(choosenDate), 1);
+      this.days = GlobalFunctions.getDateInDays(this.event.eventEnd) - GlobalFunctions.getDateInDays(this.event.eventBegin);
+      this.endDisplay = formatDate(GlobalFunctions.addDays(this.event.eventEnd, -1), 'EEE d.MM.yyyy', this.locale);
+      this.event.cardElement.eventDurationDisplay = GlobalFunctions.minutesDisplay(GlobalFunctions.getDateInMinutes(this.event.eventEnd) - GlobalFunctions.getDateInMinutes(this.event.eventBegin));
+      this.addDpOptions(this.event);
     }
   }
 
@@ -807,7 +807,7 @@ private onChangesWorkType() {
   }
 
   public setAnotherIssue() {
-    // console.log('work-info: ', this.work.workInfo);
+    // console.log('event-info: ', this.event.eventInfo);
     this.ixSet = this.ixSelected >= 0 ? this.ixSelected : this.ixSet;
     if ((this.issueChoices[this.ixSet].value === 3 || this.issueChoices[this.ixSet].value >= 5)) {
       const defLocType = this.issueChoices[this.ixSet].defaultLocationType;
@@ -821,114 +821,114 @@ private onChangesWorkType() {
 
 
   public submitForm() {
-    this.work.summary = this.thisForm.value.bodyGroup.summary;
-    this.work.locationType = Number(this.thisForm.value.bodyGroup.locationType);
-    this.work.description = this.thisForm.value.bodyGroup.description;
-    this.work.location = this.thisForm.value.bodyGroup.location;
+    this.event.summary = this.thisForm.value.bodyGroup.summary;
+    this.event.locationType = Number(this.thisForm.value.bodyGroup.locationType);
+    this.event.description = this.thisForm.value.bodyGroup.description;
+    this.event.location = this.thisForm.value.bodyGroup.location;
     switch (true) {
       case (this.ixSet === 0):
-        this.work.customerNr = 0;
-        this.work.issueProviderId = 0;
-        this.work.nExternalIssueId = 0;
-        this.work.sExternalIssueId = '';
-        this.work.providerUrl = '';
-        this.work.login = '';
+        this.event.contactNr = 0;
+        this.event.issueProviderId = 0;
+        this.event.nExternalIssueId = 0;
+        this.event.sExternalIssueId = '';
+        this.event.providerUrl = '';
+        this.event.login = '';
         break;
       case (this.ixSet === 1 && this.issueChoices[1].value === 2):
-        this.work.customerNr = this.workContainer.work.customerNr;
-        this.work.issueProviderId = 0;
-        this.work.nExternalIssueId = 0;
-        this.work.sExternalIssueId = '';
-        this.work.providerUrl = '';
-        this.work.login = '';
+        this.event.contactNr = this.eventContainer.event.contactNr;
+        this.event.issueProviderId = 0;
+        this.event.nExternalIssueId = 0;
+        this.event.sExternalIssueId = '';
+        this.event.providerUrl = '';
+        this.event.login = '';
         break;
       case (this.ixSet === 1 && this.issueChoices[1].value === 3):
-        // customer and issue stay as they were ...
+        // contact and issue stay as they were ...
         break;
       case (this.ixSet >= 1 && this.issueChoices[this.ixSet].value === 4):
-        this.work.customerNr = this.workCustomer.customerNr;
-        this.work.issueProviderId = 0;
-        this.work.nExternalIssueId = 0;
-        this.work.sExternalIssueId = '';
-        this.work.providerUrl = '';
-        this.work.login = '';
+        this.event.contactNr = this.eventContact.contactNr;
+        this.event.issueProviderId = 0;
+        this.event.nExternalIssueId = 0;
+        this.event.sExternalIssueId = '';
+        this.event.providerUrl = '';
+        this.event.login = '';
         break;
       case (this.ixSet >= 1 && this.issueChoices[this.ixSet].value >= 5):
-        const choice = this.issueChoices[this.ixSet].workIssuesIndex;
-        this.work.customerNr = this.workIssues[choice].customerNr;
-        this.work.issueProviderId = this.workIssues[choice].issueProviderId;
-        this.work.nExternalIssueId = this.workIssues[choice].nExternalIssueId;
-        this.work.sExternalIssueId = this.workIssues[choice].sExternalIssueId;
-        this.work.providerUrl = this.workIssues[choice].providerUrl;
-        this.work.login = this.workIssues[choice].login;
+        const choice = this.issueChoices[this.ixSet].eventIssuesIndex;
+        this.event.contactNr = this.eventIssues[choice].contactNr;
+        this.event.issueProviderId = this.eventIssues[choice].issueProviderId;
+        this.event.nExternalIssueId = this.eventIssues[choice].nExternalIssueId;
+        this.event.sExternalIssueId = this.eventIssues[choice].sExternalIssueId;
+        this.event.providerUrl = this.eventIssues[choice].providerUrl;
+        this.event.login = this.eventIssues[choice].login;
         break;
     }
-    if (this.work.type < WorkType.timeSpanUndefined) {
-      // when updating real works (type < WorkType.timeSpanUndefined) it might be that there are associated works where customer, issue should also be updated
-      if (this.workContainer.updateType !== UpdateType.insert
-        && (this.work.customerNr !== this.workContainer.work.customerNr
-          || this.work.issueProviderId !== this.workContainer.work.issueProviderId
-          || this.work.nExternalIssueId !== this.workContainer.work.nExternalIssueId
-          || this.work.sExternalIssueId !== this.workContainer.work.sExternalIssueId
-          || this.work.providerUrl !== this.workContainer.work.providerUrl
-          || this.work.login !== this.workContainer.work.login)) {
-        this.workUpdateAssoc.emit({updateType: this.workContainer.updateType, work: this.work});
+    if (this.event.type < EventType.timeSpanUndefined) {
+      // when updating real events (type < EventType.timeSpanUndefined) it might be that there are associated events where contact, issue should also be updated
+      if (this.eventContainer.updateType !== UpdateType.insert
+        && (this.event.contactNr !== this.eventContainer.event.contactNr
+          || this.event.issueProviderId !== this.eventContainer.event.issueProviderId
+          || this.event.nExternalIssueId !== this.eventContainer.event.nExternalIssueId
+          || this.event.sExternalIssueId !== this.eventContainer.event.sExternalIssueId
+          || this.event.providerUrl !== this.eventContainer.event.providerUrl
+          || this.event.login !== this.eventContainer.event.login)) {
+        this.eventUpdateAssoc.emit({updateType: this.eventContainer.updateType, event: this.event});
       } else {
-        this.workUpdate.emit({updateType: this.workContainer.updateType, work: this.work});
+        this.eventUpdate.emit({updateType: this.eventContainer.updateType, event: this.event});
       }
     } else {
       let category = Number(this.thisForm.value.bodyGroup.category);
       if (category === 0 && this.timeSpanTypeChoices.length > 0) {
         category = Number(this.timeSpanTypeChoices[0].value);
       }
-      this.work.type = WorkType.timeSpanUndefined + category;
+      this.event.type = EventType.timeSpanUndefined + category;
       const ix = this.timeSpanTypeChoices.findIndex(_ => _.value === this.thisForm.value.bodyGroup.category);
       if (ix >= 0) {
         this.style = this.timeSpanTypeChoices[ix].style;
       } else {
         this.style = {};
       }
-      this.timeSpanUpdate.emit({updateType: this.workContainer.updateType, work: this.work});
+      this.timeSpanUpdate.emit({updateType: this.eventContainer.updateType, event: this.event});
     }
 
   }
 
   public setDone(): void {
     /*
-    if (this.work.doneId > 0 && confirm(this.txt['reset'] + ' ' + this.txt['done'] + '?')) {
-      this.work.doneId = 0;
+    if (this.event.doneId > 0 && confirm(this.txt['reset'] + ' ' + this.txt['done'] + '?')) {
+      this.event.doneId = 0;
       this.submitForm();
-    } else if (!(this.work.doneId > 0)) {
+    } else if (!(this.event.doneId > 0)) {
       if (this.isAfterToday) {
         alert(this.txt['set_to'] + ' ' + this.txt['done'] + ' ' + this.txt['not_allowed']);
       } else if (confirm(this.txt['set_to'] + ' ' + this.txt['done'] + '?')) {
-        this.work.doneId = this.work.workId;
+        this.event.doneId = this.event.eventId;
         this.submitForm();
       }
     }
     */
-    if (this.work.doneId > 0) {
-      this.work.doneId = 0;
-    }  else if (!(this.work.doneId > 0)) {
+    if (this.event.doneId > 0) {
+      this.event.doneId = 0;
+    }  else if (!(this.event.doneId > 0)) {
       if (this.isAfterToday) {
         alert(this.txt['set_to'] + ' ' + this.txt['done'] + ' ' + this.txt['not_allowed']);
       } else {
-        this.work.doneId = this.work.workId;
+        this.event.doneId = this.event.eventId;
       }
     }
   }
 
   public setDelete(): void {
-    if (this.work.type < WorkType.timeSpanUndefined) {
-      if (confirm(this.txt['work_disable'] + '?')) {
-        if (this.workContainer.updateType === UpdateType.update) {
-          this.workUpdate.emit({updateType: UpdateType.delete, work: this.work});
+    if (this.event.type < EventType.timeSpanUndefined) {
+      if (confirm(this.txt['event_disable'] + '?')) {
+        if (this.eventContainer.updateType === UpdateType.update) {
+          this.eventUpdate.emit({updateType: UpdateType.delete, event: this.event});
         }
       }
     } else {
       if (confirm(this.txt['time_span_disable'] + '?')) {
-        if (this.workContainer.updateType === UpdateType.update) {
-          this.timeSpanUpdate.emit({updateType: UpdateType.delete, work: this.work});
+        if (this.eventContainer.updateType === UpdateType.update) {
+          this.timeSpanUpdate.emit({updateType: UpdateType.delete, event: this.event});
         }
       }
     }
@@ -936,8 +936,8 @@ private onChangesWorkType() {
   }
 
   public cancelUpdates(): void {
-    if (this.workContainer.updateType !== UpdateType.insert) {
-      this.workUpdate.emit({updateType: UpdateType.cancelUpdate, work: this.work});
+    if (this.eventContainer.updateType !== UpdateType.insert) {
+      this.eventUpdate.emit({updateType: UpdateType.cancelUpdate, event: this.event});
     } else {
       this.cardFormCancel.emit();
     }

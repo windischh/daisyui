@@ -2,9 +2,9 @@ import { Component, OnInit, Input, EventEmitter, Output } from '@angular/core';
 
 import { GlobalFunctions } from '../../_globals/global-functions';
 
-import { IWorkOptions } from '../../_interfaces/i-work-options';
+import { IEventOptions } from '../../_interfaces/i-event-options';
 import { ConfigurationOption } from '../../_db/configuration-option';
-import { IUserWorkOptions } from '../../_interfaces/i-user-work-options';
+import { IUserEventOptions } from '../../_interfaces/i-user-event-options';
 import { FormsModule } from '@angular/forms';
 
 // TODO if we  need this construct otherwhere, we should make an interface ....
@@ -17,12 +17,12 @@ class HourObject {startHour: {value: string, isChecked: boolean}; lastHour: {val
   styleUrl: './calendar-day-options-view.css',
   imports: [FormsModule]
 })
-export class WorkDayOptionsViewComponent implements OnInit {
+export class EventDayOptionsViewComponent implements OnInit {
 
-  public name = 'WorkDayOptionsViewComponent';
+  public name = 'EventDayOptionsViewComponent';
 
   @Input({required: true}) txt: { [key: string]: string };
-  @Input({required: true}) userOpts: IUserWorkOptions;
+  @Input({required: true}) userOpts: IUserEventOptions;
   @Input({required: true}) options: ConfigurationOption[];
 
   persistChoices: Array<{value: string, isChecked: boolean}> = [];
@@ -38,7 +38,7 @@ export class WorkDayOptionsViewComponent implements OnInit {
 
   hourChoices: HourObject[] = [];
 
-  @Output() optsUpdate = new EventEmitter<IUserWorkOptions>();
+  @Output() optsUpdate = new EventEmitter<IUserEventOptions>();
   @Output() optsStore = new EventEmitter();
 
   documentWidth = document.documentElement.clientWidth;
@@ -99,7 +99,7 @@ export class WorkDayOptionsViewComponent implements OnInit {
 
   private getStyles() {
     this.styleChoices = [];
-    this.options.filter(_ => _.optionArea === 'workCalendar'
+    this.options.filter(_ => _.optionArea === 'eventCalendar'
       && _.optionName.substr(_.optionArea.length + 4) === 'opt_style_name'
     ).forEach(_ => {
       const styleString  = _.optionName.substr(_.optionArea.length + 1, 2);
@@ -126,7 +126,7 @@ export class WorkDayOptionsViewComponent implements OnInit {
     // console.log('setPersist ', JSON.stringify(event));
     if (event.target.value) {
       // we must clone opts to get a new object reference for this.opts in model
-      const userOpts: IUserWorkOptions = GlobalFunctions.clone(this.userOpts);
+      const userOpts: IUserEventOptions = GlobalFunctions.clone(this.userOpts);
       this.persistChoices.forEach(_ => {
         if (_.value === event.target.value && event.target.checked) {
           _.isChecked = true;
@@ -142,7 +142,7 @@ export class WorkDayOptionsViewComponent implements OnInit {
   public selectStyle(event: any) {
     if (event.target.value) {
       // we must clone opts to get a new object reference for this.opts in model
-      const userOpts: IUserWorkOptions = GlobalFunctions.clone(this.userOpts);
+      const userOpts: IUserEventOptions = GlobalFunctions.clone(this.userOpts);
       this.styleChoices.forEach(_ => {
         if (_.value === Number(event.target.value)) {
           _.isSelected = true;
@@ -157,7 +157,7 @@ export class WorkDayOptionsViewComponent implements OnInit {
 
   public setTimeSlize(event: any) {
     // we must clone opts to get a new object reference for this.opts in model
-    const userOpts: IUserWorkOptions = GlobalFunctions.clone(this.userOpts);
+    const userOpts: IUserEventOptions = GlobalFunctions.clone(this.userOpts);
     this.timeSlizeChoices.forEach(_ => {
       if (_.value === Number(event.target.value) && event.target.checked) {
         userOpts.timeSlize = _.value;
@@ -172,7 +172,7 @@ export class WorkDayOptionsViewComponent implements OnInit {
   public setStartHour(event: any) {
     if (event.target.value) {
       // we must clone opts to get a new object reference for this.opts in model
-      const userOpts: IUserWorkOptions = GlobalFunctions.clone(this.userOpts);
+      const userOpts: IUserEventOptions = GlobalFunctions.clone(this.userOpts);
       this.startHourChoices.forEach(_ => {
         if (_.value === event.target.value && event.target.checked) {
           _.isChecked = true;
@@ -192,7 +192,7 @@ export class WorkDayOptionsViewComponent implements OnInit {
   public setLastHour(event: any) {
     if (event.target.value) {
       // we must clone opts to get a new object reference for this.opts in model
-      const userOpts: IUserWorkOptions = GlobalFunctions.clone(this.userOpts);
+      const userOpts: IUserEventOptions = GlobalFunctions.clone(this.userOpts);
       this.lastHourChoices.forEach(_ => {
         if (_.value === event.target.value && event.target.checked) {
           _.isChecked = true;
@@ -211,7 +211,7 @@ export class WorkDayOptionsViewComponent implements OnInit {
 
   public setMaxCustSel(event: any) {
     // we must clone opts to get a new object reference for this.opts in model
-    const userOpts: IUserWorkOptions = GlobalFunctions.clone(this.userOpts);
+    const userOpts: IUserEventOptions = GlobalFunctions.clone(this.userOpts);
     this.maxCustSelChoices.forEach(_ => {
       if (_.value === Number(event.target.value) && event.target.checked) {
         userOpts.maxIssueSelections = _.value;

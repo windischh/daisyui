@@ -7,26 +7,26 @@ import { StyleFactory } from '../../_globals/style-factory';
 import { LocationType } from '../../_enums/location-type.enum';
 import { UpdateType } from '../../_enums/update-type.enum';
 
-import { Work } from '../../_db/work';
-import { WorkFactory } from '../../_db/work-factory';
+import { Event } from '../../_db/event';
+import { EventFactory } from '../../_db/event-factory';
 import { Session } from '../../_db/session';
 import { ConfigurationOption } from '../../_db/configuration-option';
 
 import { INumChoice } from '../../_interfaces/i-num-choice';
-import { IUserWorkOptions } from '../../_interfaces/i-user-work-options';
-import { IWorkOptions } from '../../_interfaces/i-work-options';
-import { WorkDayTimeChangeComponent } from '../work-day-time-change/work-day-time-change.component';
+import { IUserEventOptions } from '../../_interfaces/i-user-event-options';
+import { IEventOptions } from '../../_interfaces/i-event-options';
+import { EventDayTimeChangeComponent } from '../event-day-time-change/event-day-time-change.component';
 
 
 @Component({
   selector: 'dsy-calendar-day-cards-view',
   templateUrl: './calendar-day-cards-view.html',
   styleUrl: './calendar-day-cards-view.css',
-  imports: [NgClass, WorkDayTimeChangeComponent, NgStyle, SlicePipe, DatePipe]
+  imports: [NgClass, EventDayTimeChangeComponent, NgStyle, SlicePipe, DatePipe]
 })
-export class WorkDayCardsViewComponent implements OnInit {
+export class EventDayCardsViewComponent implements OnInit {
 
-  public name = 'WorkDayCardsViewComponent';
+  public name = 'EventDayCardsViewComponent';
 
   @Input({required: true}) session: Session;
 
@@ -34,35 +34,35 @@ export class WorkDayCardsViewComponent implements OnInit {
   @Input({required: true}) locale: string;
 
   @Input({required: true}) txt: { [key: string]: string };
-  @Input({required: true}) worktxt: { [key: string]: string };
+  @Input({required: true}) eventtxt: { [key: string]: string };
 
   @Input({required: true}) options: Array<ConfigurationOption>;
-  // startHour, timeSlize, defaultIntervalSize are model parameters, managed by work-day-component
-  @Input({required: true}) opts: IWorkOptions;
-  @Input({required: true}) userOpts: IUserWorkOptions;
+  // startHour, timeSlize, defaultIntervalSize are model parameters, managed by event-day-component
+  @Input({required: true}) opts: IEventOptions;
+  @Input({required: true}) userOpts: IUserEventOptions;
 
-  // day of work - 00:00 in browser timezone
+  // day of event - 00:00 in browser timezone
   // can be selected by user
-  // workDay is in opts @Input({required: true}) workDay: Date;
-  workDayDisplay = '';
+  // eventDay is in opts @Input({required: true}) eventDay: Date;
+  eventDayDisplay = '';
   dateString = '';
 
   isAfterToday = false;
 
-  @Input({required: true}) works: Array<Work>;
-  @Input({required: true}) worksChangeCounter: number;
+  @Input({required: true}) events: Array<Event>;
+  @Input({required: true}) eventsChangeCounter: number;
 
   @Input({required: true}) isCreating: boolean;
   @Input({required: true}) isSelecting: boolean;
 
-  @Output() workSelect = new EventEmitter<{isSelect: boolean, id: number}>();
-  // this view updates only work summary, begin, end
-  @Output() workUpdate = new EventEmitter<{updateType: UpdateType, work: Work}>();
-  @Output() workCreate = new EventEmitter<boolean>();
-  @Output() cardFormViewEnabled = new EventEmitter<{updateType: UpdateType, work: Work, d: Date}>();
+  @Output() eventSelect = new EventEmitter<{isSelect: boolean, id: number}>();
+  // this view updates only event summary, begin, end
+  @Output() eventUpdate = new EventEmitter<{updateType: UpdateType, event: Event}>();
+  @Output() eventCreate = new EventEmitter<boolean>();
+  @Output() cardFormViewEnabled = new EventEmitter<{updateType: UpdateType, event: Event, d: Date}>();
 
-  // workCards are enhanced works (time-picker attributes are set via mapping) and have same cardinality and sort-order as works
-  workCards: Array<Work>;
+  // eventCards are enhanced events (time-picker attributes are set via mapping) and have same cardinality and sort-order as events
+  eventCards: Array<Event>;
 
   locationTypeEnum: typeof LocationType = LocationType;
 
@@ -71,7 +71,7 @@ export class WorkDayCardsViewComponent implements OnInit {
   // which time should be updated 1 begin, 2 end, 3 duration
   changeType: number;
 
-  isWorksLoaded = false;
+  isEventsLoaded = false;
 
 
 
@@ -82,41 +82,41 @@ export class WorkDayCardsViewComponent implements OnInit {
   }
 
   ngOnChanges(changes: {[propKey: string]: SimpleChange}) {
-    let isSetWorks = false;
+    let isSetEvents = false;
     for (const [propKey, propValue] of Object.entries(changes)) {
       if (propKey === 'opts') {
         // this.opts = propValue.currentValue;
-        if (this.session?.workDay) {
-          this.getWorkParameters();
+        if (this.session?.eventDay) {
+          this.getEventParameters();
         }
       }
-      if (propKey === 'works' || propKey === 'worksChangeCounter') {
-        isSetWorks = true;
+      if (propKey === 'events' || propKey === 'eventsChangeCounter') {
+        isSetEvents = true;
       }
-      // console.log('work-day-cards propkey: ', propKey, 'propvalue: ', JSON.stringify(propValue));
+      // console.log('event-day-cards propkey: ', propKey, 'propvalue: ', JSON.stringify(propValue));
     }
-    if (isSetWorks) {
-      this.isWorksLoaded = false;
-      if (this.works && this.works.length > 0 && this.session?.workDay) {
-        const realWorks = this.works.filter(_ => GlobalFunctions.isMinuteSameOrEarlier(this.session.workDay, _.workBegin)
-        && GlobalFunctions.isMinuteEarlier(_.workBegin, GlobalFunctions.addDays(this.session.workDay, 1) ) );
-        if (realWorks && realWorks?.length > 0) {
-          this.buildWorkCards(this.works);
-        } else if (this.session?.workDay) {
+    if (isSetEvents) {
+      this.isEventsLoaded = false;
+      if (this.events && this.events.length > 0 && this.session?.eventDay) {
+        const realEvents = this.events.filter(_ => GlobalFunctions.isMinuteSameOrEarlier(this.session.eventDay, _.eventBegin)
+        && GlobalFunctions.isMinuteEarlier(_.eventBegin, GlobalFunctions.addDays(this.session.eventDay, 1) ) );
+        if (realEvents && realEvents?.length > 0) {
+          this.buildEventCards(this.events);
+        } else if (this.session?.eventDay) {
           this.addDayStartCard();
         }
-      } else if (this.session?.workDay) {
+      } else if (this.session?.eventDay) {
         this.addDayStartCard();
       }
-      this.isWorksLoaded = true;
+      this.isEventsLoaded = true;
     }
   }
 
-  private getWorkParameters() {
+  private getEventParameters() {
     // defaultIntervlLength is taken from opts in "prepareInsert()"
-    this.workDayDisplay = formatDate( this.session.workDay, 'EEE dd.MM.yyyy', this.locale);
+    this.eventDayDisplay = formatDate( this.session.eventDay, 'EEE dd.MM.yyyy', this.locale);
     const tomorrow = GlobalFunctions.addDays(GlobalFunctions.getStartOfDay(new Date()), 1);
-    this.isAfterToday = GlobalFunctions.getDateInMinutes(this.session.workDay) >= GlobalFunctions.getDateInMinutes(tomorrow);
+    this.isAfterToday = GlobalFunctions.getDateInMinutes(this.session.eventDay) >= GlobalFunctions.getDateInMinutes(tomorrow);
   }
 
   private buildLocationTypeChoices(): Array<INumChoice>  {
@@ -131,42 +131,42 @@ export class WorkDayCardsViewComponent implements OnInit {
 
 
   private addDayStartCard() {
-    const dayStartDummy = WorkFactory.empty();
-    dayStartDummy.workBegin = GlobalFunctions.addMinutes(this.session.workDay, this.userOpts.startHour * 60);
-    dayStartDummy.workEnd = dayStartDummy.workBegin;
+    const dayStartDummy = EventFactory.empty();
+    dayStartDummy.eventBegin = GlobalFunctions.addMinutes(this.session.eventDay, this.userOpts.startHour * 60);
+    dayStartDummy.eventEnd = dayStartDummy.eventBegin;
     dayStartDummy.summary = (this.session?.isPlan ? this.txt['no_plan_entry'] : this.txt['no_entry'] );
-    const worksDummy: Array<Work> = [];
-    worksDummy.push(dayStartDummy);
-    this.buildWorkCards(worksDummy);
+    const eventsDummy: Array<Event> = [];
+    eventsDummy.push(dayStartDummy);
+    this.buildEventCards(eventsDummy);
   }
 
 
   /**
-   * we build workCards from works
-   * (attention: we use this function also for dummyWorks)
+   * we build eventCards from events
+   * (attention: we use this function also for dummyEvents)
    */
-  private buildWorkCards(works: Array<Work>) {
-    this.workCards = works.filter(_ => GlobalFunctions.isMinuteSameOrEarlier(this.session.workDay, _.workBegin)
-    && GlobalFunctions.isMinuteEarlier(_.workBegin, GlobalFunctions.addDays(this.session.workDay, 1)) );
-    this.workCards.map((card) => {
-      const workDurationDisplay = GlobalFunctions.minutesDisplay(card.workDuration);
+  private buildEventCards(events: Array<Event>) {
+    this.eventCards = events.filter(_ => GlobalFunctions.isMinuteSameOrEarlier(this.session.eventDay, _.eventBegin)
+    && GlobalFunctions.isMinuteEarlier(_.eventBegin, GlobalFunctions.addDays(this.session.eventDay, 1)) );
+    this.eventCards.map((card) => {
+      const eventDurationDisplay = GlobalFunctions.minutesDisplay(card.eventDuration);
       let custIssueNr = '';
       let custIssueName = '';
       let custStyle = {};
-      if (card.customerNr > 0) {
+      if (card.contactNr > 0) {
         if (card.issueProviderId > 0) {
-          custIssueNr = card.workInfo.customerDisplayNr;
-          custIssueName = card.workInfo.customerName;
+          custIssueNr = card.eventInfo.contactDisplayNr;
+          custIssueName = card.eventInfo.contactName;
         } else {
-          custIssueNr = card.workInfo.issueDisplayNr;
-          custIssueName = card.workInfo.customerName+ ' | ' + card.workInfo.issueText;
+          custIssueNr = card.eventInfo.issueDisplayNr;
+          custIssueName = card.eventInfo.contactName+ ' | ' + card.eventInfo.issueText;
         }
-        custStyle = StyleFactory.getBgColorStyle(card.workInfo.customerColor, 0);
+        custStyle = StyleFactory.getBgColorStyle(card.eventInfo.contactColor, 0);
       }
-      // work might be updated in another view, but all workCards ar set to update = false;
+      // event might be updated in another view, but all eventCards ar set to update = false;
       card.cardElement = {spaceBefore: 0, spaceAfter: 0, isTemporary: false, isSummaryUpdated: false,
-        workDurationDisplay, custIssueNr: custIssueNr, custIssueName, custStyle};
-      // console.log('map models for ', JSON.stringify(work));
+        eventDurationDisplay, custIssueNr: custIssueNr, custIssueName, custStyle};
+      // console.log('map models for ', JSON.stringify(event));
       return card;
     });
     this.actualizeCardElements();
@@ -174,24 +174,24 @@ export class WorkDayCardsViewComponent implements OnInit {
 
 
   private actualizeCardElements() {
-    // we add work from previous day, reaching to this day and first work of next day
-    const allWorks = GlobalFunctions.buildWorks(this.works, this.session.workDay, true, true);
-    this.workCards.forEach((card) => {
-      card.cardElement.spaceBefore = GlobalFunctions.getSpaceBefore(card.workBegin, allWorks, this.session.workDay);
-      card.cardElement.spaceAfter = GlobalFunctions.getSpaceAfter(card.workEnd, allWorks, this.session.workDay);
+    // we add event from previous day, reaching to this day and first event of next day
+    const allEvents = GlobalFunctions.buildEvents(this.events, this.session.eventDay, true, true);
+    this.eventCards.forEach((card) => {
+      card.cardElement.spaceBefore = GlobalFunctions.getSpaceBefore(card.eventBegin, allEvents, this.session.eventDay);
+      card.cardElement.spaceAfter = GlobalFunctions.getSpaceAfter(card.eventEnd, allEvents, this.session.eventDay);
 
-      // for shift before (= before work which is before selected works)
-      const earlierBegin = GlobalFunctions.getPreviousBegin(card.workBegin, card.workDuration, allWorks, this.session.workDay);
-      card.cardElement.shiftSpaceBefore = earlierBegin ? GlobalFunctions.getDateInMinutes(card.workBegin) - GlobalFunctions.getDateInMinutes(earlierBegin) : 0;
+      // for shift before (= before event which is before selected events)
+      const earlierBegin = GlobalFunctions.getPreviousBegin(card.eventBegin, card.eventDuration, allEvents, this.session.eventDay);
+      card.cardElement.shiftSpaceBefore = earlierBegin ? GlobalFunctions.getDateInMinutes(card.eventBegin) - GlobalFunctions.getDateInMinutes(earlierBegin) : 0;
       // console.log('shiftSpaceBefore', this.shiftSpaceBefore);
 
-      // for shift after (= after work which is after selected works)
-      const laterBegin = GlobalFunctions.getNextBegin(card.workBegin, card.workDuration, allWorks, this.session.workDay);
-      card.cardElement.shiftSpaceAfter = laterBegin ? GlobalFunctions.getDateInMinutes(laterBegin) - GlobalFunctions.getDateInMinutes(card.workBegin) : 0;
+      // for shift after (= after event which is after selected events)
+      const laterBegin = GlobalFunctions.getNextBegin(card.eventBegin, card.eventDuration, allEvents, this.session.eventDay);
+      card.cardElement.shiftSpaceAfter = laterBegin ? GlobalFunctions.getDateInMinutes(laterBegin) - GlobalFunctions.getDateInMinutes(card.eventBegin) : 0;
       // console.log('shiftSpaceAfter', this.shiftSpaceAfter);
 
-      if (!GlobalFunctions.isMinuteSame(card.workBegin, card.workEnd)) {
-        card.cardElement.isEndOnNextDay = card.workEnd.getTime() >= GlobalFunctions.addDays(this.session.workDay, 1).getTime();
+      if (!GlobalFunctions.isMinuteSame(card.eventBegin, card.eventEnd)) {
+        card.cardElement.isEndOnNextDay = card.eventEnd.getTime() >= GlobalFunctions.addDays(this.session.eventDay, 1).getTime();
         card.cardElement.locationTypeChoices = this.buildLocationTypeChoices();
         const ix = card.cardElement.locationTypeChoices.findIndex(_ => _.value === card.locationType);
         if (ix >= 0) {
@@ -211,8 +211,8 @@ export class WorkDayCardsViewComponent implements OnInit {
       // console.log(`parent id is`, target.parentElement.id);
     } else {
       // console.log(`You clicked on`, target);
-      if (this.workCards) {
-        this.workCards.forEach(_ => {
+      if (this.eventCards) {
+        this.eventCards.forEach(_ => {
           _.cardElement.isShowLocationTypeDropdown = false;
         });
       }
@@ -221,65 +221,65 @@ export class WorkDayCardsViewComponent implements OnInit {
 
   /** ------------------------  public methods --------------------------------------------------- */
 
-  public setCustomerBgColorStyle (customerColor: string) {
-    return StyleFactory.getBgColorStyle(customerColor, 0);
+  public setContactBgColorStyle (contactColor: string) {
+    return StyleFactory.getBgColorStyle(contactColor, 0);
   }
 
   public shiftBefore(i: number) {
-    this.workCards[i].workBegin = GlobalFunctions.addMinutes(this.workCards[i].workBegin, -1 * this.workCards[i].cardElement.shiftSpaceBefore);
-    this.workCards[i].workEnd = GlobalFunctions.addMinutes(this.workCards[i].workEnd, -1 * this.workCards[i].cardElement.shiftSpaceBefore);
+    this.eventCards[i].eventBegin = GlobalFunctions.addMinutes(this.eventCards[i].eventBegin, -1 * this.eventCards[i].cardElement.shiftSpaceBefore);
+    this.eventCards[i].eventEnd = GlobalFunctions.addMinutes(this.eventCards[i].eventEnd, -1 * this.eventCards[i].cardElement.shiftSpaceBefore);
     // actualized by onChanges
     // this.actualizeCardElements();
-    if (!this.workCards[i].cardElement.isTemporary) {
-      this.workUpdate.emit({updateType: UpdateType.update, work: this.workCards[i]});
+    if (!this.eventCards[i].cardElement.isTemporary) {
+      this.eventUpdate.emit({updateType: UpdateType.update, event: this.eventCards[i]});
     }
   }
 
   public shiftAfter(i: number) {
-    this.workCards[i].workBegin = GlobalFunctions.addMinutes(this.workCards[i].workBegin, this.workCards[i].cardElement.shiftSpaceAfter);
-    this.workCards[i].workEnd =  GlobalFunctions.addMinutes( this.workCards[i].workEnd, this.workCards[i].cardElement.shiftSpaceAfter);
+    this.eventCards[i].eventBegin = GlobalFunctions.addMinutes(this.eventCards[i].eventBegin, this.eventCards[i].cardElement.shiftSpaceAfter);
+    this.eventCards[i].eventEnd =  GlobalFunctions.addMinutes( this.eventCards[i].eventEnd, this.eventCards[i].cardElement.shiftSpaceAfter);
     // actualized by onChanges
     // this.actualizeCardElements();
-    if (!this.workCards[i].cardElement.isTemporary) {
-      this.workUpdate.emit({updateType: UpdateType.update, work: this.workCards[i]});
+    if (!this.eventCards[i].cardElement.isTemporary) {
+      this.eventUpdate.emit({updateType: UpdateType.update, event: this.eventCards[i]});
     }
   }
 
 
    /**
    * insert - button (left side of card) pressed by user
-   * @param index of work - we use workBegim of work where insert symbol was clicked as workEnd for new work
+   * @param index of event - we use eventBegim of event where insert symbol was clicked as eventEnd for new event
    */
   public insertBefore(i: number): void {
-    if (this.workCards.filter(_ => _.cardElement.isSummaryUpdated || _.cardElement.isShowTimeChange).length === 0
-    && (!this.session.isPlan || GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date())) <= GlobalFunctions.getDateInMinutes(this.session.workDay))) {
-      const newWork = WorkFactory.empty();
-      newWork.type = this.session.isPlan ? 0 : 1;
-      newWork.workEnd = this.workCards[i].workBegin;
-      if (newWork.workEnd.getMinutes() < this.opts.defaultIntervalLength) {
-        newWork.workDuration = newWork.workEnd.getMinutes();
+    if (this.eventCards.filter(_ => _.cardElement.isSummaryUpdated || _.cardElement.isShowTimeChange).length === 0
+    && (!this.session.isPlan || GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date())) <= GlobalFunctions.getDateInMinutes(this.session.eventDay))) {
+      const newEvent = EventFactory.empty();
+      newEvent.type = this.session.isPlan ? 0 : 1;
+      newEvent.eventEnd = this.eventCards[i].eventBegin;
+      if (newEvent.eventEnd.getMinutes() < this.opts.defaultIntervalLength) {
+        newEvent.eventDuration = newEvent.eventEnd.getMinutes();
       } else {
-        newWork.workDuration = this.opts.defaultIntervalLength;
+        newEvent.eventDuration = this.opts.defaultIntervalLength;
       }
-      if (newWork.workDuration > 0) {
-        newWork.workBegin = GlobalFunctions.addMinutes(newWork.workEnd, -1 * newWork.workDuration);
-        // adding work from previous day
-        const allWorks = GlobalFunctions.buildWorks(this.works, this.session.workDay, true, false);
-        let previousWork: Work = GlobalFunctions.getPreviousWork(allWorks, newWork.workBegin);
-        // if overlapping, workBegin is set to previous workEnd
-        if (previousWork && GlobalFunctions.isMinuteEarlier(newWork.workBegin, previousWork.workEnd )) {
-          newWork.workBegin = previousWork.workEnd;
+      if (newEvent.eventDuration > 0) {
+        newEvent.eventBegin = GlobalFunctions.addMinutes(newEvent.eventEnd, -1 * newEvent.eventDuration);
+        // adding event from previous day
+        const allEvents = GlobalFunctions.buildEvents(this.events, this.session.eventDay, true, false);
+        let previousEvent: Event = GlobalFunctions.getPreviousEvent(allEvents, newEvent.eventBegin);
+        // if overlapping, eventBegin is set to previous eventEnd
+        if (previousEvent && GlobalFunctions.isMinuteEarlier(newEvent.eventBegin, previousEvent.eventEnd )) {
+          newEvent.eventBegin = previousEvent.eventEnd;
         }
-        newWork.workDuration = GlobalFunctions.getDateInMinutes(newWork.workEnd)
-        - GlobalFunctions.getDateInMinutes(newWork.workBegin);
-        const workDurationDisplay = GlobalFunctions.minutesDisplay(newWork.workDuration);
-        newWork.cardElement = {isTemporary: true, isSummaryUpdated: true, spaceBefore: 0, spaceAfter: 0,
-          workDurationDisplay, custIssueNr: '', custIssueName: ''};
-        this.workCards = this.workCards.filter(_ =>_.workBegin < _.workEnd);
-        this.workCards.push(newWork);
-        this.workCards.sort((a, b) => a.workBegin.getTime() - b.workBegin.getTime());
+        newEvent.eventDuration = GlobalFunctions.getDateInMinutes(newEvent.eventEnd)
+        - GlobalFunctions.getDateInMinutes(newEvent.eventBegin);
+        const eventDurationDisplay = GlobalFunctions.minutesDisplay(newEvent.eventDuration);
+        newEvent.cardElement = {isTemporary: true, isSummaryUpdated: true, spaceBefore: 0, spaceAfter: 0,
+          eventDurationDisplay, custIssueNr: '', custIssueName: ''};
+        this.eventCards = this.eventCards.filter(_ =>_.eventBegin < _.eventEnd);
+        this.eventCards.push(newEvent);
+        this.eventCards.sort((a, b) => a.eventBegin.getTime() - b.eventBegin.getTime());
         this.actualizeCardElements();
-        this.workCreate.emit(true);
+        this.eventCreate.emit(true);
       }
     } else {
       alert(this.txt['notPossible']);
@@ -288,38 +288,38 @@ export class WorkDayCardsViewComponent implements OnInit {
 
   /**
    * insert - button (right side of card) pressed by user
-   * @param i - index of work - we use workEnd of work where insert symbol was clicked as workStart for new work
+   * @param i - index of event - we use eventEnd of event where insert symbol was clicked as eventStart for new event
    */
   public insertAfter(i: number): void {
-    if (this.workCards.filter(_ => _.cardElement.isSummaryUpdated || _.cardElement.isShowTimeChange).length === 0
-    && (!this.session.isPlan || GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date())) <= GlobalFunctions.getDateInMinutes(this.session.workDay))) {
-      const newWork = WorkFactory.empty();
-      newWork.type = this.session.isPlan ? 0 : 1;
-      newWork.workBegin = this.workCards[i].workEnd;
-      newWork.workDuration = this.opts.defaultIntervalLength;
-      newWork.workEnd = GlobalFunctions.addMinutes(newWork.workBegin, newWork.workDuration);
-      // adding first work on next day
-      const allWorks = GlobalFunctions.buildWorks(this.works,  this.session.workDay, false, true);
-      let nextWork: Work = GlobalFunctions.getNextWork(allWorks, newWork.workBegin);
-      // if we get this processed work as next work we search for real next work
+    if (this.eventCards.filter(_ => _.cardElement.isSummaryUpdated || _.cardElement.isShowTimeChange).length === 0
+    && (!this.session.isPlan || GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date())) <= GlobalFunctions.getDateInMinutes(this.session.eventDay))) {
+      const newEvent = EventFactory.empty();
+      newEvent.type = this.session.isPlan ? 0 : 1;
+      newEvent.eventBegin = this.eventCards[i].eventEnd;
+      newEvent.eventDuration = this.opts.defaultIntervalLength;
+      newEvent.eventEnd = GlobalFunctions.addMinutes(newEvent.eventBegin, newEvent.eventDuration);
+      // adding first event on next day
+      const allEvents = GlobalFunctions.buildEvents(this.events,  this.session.eventDay, false, true);
+      let nextEvent: Event = GlobalFunctions.getNextEvent(allEvents, newEvent.eventBegin);
+      // if we get this processed event as next event we search for real next event
       // here we need this only for dayStartCard
-      if (nextWork && GlobalFunctions.isMinuteSame (nextWork.workBegin, this.workCards[i].workBegin)) {
-        nextWork = GlobalFunctions.getNextWork(allWorks, GlobalFunctions.addMinutes(this.workCards[i].workBegin, 1));
+      if (nextEvent && GlobalFunctions.isMinuteSame (nextEvent.eventBegin, this.eventCards[i].eventBegin)) {
+        nextEvent = GlobalFunctions.getNextEvent(allEvents, GlobalFunctions.addMinutes(this.eventCards[i].eventBegin, 1));
       }
-      // if overlapping, workEnd is set to begin of next work, duration is shortened
-      if (nextWork && GlobalFunctions.isMinuteEarlier(nextWork.workBegin, newWork.workEnd )) {
-        newWork.workEnd = nextWork.workBegin;
+      // if overlapping, eventEnd is set to begin of next event, duration is shortened
+      if (nextEvent && GlobalFunctions.isMinuteEarlier(nextEvent.eventBegin, newEvent.eventEnd )) {
+        newEvent.eventEnd = nextEvent.eventBegin;
       }
-      newWork.workDuration = GlobalFunctions.getDateInMinutes(newWork.workEnd)
-      - GlobalFunctions.getDateInMinutes(newWork.workBegin);
-      const workDurationDisplay = GlobalFunctions.minutesDisplay(newWork.workDuration);
-      newWork.cardElement = {isTemporary: true, isSummaryUpdated: true, spaceBefore: 0, spaceAfter: 0, workDurationDisplay,
+      newEvent.eventDuration = GlobalFunctions.getDateInMinutes(newEvent.eventEnd)
+      - GlobalFunctions.getDateInMinutes(newEvent.eventBegin);
+      const eventDurationDisplay = GlobalFunctions.minutesDisplay(newEvent.eventDuration);
+      newEvent.cardElement = {isTemporary: true, isSummaryUpdated: true, spaceBefore: 0, spaceAfter: 0, eventDurationDisplay,
         custIssueNr: '', custIssueName: ''};
-      this.workCards = this.workCards.filter(_ =>_.workBegin < _.workEnd);
-      this.workCards.push(newWork);
-      this.workCards.sort((a, b) => a.workBegin.getTime() - b.workBegin.getTime());
+      this.eventCards = this.eventCards.filter(_ =>_.eventBegin < _.eventEnd);
+      this.eventCards.push(newEvent);
+      this.eventCards.sort((a, b) => a.eventBegin.getTime() - b.eventBegin.getTime());
       this.actualizeCardElements();
-      this.workCreate.emit(true);
+      this.eventCreate.emit(true);
     } else {
       alert(this.txt['notPossible']);
     }
@@ -328,51 +328,51 @@ export class WorkDayCardsViewComponent implements OnInit {
 
 
   public setShowTimeChange(i: number, type: number) {
-    if (this.workCards.filter(_ => _.cardElement.isSummaryUpdated || _.cardElement.isShowTimeChange).length === 0 || this.workCards[i].cardElement.isTemporary) {
+    if (this.eventCards.filter(_ => _.cardElement.isSummaryUpdated || _.cardElement.isShowTimeChange).length === 0 || this.eventCards[i].cardElement.isTemporary) {
       this.changeType = type;
-      this.workCards[i].cardElement.isShowTimeChange = true;
+      this.eventCards[i].cardElement.isShowTimeChange = true;
     }
   }
 
-  public timeUpdate(event: {updateType: UpdateType, work: Work, id: number}) {
-    const i = this.workCards.findIndex(_ => _.workId === event.id);
+  public timeUpdate(event: {updateType: UpdateType, event: Event, id: number}) {
+    const i = this.eventCards.findIndex(_ => _.eventId === event.id);
     if (i >= 0) {
-      this.workCards[i] = event.work;
-      this.workCards[i].workEnd = this.getNewEnd(event.work.workBegin, event.work.workEnd);
-      this.workCards[i].cardElement.isShowTimeChange = false;
+      this.eventCards[i] = event.event;
+      this.eventCards[i].eventEnd = this.getNewEnd(event.event.eventBegin, event.event.eventEnd);
+      this.eventCards[i].cardElement.isShowTimeChange = false;
       this.actualizeCardElements();
-      if (!this.workCards[i].cardElement.isTemporary) {
-        this.workUpdate.emit({updateType: UpdateType.update, work: this.workCards[i]});
+      if (!this.eventCards[i].cardElement.isTemporary) {
+        this.eventUpdate.emit({updateType: UpdateType.update, event: this.eventCards[i]});
       }
     }
   }
 
-  public cancelTimeChangeView(event: {updateType: UpdateType, work: Work, id: number}) {
-    const i = this.workCards.findIndex(_ => _.workId === event.id);
+  public cancelTimeChangeView(event: {updateType: UpdateType, event: Event, id: number}) {
+    const i = this.eventCards.findIndex(_ => _.eventId === event.id);
     if (i >= 0) {
-      this.workCards[i].cardElement.isShowTimeChange = false;
+      this.eventCards[i].cardElement.isShowTimeChange = false;
     }
   }
 
 
-  public selectWork(i: number) {
+  public selectEvent(i: number) {
     // console.log('select:', i);
-    if (this.workCards[i].isSelected) {
-      this.workCards[i].isSelected = false;
+    if (this.eventCards[i].isSelected) {
+      this.eventCards[i].isSelected = false;
     } else {
-      this.workCards[i].isSelected = true;
+      this.eventCards[i].isSelected = true;
     }
-    if (!this.workCards[i].cardElement.isTemporary) {
-      this.workSelect.emit({isSelect: this.workCards[i].isSelected, id: this.workCards[i].workId});
+    if (!this.eventCards[i].cardElement.isTemporary) {
+      this.eventSelect.emit({isSelect: this.eventCards[i].isSelected, id: this.eventCards[i].eventId});
     }
   }
 
 
   public showLocationType(i: any) {
-    if (this.workCards[i].cardElement.isShowLocationTypeDropdown) {
-      this.workCards[i].cardElement.isShowLocationTypeDropdown = false;
-    } else if (this.workCards.filter(_ => _.cardElement.isSummaryUpdated || _.cardElement.isShowTimeChange).length === 0 || this.workCards[i].cardElement.isTemporary) {
-      this.workCards[i].cardElement.isShowLocationTypeDropdown = true;
+    if (this.eventCards[i].cardElement.isShowLocationTypeDropdown) {
+      this.eventCards[i].cardElement.isShowLocationTypeDropdown = false;
+    } else if (this.eventCards.filter(_ => _.cardElement.isSummaryUpdated || _.cardElement.isShowTimeChange).length === 0 || this.eventCards[i].cardElement.isTemporary) {
+      this.eventCards[i].cardElement.isShowLocationTypeDropdown = true;
     }
   }
 
@@ -380,57 +380,57 @@ export class WorkDayCardsViewComponent implements OnInit {
     // console.log('i:', i)
     // console.log('value:', value)
     // console.log('value type:', typeof value)
-    this.workCards[i].cardElement.locationTypeChoices.forEach(_ => {
+    this.eventCards[i].cardElement.locationTypeChoices.forEach(_ => {
       if (_.value  === value) {
         _.isSelected = true;
-          this.workCards[i].locationType = value;
-          if (!this.workCards[i].cardElement.isTemporary) {
-            this.workUpdate.emit({updateType: UpdateType.update, work: this.workCards[i]});
+          this.eventCards[i].locationType = value;
+          if (!this.eventCards[i].cardElement.isTemporary) {
+            this.eventUpdate.emit({updateType: UpdateType.update, event: this.eventCards[i]});
           }
       } else {
         _.isSelected = false;
       }
     });
-    this.workCards[i].cardElement.isShowLocationTypeDropdown = false;
+    this.eventCards[i].cardElement.isShowLocationTypeDropdown = false;
   }
 
-  // we use update to set the update flag - if work is updated by another view, we do not allow updating
-  // if another work is just beeing update or time-updated, no update of this work is possible
+  // we use update to set the update flag - if event is updated by another view, we do not allow updating
+  // if another event is just beeing update or time-updated, no update of this event is possible
   public setUpdateSummary(i: number): void {
-    // no update for dayStartCard and no update if works are updated by another view
-    if (!GlobalFunctions.isMinuteSame(this.workCards[i].workBegin, this.workCards[i].workEnd)
+    // no update for dayStartCard and no update if events are updated by another view
+    if (!GlobalFunctions.isMinuteSame(this.eventCards[i].eventBegin, this.eventCards[i].eventEnd)
     && !this.isSelecting
-    // @deprecated && this.works.filter(_ => _.isUpdated && _.workId === this.workCards[i].workId).length === 0
-      && this.workCards.filter(_ => _.cardElement.isSummaryUpdated || _.cardElement.isShowTimeChange).length === 0)  {
-      this.workCards[i].cardElement.isSummaryUpdated = true;
-      // this.workSetUpdate.emit(this.workCards[i].workId);
+    // @deprecated && this.events.filter(_ => _.isUpdated && _.eventId === this.eventCards[i].eventId).length === 0
+      && this.eventCards.filter(_ => _.cardElement.isSummaryUpdated || _.cardElement.isShowTimeChange).length === 0)  {
+      this.eventCards[i].cardElement.isSummaryUpdated = true;
+      // this.eventSetUpdate.emit(this.eventCards[i].eventId);
     }
   }
 
   public storeSummary(i: number, summary: string, info: string): void {
-    if (summary && summary.length > 0 && this.workCards[i].cardElement.isSummaryUpdated) {
-      this.workCards[i].summary = summary;
+    if (summary && summary.length > 0 && this.eventCards[i].cardElement.isSummaryUpdated) {
+      this.eventCards[i].summary = summary;
     }
   }
 
   /**
-   * update sets text fields in work and sends workUpdate
-   * (changes in workBegin and workEnd are handled otherwhere - so weh do not have to deal with
+   * update sets text fields in event and sends eventUpdate
+   * (changes in eventBegin and eventEnd are handled otherwhere - so weh do not have to deal with
    *    disabledRanges here)
-   * @param i index of workCards
-   * @param summary text for this work
+   * @param i index of eventCards
+   * @param summary text for this event
    */
   public updateSummary(i: number, summary: string, info: string): void {
     // console.log('setSummaryEmit', info);
-    if (summary && summary.length > 0 && this.workCards[i].cardElement.isSummaryUpdated) {
-      this.workCards[i].summary = summary;
-      // this.workCards[i].cardElements.isSummaryUpdated = false;
-      if (this.workCards[i].cardElement.isTemporary) {
-        // this.workCards[i].cardElements.isTemporary = false;
-        this.workUpdate.emit({updateType: UpdateType.insert, work: this.workCards[i]});
-        this.workCreate.emit(false);
+    if (summary && summary.length > 0 && this.eventCards[i].cardElement.isSummaryUpdated) {
+      this.eventCards[i].summary = summary;
+      // this.eventCards[i].cardElements.isSummaryUpdated = false;
+      if (this.eventCards[i].cardElement.isTemporary) {
+        // this.eventCards[i].cardElements.isTemporary = false;
+        this.eventUpdate.emit({updateType: UpdateType.insert, event: this.eventCards[i]});
+        this.eventCreate.emit(false);
       } else {
-        this.workUpdate.emit({updateType: UpdateType.update, work: this.workCards[i]});
+        this.eventUpdate.emit({updateType: UpdateType.update, event: this.eventCards[i]});
       }
     } else {
       this.cancelUpdates(i);
@@ -439,42 +439,42 @@ export class WorkDayCardsViewComponent implements OnInit {
 
 
   public cancelUpdates(i: number) {
-    // we need the assertion of existing workCards element because of deleting from array inside the if construct
-    if (this.workCards[i]) {
-      if (this.workCards[i].cardElement.isTemporary) {
-        this.workCards.splice(i, 1);
+    // we need the assertion of existing eventCards element because of deleting from array inside the if construct
+    if (this.eventCards[i]) {
+      if (this.eventCards[i].cardElement.isTemporary) {
+        this.eventCards.splice(i, 1);
         // splice or reload model to get rid of temporary cards lead to similar effect in this if construct
-        // this.workReload.emit();
-        // we have to recalc disabled because workBegin and workEnd where already placed in deisabledRange
-        if (this.workCards.length > 0) {
+        // this.eventReload.emit();
+        // we have to recalc disabled because eventBegin and eventEnd where already placed in deisabledRange
+        if (this.eventCards.length > 0) {
           this.actualizeCardElements();
         } else {
           this.addDayStartCard();
         }
       } else {
-        this.workCards[i].cardElement.isSummaryUpdated = false;
-        this.workCards[i].summary = this.works.find(_ => _.workId === this.workCards[i].workId)?.summary;
+        this.eventCards[i].cardElement.isSummaryUpdated = false;
+        this.eventCards[i].summary = this.events.find(_ => _.eventId === this.eventCards[i].eventId)?.summary;
         // console.log('cancelUpdatesEmit');
-        // this.workUpdate.emit({type: UpdateType.cancelUpdate, work: this.workCards[i], id: this.workCards[i].workId});
+        // this.eventUpdate.emit({type: UpdateType.cancelUpdate, event: this.eventCards[i], id: this.eventCards[i].eventId});
       }
     }
-    this.workCreate.emit(false);
+    this.eventCreate.emit(false);
   }
 
   public setDone(i: number): void {
     if (!this.isCreating && !this.isSelecting) {
-      if(this.workCards[i].doneId > 0 && confirm(this.txt['reset'] + ' ' + this.txt['done'] + '?')) {
-        this.workCards[i].doneId = 0;
-        this.workUpdate.emit({updateType: UpdateType.update, work: this.workCards[i]});
-      } else if (!(this.workCards[i].doneId > 0)) {
+      if(this.eventCards[i].doneId > 0 && confirm(this.txt['reset'] + ' ' + this.txt['done'] + '?')) {
+        this.eventCards[i].doneId = 0;
+        this.eventUpdate.emit({updateType: UpdateType.update, event: this.eventCards[i]});
+      } else if (!(this.eventCards[i].doneId > 0)) {
         // we do not show done element if isAfterToday
-        // user can set to unDone for future elements (thess can occur only when shifting done works to the future) only in card-form
+        // user can set to unDone for future elements (thess can occur only when shifting done events to the future) only in card-form
         // so this case can not occur in the moment
         if (this.isAfterToday) {
           alert(this.txt['set_to'] + ' ' + this.txt['done'] + this.txt['not_allowed']);
         } else if (confirm(this.txt['set_to'] + ' ' + this.txt['done'] + '?')) {
-          this.workCards[i].doneId = this.workCards[i].workId;
-          this.workUpdate.emit({updateType: UpdateType.update, work: this.workCards[i]});
+          this.eventCards[i].doneId = this.eventCards[i].eventId;
+          this.eventUpdate.emit({updateType: UpdateType.update, event: this.eventCards[i]});
         }
       }
     }
@@ -482,9 +482,9 @@ export class WorkDayCardsViewComponent implements OnInit {
 
   public setDelete(i: number): void {
     // we check isSummaryUpdated
-    if (confirm(this.txt['work_disable'] + '?')) {
-      if (this.workCards[i] && this.workCards[i].cardElement.isSummaryUpdated ) {
-        this.workUpdate.emit({updateType: UpdateType.delete, work: this.workCards[i]});
+    if (confirm(this.txt['event_disable'] + '?')) {
+      if (this.eventCards[i] && this.eventCards[i].cardElement.isSummaryUpdated ) {
+        this.eventUpdate.emit({updateType: UpdateType.delete, event: this.eventCards[i]});
       } else {
         this.cancelUpdates(i);
       }
@@ -492,17 +492,17 @@ export class WorkDayCardsViewComponent implements OnInit {
   }
 
 
-  public enableCardFormView(workCard: Work, i: number) {
-    if (workCard.workId === this.workCards[i].workId
-      && this.workCards.filter(_ => (_.cardElement.isSummaryUpdated && _.workId !== workCard.workId)
+  public enableCardFormView(eventCard: Event, i: number) {
+    if (eventCard.eventId === this.eventCards[i].eventId
+      && this.eventCards.filter(_ => (_.cardElement.isSummaryUpdated && _.eventId !== eventCard.eventId)
       || _.cardElement.isShowTimeChange).length === 0) {
       // we transfer eventually updated summary, location type to card-form-view
-      // workCards itself are set back to original value
-      const work: Work = GlobalFunctions.clone(this.workCards[i]);
-      if (work.cardElement.isTemporary) {
-        this.cardFormViewEnabled.emit({updateType: UpdateType.insert, work, d: null});
+      // eventCards itself are set back to original value
+      const event: Event = GlobalFunctions.clone(this.eventCards[i]);
+      if (event.cardElement.isTemporary) {
+        this.cardFormViewEnabled.emit({updateType: UpdateType.insert, event, d: null});
       } else {
-        this.cardFormViewEnabled.emit({updateType: UpdateType.update, work, d: null});
+        this.cardFormViewEnabled.emit({updateType: UpdateType.update, event, d: null});
       }
       this.cancelUpdates(i);
     }
@@ -512,14 +512,14 @@ export class WorkDayCardsViewComponent implements OnInit {
   /** --------------------------  supporting functions for public methods -------------------------------------------- */
 
   private getNewEnd(begin: Date, end: Date): Date {
-    let nextWork: Work = GlobalFunctions.getNextWork(this.works, begin);
-    // if we get this processed work as next work we search for real next work
-    if (nextWork && GlobalFunctions.isMinuteSame(nextWork.workBegin, begin)) {
-      nextWork = GlobalFunctions.getNextWork(this.works, GlobalFunctions.addMinutes(begin, 1));
+    let nextEvent: Event = GlobalFunctions.getNextEvent(this.events, begin);
+    // if we get this processed event as next event we search for real next event
+    if (nextEvent && GlobalFunctions.isMinuteSame(nextEvent.eventBegin, begin)) {
+      nextEvent = GlobalFunctions.getNextEvent(this.events, GlobalFunctions.addMinutes(begin, 1));
     }
-    // if overlapping, workEnd is set to begin of next work, duration is shortened
-    if (nextWork && GlobalFunctions.isMinuteEarlier(nextWork.workBegin, end )) {
-      end = nextWork.workBegin;
+    // if overlapping, eventEnd is set to begin of next event, duration is shortened
+    if (nextEvent && GlobalFunctions.isMinuteEarlier(nextEvent.eventBegin, end )) {
+      end = nextEvent.eventBegin;
     }
     // duration must not exceed this.opts.maxIntervalLength
     if (GlobalFunctions.isMinuteEarlier(GlobalFunctions.addMinutes(begin, this.opts.maxIntervalLength), end)) {

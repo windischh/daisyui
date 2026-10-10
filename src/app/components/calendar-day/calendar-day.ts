@@ -7,171 +7,171 @@ import { ConfigurationOptionHandlingFunctions } from '../../_globals/configurati
 import { StyleFactory } from '../../_globals/style-factory';
 
 import { ConfigurationOption } from '../../_db/configuration-option';
-import { Work } from '../../_db/work';
-import { WorkFactory } from '../../_db/work-factory';
+import { Event } from '../../_db/event';
+import { EventFactory } from '../../_db/event-factory';
 import { IssueFactory } from '../../_db/issue-factory';
-import { CustomerFactory } from '../../_db/customer-factory';
-import { Customer } from '../../_db/customer';
+import { ContactFactory } from '../../_db/contact-factory';
+import { Contact } from '../../_db/contact';
 import { Issue } from '../../_db/issue';
 import { Session } from '../../_db/session';2
 import { IssueSelectionFactory } from '../../_db/issue-selection-factory';
 import { IssueSelection } from '../../_db/issue-selection';
 
-import { OptionNameUserWorks } from '../../_enums/option-name-user-works.enum';
+import { OptionNameUserEvents } from '../../_enums/option-name-user-events.enum';
 import { UpdateType } from '../../_enums/update-type.enum';
-import { WorkType } from '../../_enums/work-type.enum';
+import { EventType } from '../../_enums/event-type.enum';
 import { ProviderType } from '../../_enums/provider-type.enum';
 
 import { IChoice } from '../../_interfaces/i-choice';
-import { IWorkOptions } from '../../_interfaces/i-work-options';
-import { IUserWorkOptions } from '../../_interfaces/i-user-work-options';
+import { IEventOptions } from '../../_interfaces/i-event-options';
+import { IUserEventOptions } from '../../_interfaces/i-user-event-options';
 import { IView } from '../../_interfaces/i-view';
 
 import { LogService } from '../../_services/log.service';
 import { MessageService } from '../../_services/message.service';
 import { AuthenticationService } from '../../_services/authentication.service';
-import { WorkService } from '../../_services/work.service';
+import { EventService } from '../../_services/event.service';
 import { IssueService } from '../../_services/issue.service';
-import { CustomerService } from '../../_services/customer.service';
+import { ContactService } from '../../_services/contact.service';
 import { ProviderService } from '../../_services/provider.service';
 import { ConfigurationService } from '../../_services/configuration.service';
 import { UserService } from '../../_services/user.service';
 
-import { WorkDayOptionsViewComponent } from '../work-day-options-view/work-day-options-view.component';
-import { WorkDayIssuesViewComponent } from '../work-day-issues-view/work-day-issues-view.component';
-import { WorkDayGridViewComponent } from '../work-day-grid-view/work-day-grid-view.component';
-import { WorkDayWeekViewComponent } from '../work-day-week-view/work-day-week-view.component';
-import { WorkDayCardsViewComponent } from '../work-day-cards-view/work-day-cards-view.component';
-import { WorkDayCardFormViewComponent } from '../work-day-card-form-view/work-day-card-form-view.component';
-import { WorkDayTimeShiftViewComponent } from '../work-day-time-shift-view/work-day-time-shift-view.component';
-import { WorkDayIssueSelectViewComponent } from '../work-day-issue-select-view/work-day-issue-select-view.component';
-import { WorkDaySelectionBarComponent } from '../work-day-selection-bar/work-day-selection-bar.component';
+import { EventDayOptionsViewComponent } from '../event-day-options-view/event-day-options-view.component';
+import { EventDayIssuesViewComponent } from '../event-day-issues-view/event-day-issues-view.component';
+import { EventDayGridViewComponent } from '../event-day-grid-view/event-day-grid-view.component';
+import { EventDayWeekViewComponent } from '../event-day-week-view/event-day-week-view.component';
+import { EventDayCardsViewComponent } from '../event-day-cards-view/event-day-cards-view.component';
+import { EventDayCardFormViewComponent } from '../event-day-card-form-view/event-day-card-form-view.component';
+import { EventDayTimeShiftViewComponent } from '../event-day-time-shift-view/event-day-time-shift-view.component';
+import { EventDayIssueSelectViewComponent } from '../event-day-issue-select-view/event-day-issue-select-view.component';
+import { EventDaySelectionBarComponent } from '../event-day-selection-bar/event-day-selection-bar.component';
 
 
 @Component({
   selector: 'dsy-calendar-day',
   templateUrl: './calendar-day.html',
   styleUrl: './calendar-day.css',
-  imports: [WorkDaySelectionBarComponent, WorkDayIssueSelectViewComponent, WorkDayTimeShiftViewComponent, WorkDayCardFormViewComponent, WorkDayCardsViewComponent, WorkDayWeekViewComponent, WorkDayGridViewComponent, WorkDayIssuesViewComponent, WorkDayOptionsViewComponent]
+  imports: [EventDaySelectionBarComponent, EventDayIssueSelectViewComponent, EventDayTimeShiftViewComponent, EventDayCardFormViewComponent, EventDayCardsViewComponent, EventDayWeekViewComponent, EventDayGridViewComponent, EventDayIssuesViewComponent, EventDayOptionsViewComponent]
 })
 
-export class WorkDayComponent implements OnInit {
+export class EventDayComponent implements OnInit {
 
-  @Input({required: true}) workDayLoadCounter: number;
-  @Input({required: true}) isShowWork: boolean;
-  @Input({required: true}) workId: number;
+  @Input({required: true}) eventDayLoadCounter: number;
+  @Input({required: true}) isShowEvent: boolean;
+  @Input({required: true}) eventId: number;
 
   @Output() issueSelect = new EventEmitter<Issue>();
   @Output() sidebarHide = new EventEmitter();
   @Output() sidebarShow = new EventEmitter();
   @Output() restart = new EventEmitter();
 
-  public name = 'WorkDayComponent';
+  public name = 'EventDayComponent';
 
   // session is used in some sub-views and MUST NOT be used in this component (use this.auth.getSession instead)
   public sessionForViews: Session;
 
   public options: Array<ConfigurationOption>;
-  public opts: IWorkOptions;
-  public userOpts: IUserWorkOptions;
+  public opts: IEventOptions;
+  public userOpts: IUserEventOptions;
 
-  public customers: Array<Customer>;
+  public contacts: Array<Contact>;
 
   public issueSelections: Array<IssueSelection>;
 
   // db texts
-  public worktxt: { [key: string]: string } = {};
+  public eventtxt: { [key: string]: string } = {};
   public custtxt: { [key: string]: string } = {};
   public issuetxt: { [key: string]: string } = {};
 
-  // timeSpans contain work elements of type "time span"  - for performance reason we build it for one week
-  public timeSpans:  Array<Work>;
-  public linkedTimeSpans:  Array<Work> = [];
+  // timeSpans contain event elements of type "time span"  - for performance reason we build it for one week
+  public timeSpans:  Array<Event>;
+  public linkedTimeSpans:  Array<Event> = [];
 
-  // all works for current user
-  public allWorks: Array<Work>;
+  // all events for current user
+  public allEvents: Array<Event>;
 
  // refresh signal triggers change detection
   // signal value   0 - no data loaded   1 - data loded
   public refreshSignal = signal(0);
 
-  // actualWorks are building the client model for actual work. Includes last work of previous day - if it reaches into this.workday and first work of next day
-  actualWorks: Array<Work>;
-  weekActualWorks: Array<Work>;
+  // actualEvents are building the client model for actual event. Includes last event of previous day - if it reaches into this.eventday and first event of next day
+  actualEvents: Array<Event>;
+  weekActualEvents: Array<Event>;
 
-  // planWworks are building the client model for planned work. Includes last work of previous day - if it reaches into this.workday and first work of next day
-  planWorks: Array<Work>;
-  weekPlanWorks: Array<Work>;
+  // planWevents are building the client model for planned event. Includes last event of previous day - if it reaches into this.eventday and first event of next day
+  planEvents: Array<Event>;
+  weekPlanEvents: Array<Event>;
 
-  // references to either planWorks or actualWorks
-  works: Array<Work>;
-  // oldest work day
-  firstWorkDay: Date;
+  // references to either planEvents or actualEvents
+  events: Array<Event>;
+  // oldest event day
+  firstEventDay: Date;
 
   // etag holds last etag for check at update
   private etag: string;
 
-  // all works for linked user
-  allLinkedUserWorks: Array<Work>;
-  // actualized works of a linked user
-  linkedUserWorks:  Array<Work>;
+  // all events for linked user
+  allLinkedUserEvents: Array<Event>;
+  // actualized events of a linked user
+  linkedUserEvents:  Array<Event>;
 
-  // worksChangeCounter: worksChangeCounter as flag for the views if works has been reloaded or single work is updated, inserted
-  worksChangeCounter = 0;
-  weekWorksChangeCounter = 0;
+  // eventsChangeCounter: eventsChangeCounter as flag for the views if events has been reloaded or single event is updated, inserted
+  eventsChangeCounter = 0;
+  weekEventsChangeCounter = 0;
   timeSpanChangeCounter = 0;
 
-  // is set true if works of workDay are loaded first time
+  // is set true if events of eventDay are loaded first time
   isDayLoadedSignal = signal(0);
-  // is set true if week-view is activated - week work arrays are filled
+  // is set true if week-view is activated - week event arrays are filled
   isWeekLoadedSignal = signal(0);
   // is set true if time span arrays are filled from DB
   isTimeSpanLoadedSignal = signal(0);
 
 
-  // workCustomer and workIssue are the selected customer and issue from session - adn set in session
-  workCustomer: Customer;
-  workIssue: Issue;
-  // all issues belonging to workCustomer
-  workCustomerIssues: Array<Issue> = [];
-  // all issues belonging to workCustomer and relevant at session.workDay
-  workIssues: Array<Issue> = [];
+  // eventContact and eventIssue are the selected contact and issue from session - adn set in session
+  eventContact: Contact;
+  eventIssue: Issue;
+  // all issues belonging to eventContact
+  eventContactIssues: Array<Issue> = [];
+  // all issues belonging to eventContact and relevant at session.eventDay
+  eventIssues: Array<Issue> = [];
 
 
-  // workCustomerRequetsed (and workIssueRequested) are the choosen cutomer/issue in customer select (... not selected finally)
-  workCustomerRequested: Customer;
-  workIssueRequested: Issue;
-  //  workIssuesRequested contain all issues of the requested customer
-  workIssuesRequested: Array<Issue> = [];
+  // eventContactRequetsed (and eventIssueRequested) are the choosen cutomer/issue in contact select (... not selected finally)
+  eventContactRequested: Contact;
+  eventIssueRequested: Issue;
+  //  eventIssuesRequested contain all issues of the requested contact
+  eventIssuesRequested: Array<Issue> = [];
 
   // is increased if relevant options for woork-day-selection-bar are changed
-  workDayChangeCounter = 0;
+  eventDayChangeCounter = 0;
 
   timeZoneIdentifier: string;
 
   // difference of browser timezone to mandant timezone - is used to set dates in component
   timeZoneDiff: number;
 
-  // isSelecting is true if user is enabled to select works
+  // isSelecting is true if user is enabled to select events
   isSelecting = false;
   countSelected = 0;
 
-  // if selected works are to be shifted to another date we use targetWorks and targetWorkDay
-  targetWorks: Array<Work>;
-  targetWorkDay: Date;
+  // if selected events are to be shifted to another date we use targetEvents and targetEventDay
+  targetEvents: Array<Event>;
+  targetEventDay: Date;
 
-  // isCreating is true if user just creates new work (in cards view) to prohibit set selecting at same time
+  // isCreating is true if user just creates new event (in cards view) to prohibit set selecting at same time
   isCreating = false;
 
-  // workContainer is used when calling work-day-card-form-view
-  workContainer: {updateType: UpdateType, work: Work, d: Date};
+  // eventContainer is used when calling event-day-card-form-view
+  eventContainer: {updateType: UpdateType, event: Event, d: Date};
 
   // types are indexed by type-part x in time spans with types 2x
   timeSpanTypeColors: Array<{text: string, color: string}>;
   // type 21,22 is not selectable
   timeSpanTypeChoices: Array<IChoice>;
 
-  // work-day-views - isSelectable true => visible for user selection
+  // event-day-views - isSelectable true => visible for user selection
   v: { [key: string]: IView } = {};
   // each v entry references to array element (= view object) - isSelectable elements are shown in tabular menu
   views: Array<IView> = [
@@ -197,10 +197,10 @@ export class WorkDayComponent implements OnInit {
 
   constructor(@Inject(LOCALE_ID) public locale: string,
     private configurationService: ConfigurationService,
-    private customerService: CustomerService,
+    private contactService: ContactService,
     private providerService: ProviderService,
     private issueService: IssueService,
-    private workService: WorkService,
+    private eventService: EventService,
     private userService: UserService,
     private logger: LogService,
     private message: MessageService,
@@ -220,7 +220,7 @@ export class WorkDayComponent implements OnInit {
     */
     for (const [propKey, propValue] of Object.entries(changes)) {
 
-      if (propKey === 'workDayLoadCounter') {
+      if (propKey === 'eventDayLoadCounter') {
         this.sessionActivate();
       }
       // console.log('menu-item propkey: ', propKey, 'propvalue: ', JSON.stringify(propValue));
@@ -236,29 +236,29 @@ export class WorkDayComponent implements OnInit {
       this.refreshSignal.set(0);
       this.loadViewTexts();
       this.loadDbTexts();
-      await this.getCustomers();
-      await this.getWorkOptions();
-      await this.getWorks();
-      await this.actualizeWeekWorks();
+      await this.getContacts();
+      await this.getEventOptions();
+      await this.getEvents();
+      await this.actualizeWeekEvents();
       await this.actualizeTimeSpans();
       await this.getLinkedUserData();
-      if (this.isShowWork) {
-        // work-day was called to show a special work in card form ...
-        let work = this.allWorks.filter(_ => _.workId === this.workId)[0];
-        if (work) {
-          await this.selectWorkDay(work.workBegin);
+      if (this.isShowEvent) {
+        // event-day was called to show a special event in card form ...
+        let event = this.allEvents.filter(_ => _.eventId === this.eventId)[0];
+        if (event) {
+          await this.selectEventDay(event.eventBegin);
           const session = this.auth.getSession(this.name);
-          const event = {updateType: UpdateType.update, work, d: session.workDay};
+          const event = {updateType: UpdateType.update, event, d: session.eventDay};
           await this.enableCardFormView(event);
         } else {
-          alert('work with id: ' + this.workId + ' not found');
-          // we must call sidebarShow to reset osShowWork in header
+          alert('event with id: ' + this.eventId + ' not found');
+          // we must call sidebarShow to reset osShowEvent in header
           this.sidebarShow.emit();
         }
       }
       // session is set to have it available in all sub-views
       this.sessionForViews = this.auth.getSession(this.name);
-      this.worksChangeCounter += 1;
+      this.eventsChangeCounter += 1;
       this.refreshSignal.set(1);
     } else {
       // session could not be activated - duration exhausted
@@ -283,13 +283,13 @@ export class WorkDayComponent implements OnInit {
     const session = this.auth.getSession(this.name);
     // default language according to application internal language coding (language enum)
     const language = session.language ? session.language : GlobalFunctions.getDefaultLanguage(this.locale);
-    const work = WorkFactory.empty(); // just for dbtxt
-    const customer = CustomerFactory.empty(); // just for dbtxt
+    const event = EventFactory.empty(); // just for dbtxt
+    const contact = ContactFactory.empty(); // just for dbtxt
     const issue = IssueFactory.empty(); // just for dbtxt
-    this.worktxt = GlobalFunctions.objText(work,
-      'Work', this.auth.systemTexts, language,  this.name);
-    this.custtxt = GlobalFunctions.objText(customer,
-      'Customer', this.auth.systemTexts, language,  this.name);
+    this.eventtxt = GlobalFunctions.objText(event,
+      'Event', this.auth.systemTexts, language,  this.name);
+    this.custtxt = GlobalFunctions.objText(contact,
+      'Contact', this.auth.systemTexts, language,  this.name);
     this.issuetxt = GlobalFunctions.objText(issue,
       'Issue', this.auth.systemTexts, language,  this.name);
   }
@@ -300,48 +300,48 @@ export class WorkDayComponent implements OnInit {
     alert(message);
   }
 
-  private async getCustomers() {
-    this.customers = await this.customerService.getCustomers(this.name);
+  private async getContacts() {
+    this.contacts = await this.contactService.getContacts(this.name);
   }
 
   /**
-   * we get choosen issue (and customer) and options which are relevant for work presentation
+   * we get choosen issue (and contact) and options which are relevant for event presentation
    * (we must take care to actualize them every time we enter this component)
-   * workCustomer and workIssue are token from session
-   * work options (can be maintained by configuaration maintenance)  are token from option file
+   * eventContact and eventIssue are token from session
+   * event options (can be maintained by configuaration maintenance)  are token from option file
    */
-  private async getWorkOptions() {
-    // we build workIssue structures in component
+  private async getEventOptions() {
+    // we build eventIssue structures in component
     const session = this.auth.getSession(this.name);
-    this.workIssuesRequested = [];
-    this.workIssues = [];
+    this.eventIssuesRequested = [];
+    this.eventIssues = [];
 
-    // we build workIssue and workCustomer structures in component
-    this.workIssue = await this.workService.getWorkIssue(this.name);
-    this.workIssueRequested = this.workIssue;
-    const workCustElement = await this.workService.getWorkCustomer(this.name);
-    this.workCustomer = workCustElement.workCustomer;
-    this.workCustomerRequested = this.workCustomer;
+    // we build eventIssue and eventContact structures in component
+    this.eventIssue = await this.eventService.getEventIssue(this.name);
+    this.eventIssueRequested = this.eventIssue;
+    const eventCustElement = await this.eventService.getEventContact(this.name);
+    this.eventContact = eventCustElement.eventContact;
+    this.eventContactRequested = this.eventContact;
 
-    // load this.workIssues - also if customerNr is 0
-    let custIssues = this.issueService.getMyIssuesCust(session.customerNr, this.name);
+    // load this.eventIssues - also if contactNr is 0
+    let custIssues = this.issueService.getMyIssuesCust(session.contactNr, this.name);
     if (custIssues?.length > 0) {
-      this.workIssuesRequested = this.selectIssuesForDate(custIssues);
-      this.workCustomerIssues = custIssues;
-      // if user should not choose the customer issues at his work-form, we leave workIssues empty
-      const isChooseAllCustomerIssues = ConfigurationOptionBasicFunctions.getOptionString(this.options, 'opt_works_isChooseAllCustomerIssues') ?? false;
-      if (isChooseAllCustomerIssues && session.customerNr > 0) {
-        this.workIssues = this.selectIssuesForDate(this.workCustomerIssues) ?? [];
+      this.eventIssuesRequested = this.selectIssuesForDate(custIssues);
+      this.eventContactIssues = custIssues;
+      // if user should not choose the contact issues at his event-form, we leave eventIssues empty
+      const isChooseAllContactIssues = ConfigurationOptionBasicFunctions.getOptionString(this.options, 'opt_events_isChooseAllContactIssues') ?? false;
+      if (isChooseAllContactIssues && session.contactNr > 0) {
+        this.eventIssues = this.selectIssuesForDate(this.eventContactIssues) ?? [];
       } else {
-        this.workIssues = [];
+        this.eventIssues = [];
       }
     }
-    // workIssue must be an element of workIssues anyway
-    if (this.workIssues?.findIndex(_ => _.issueProviderId === this.workIssue.issueProviderId
-      && _.nExternalIssueId === this.workIssue.nExternalIssueId
-      && _.sExternalIssueId === this.workIssue.sExternalIssueId) < 0
-      && this.workIssue.issueProviderId > 0) {
-      this.workIssues.push(this.workIssue);
+    // eventIssue must be an element of eventIssues anyway
+    if (this.eventIssues?.findIndex(_ => _.issueProviderId === this.eventIssue.issueProviderId
+      && _.nExternalIssueId === this.eventIssue.nExternalIssueId
+      && _.sExternalIssueId === this.eventIssue.sExternalIssueId) < 0
+      && this.eventIssue.issueProviderId > 0) {
+      this.eventIssues.push(this.eventIssue);
     }
     // for timeSpans (and for sub-components) we need texts from general options - we load them from option rsessources (option.json)
     this.options = await this.configurationService.getConfigurationOptions(this.name);
@@ -374,70 +374,70 @@ export class WorkDayComponent implements OnInit {
       }
     }
     this.issueSelections = await this.issueService.getIssueSelections(this.name);
-    this.opts = ConfigurationOptionHandlingFunctions.initializeWorkOptions(session, this.options);
+    this.opts = ConfigurationOptionHandlingFunctions.initializeEventOptions(session, this.options);
     const user = this.auth.getUser(session.userId, this.name);
-    if (!user.userWorkOptions) {
-      // user work options are initialized with options of actual session user!!
-      user.userWorkOptions = ConfigurationOptionHandlingFunctions.initializeUserWorkOptions(this.options);
-      this.auth.setUserOptions(user.userWorkOptions, session.userId, this.name);
+    if (!user.userEventOptions) {
+      // user event options are initialized with options of actual session user!!
+      user.userEventOptions = ConfigurationOptionHandlingFunctions.initializeUserEventOptions(this.options);
+      this.auth.setUserOptions(user.userEventOptions, session.userId, this.name);
     }
-    this.userOpts = user.userWorkOptions;
+    this.userOpts = user.userEventOptions;
   }
 
   /**
-   * selects issues to show in issue-select-view (and to have as choosable issues in work-form)
+   * selects issues to show in issue-select-view (and to have as choosable issues in event-form)
    *  we select all issues with begin date is before or at today
    *  and which are not done
    */
   private selectIssuesForDate(issues: Array<Issue>): Array<Issue> {
-   // we take all issues which are not finished and have date interval starts at workDay
+   // we take all issues which are not finished and have date interval starts at eventDay
     const session = this.auth.getSession(this.name);
     return issues
     .filter(_ => !_.issueDateFinished
-      && (!_.issueDateFrom || GlobalFunctions.getDateInMinutes(GlobalFunctions.addDays(session.workDay, 1) ) < GlobalFunctions.getDateInMinutes(_.issueDateFrom) ))
+      && (!_.issueDateFrom || GlobalFunctions.getDateInMinutes(GlobalFunctions.addDays(session.eventDay, 1) ) < GlobalFunctions.getDateInMinutes(_.issueDateFrom) ))
     // and sort on interval begin
-    .sort((a, b) => GlobalFunctions.getDateInMinutes(a.issueDateFrom ?? session.workDay) - GlobalFunctions.getDateInMinutes(b.issueDateFrom ?? session.workDay) );
+    .sort((a, b) => GlobalFunctions.getDateInMinutes(a.issueDateFrom ?? session.eventDay) - GlobalFunctions.getDateInMinutes(b.issueDateFrom ?? session.eventDay) );
   }
 
 
   /**
-   * getWorks() delivers works in this.works
-   *  for workDay, isPlan of opts = session.workOptions
-   * getWorks is called at init, at every change of opts = session.workOptions and at every change of a work
+   * getEvents() delivers events in this.events
+   *  for eventDay, isPlan of opts = session.eventOptions
+   * getEvents is called at init, at every change of opts = session.eventOptions and at every change of a event
    */
-  private async getWorks() {
+  private async getEvents() {
     const session = this.auth.getSession(this.name);
-    this.allWorks = await this.workService.getWorks(0, this.name);
+    this.allEvents = await this.eventService.getEvents(0, this.name);
     // we rebuild recurring time spans in local storage depending on latest calendar entry
-    if (this.allWorks.length > 0) {
+    if (this.allEvents.length > 0) {
       // we search oldest
-      this.firstWorkDay = this.allWorks.reduce((a,b) => a.workBegin.getTime() <  b.workBegin.getTime() ? a : b).workBegin;
+      this.firstEventDay = this.allEvents.reduce((a,b) => a.eventBegin.getTime() <  b.eventBegin.getTime() ? a : b).eventBegin;
       // loadRecurringTimeSpans checks if startDate is already respected ...
-      await this.workService.loadRecurringTimeSpans(session.userId, this.name, this.firstWorkDay);
+      await this.eventService.loadRecurringTimeSpans(session.userId, this.name, this.firstEventDay);
     }
-    this.etag = this.workService.getEtag(this.name);
-    this.actualWorks = await this.getWorksForDate(this.allWorks, false, session.workDay, false);
-    this.planWorks = await this.getWorksForDate(this.allWorks, true, session.workDay, false);
+    this.etag = this.eventService.getEtag(this.name);
+    this.actualEvents = await this.getEventsForDate(this.allEvents, false, session.eventDay, false);
+    this.planEvents = await this.getEventsForDate(this.allEvents, true, session.eventDay, false);
     this.setAssocData();
     this.countSelected = 0;
     this.isSelecting = false;
     this.isCreating = false;
-    this.works = GlobalFunctions.clone(session.isPlan ? this.planWorks : this.actualWorks);
-    this.worksChangeCounter += 1;
+    this.events = GlobalFunctions.clone(session.isPlan ? this.planEvents : this.actualEvents);
+    this.eventsChangeCounter += 1;
     this.isDayLoadedSignal.set(1);
   }
 
   /**
-   * actualizWeekWorks() delivers week works
+   * actualizWeekEvents() delivers week events
    *
    * if week-view or issues-view is selected
    */
-  private async actualizeWeekWorks() {
+  private async actualizeWeekEvents() {
     const session = this.auth.getSession(this.name);
     if (this.v['week-view'].isSelected === true || this.v['issues-view'].isSelected === true || this.isWeekLoadedSignal ) {
-      this.weekActualWorks = await this.getWorksForDate(this.allWorks, false, session.workDay, true);
-      this.weekPlanWorks = await this.getWorksForDate(this.allWorks, true, session.workDay, true);
-      this.weekWorksChangeCounter += 1;
+      this.weekActualEvents = await this.getEventsForDate(this.allEvents, false, session.eventDay, true);
+      this.weekPlanEvents = await this.getEventsForDate(this.allEvents, true, session.eventDay, true);
+      this.weekEventsChangeCounter += 1;
       this.isWeekLoadedSignal.set(1);
     }
   }
@@ -447,7 +447,7 @@ export class WorkDayComponent implements OnInit {
    *
    * if grid-view or week-view is selected
    *
-   * timeSpans are works which include time-span-info
+   * timeSpans are events which include time-span-info
    *
    * they are built for:
    * - automatic generated holidays (time span type 21)
@@ -461,129 +461,129 @@ export class WorkDayComponent implements OnInit {
     const session = this.auth.getSession(this.name);
     if (this.v['grid-view'].isSelected === true || this.v['week-view'].isSelected === true || this.isTimeSpanLoadedSignal) {
       // begin date is first day of week, we add one day to include all possible timeZones
-      const weekDay = GlobalFunctions.getWeekDay(session.workDay, 0, this.locale);
+      const weekDay = GlobalFunctions.getWeekDay(session.eventDay, 0, this.locale);
       const diffToWeekBegin = (weekDay + 1) * -1;
-      const beginDate = GlobalFunctions.addDays(session.workDay, diffToWeekBegin);
+      const beginDate = GlobalFunctions.addDays(session.eventDay, diffToWeekBegin);
       // end date is last day of week, we add one day
       const diffToWeekEnd = 8 - weekDay;
-      const endDate = GlobalFunctions.addDays(session.workDay, diffToWeekEnd);
+      const endDate = GlobalFunctions.addDays(session.eventDay, diffToWeekEnd);
       // recurring timeSpans come from local user data
-      const recTimeSpans = await this.workService.getRecurringTimeSpanRange(0,  beginDate, endDate, this.name);
-      const timeSpans = this.allWorks.filter(_ => GlobalFunctions.getDateInMinutes(_.workEnd) >= GlobalFunctions.getDateInMinutes(beginDate)
-        && GlobalFunctions.getDateInMinutes(_.workBegin) <= GlobalFunctions.getDateInMinutes(endDate)
-        && _.type >= WorkType.timeSpanUndefined
-        && _.type <= WorkType.timeSpanCategory9
+      const recTimeSpans = await this.eventService.getRecurringTimeSpanRange(0,  beginDate, endDate, this.name);
+      const timeSpans = this.allEvents.filter(_ => GlobalFunctions.getDateInMinutes(_.eventEnd) >= GlobalFunctions.getDateInMinutes(beginDate)
+        && GlobalFunctions.getDateInMinutes(_.eventBegin) <= GlobalFunctions.getDateInMinutes(endDate)
+        && _.type >= EventType.timeSpanUndefined
+        && _.type <= EventType.timeSpanCategory9
         && _.status < 9);
       for (let span of timeSpans) {
-        // build workInfos if customer
-        if ((!span.workInfo && (span.customerNr > 0))
-          || (span.workInfo?.customerNr !== span.customerNr)) {
-            span = await this.workService.buildWorkInfo(span, this.name);
+        // build eventInfos if contact
+        if ((!span.eventInfo && (span.contactNr > 0))
+          || (span.eventInfo?.contactNr !== span.contactNr)) {
+            span = await this.eventService.buildEventInfo(span, this.name);
         }
       }
-      // const timeSpans = await this.workService.getTimeSpanRange(0, beginDate, endDate, this.name);
+      // const timeSpans = await this.eventService.getTimeSpanRange(0, beginDate, endDate, this.name);
       this.timeSpans = [];
       this.timeSpans = this.timeSpans.concat(recTimeSpans);
       this.timeSpans = this.timeSpans.concat(timeSpans);
-      this.timeSpans.sort((a, b) => a.workBegin.getTime() - b.workBegin.getTime());
+      this.timeSpans.sort((a, b) => a.eventBegin.getTime() - b.eventBegin.getTime());
       this.timeSpanChangeCounter += 1;
       this.isTimeSpanLoadedSignal.set(1);
     }
   }
 
   private setAssocData() {
-    this.actualWorks.forEach(_ => {
+    this.actualEvents.forEach(_ => {
       if (_.planId > 0) {
         _.assocCount = 0;
-        const ix = this.planWorks.findIndex(plan => _.planId === plan.workId);
+        const ix = this.planEvents.findIndex(plan => _.planId === plan.eventId);
         if (ix >= 0) {
-          _.assocWorkBegin = this.planWorks[ix].workBegin;
-          _.assocWorkEnd = this.planWorks[ix].workEnd;
-          _.assocDone = this.planWorks[ix].assocDone;
+          _.assocEventBegin = this.planEvents[ix].eventBegin;
+          _.assocEventEnd = this.planEvents[ix].eventEnd;
+          _.assocDone = this.planEvents[ix].assocDone;
           _.assocCount = 1;
         }
       }
     });
-    this.planWorks.forEach(_ => {
-      if (_.doneId === _.workId) {
-        _.assocWorkBegin = _.workBegin;
-        _.assocWorkEnd = _.workEnd;
+    this.planEvents.forEach(_ => {
+      if (_.doneId === _.eventId) {
+        _.assocEventBegin = _.eventBegin;
+        _.assocEventEnd = _.eventEnd;
         _.assocCount = 0;
       } else {
-        let assocWorkBegin: Date = null;
-        let assocWorkEnd: Date;
+        let assocEventBegin: Date = null;
+        let assocEventEnd: Date;
         let assocCount = 0;
-        this.actualWorks.forEach(actual => {
-          if (_.workId === actual.planId) {
-            assocWorkBegin = assocWorkBegin === null ? actual.workBegin : assocWorkBegin;
-            assocWorkEnd = actual.workEnd;
+        this.actualEvents.forEach(actual => {
+          if (_.eventId === actual.planId) {
+            assocEventBegin = assocEventBegin === null ? actual.eventBegin : assocEventBegin;
+            assocEventEnd = actual.eventEnd;
             assocCount += 1;
           }
         });
-        _.assocWorkBegin = assocWorkBegin;
-        _.assocWorkEnd = assocWorkEnd;
+        _.assocEventBegin = assocEventBegin;
+        _.assocEventEnd = assocEventEnd;
         _.assocCount = assocCount;
       }
     });
   }
 
   /**
-   * getWorksForDate() delivers works for workDay for a given array of works
-   * works for workDay optionallye include all works of week of workDay
+   * getEventsForDate() delivers events for eventDay for a given array of events
+   * events for eventDay optionallye include all events of week of eventDay
    *
-   * @param works- given works to select from
-   * @param isPlan - true is we get planned work
-   * @param workDay - workDay
-   * @param isWeek - if true, we return works for week of workDay - otherwise for workDay
-   * @returns work array
+   * @param events- given events to select from
+   * @param isPlan - true is we get planned event
+   * @param eventDay - eventDay
+   * @param isWeek - if true, we return events for week of eventDay - otherwise for eventDay
+   * @returns event array
    */
-  private async getWorksForDate(works: Array<Work>, isPlan: boolean, workDay: Date, isWeek: boolean): Promise<Array<Work>> {
+  private async getEventsForDate(events: Array<Event>, isPlan: boolean, eventDay: Date, isWeek: boolean): Promise<Array<Event>> {
     const type = isPlan? 0 : 1;
-    const weekDay = GlobalFunctions.getWeekDay(workDay, 0, this.locale);
+    const weekDay = GlobalFunctions.getWeekDay(eventDay, 0, this.locale);
     const previous = isWeek ? weekDay + 1 : 1;
     const next = isWeek ? 7 - weekDay : 1;
-    // console.log('works - previous: ', previous);
-    // console.log('works - next: ', next);
-    // if isWeek is false, firstDay === workDay and nextDay is day after workDay
-    const firstDay = GlobalFunctions.addDays(workDay, (previous - 1) * -1);
-    const nextDay = GlobalFunctions.addDays(workDay, next);
-    const prevDate = GlobalFunctions.addDays(workDay, previous * -1);
-    const nextDate = GlobalFunctions.addDays(workDay, next + 1);
-    let selectedWorks: Work[] = [];
-    const worksPreviousToNext = works?.filter(_ =>
-        GlobalFunctions.getDateInMinutes(_.workBegin) >= GlobalFunctions.getDateInMinutes(prevDate)
-        && GlobalFunctions.getDateInMinutes(_.workEnd) <= GlobalFunctions.getDateInMinutes(nextDate)
+    // console.log('events - previous: ', previous);
+    // console.log('events - next: ', next);
+    // if isWeek is false, firstDay === eventDay and nextDay is day after eventDay
+    const firstDay = GlobalFunctions.addDays(eventDay, (previous - 1) * -1);
+    const nextDay = GlobalFunctions.addDays(eventDay, next);
+    const prevDate = GlobalFunctions.addDays(eventDay, previous * -1);
+    const nextDate = GlobalFunctions.addDays(eventDay, next + 1);
+    let selectedEvents: Event[] = [];
+    const eventsPreviousToNext = events?.filter(_ =>
+        GlobalFunctions.getDateInMinutes(_.eventBegin) >= GlobalFunctions.getDateInMinutes(prevDate)
+        && GlobalFunctions.getDateInMinutes(_.eventEnd) <= GlobalFunctions.getDateInMinutes(nextDate)
         && _.type === type && _.status < 9);
-    if (worksPreviousToNext ?.length > 0) {
-      worksPreviousToNext.sort((a, b) => a.workBegin.getTime() - b.workBegin.getTime());
-      // get work which reaches from prevoius to first day
-      const workPrevious = worksPreviousToNext.filter(_ => GlobalFunctions.isMinuteSameOrEarlier(firstDay, _.workEnd)
-      && GlobalFunctions.isMinuteEarlier(_.workBegin, firstDay))[0];
-      if (workPrevious) {
-        selectedWorks.push(workPrevious);
+    if (eventsPreviousToNext ?.length > 0) {
+      eventsPreviousToNext.sort((a, b) => a.eventBegin.getTime() - b.eventBegin.getTime());
+      // get event which reaches from prevoius to first day
+      const eventPrevious = eventsPreviousToNext.filter(_ => GlobalFunctions.isMinuteSameOrEarlier(firstDay, _.eventEnd)
+      && GlobalFunctions.isMinuteEarlier(_.eventBegin, firstDay))[0];
+      if (eventPrevious) {
+        selectedEvents.push(eventPrevious);
       }
-      // all works which begin from nextDay 0:00 to day after, 0:00
-      const worksTodayOrWeek = worksPreviousToNext.filter(_ => GlobalFunctions.isMinuteSameOrEarlier(firstDay, _.workBegin)
-      && GlobalFunctions.isMinuteEarlier(_.workBegin, nextDay));
-      if (worksTodayOrWeek) {
-        worksTodayOrWeek.forEach(_ => selectedWorks.push(_));
+      // all events which begin from nextDay 0:00 to day after, 0:00
+      const eventsTodayOrWeek = eventsPreviousToNext.filter(_ => GlobalFunctions.isMinuteSameOrEarlier(firstDay, _.eventBegin)
+      && GlobalFunctions.isMinuteEarlier(_.eventBegin, nextDay));
+      if (eventsTodayOrWeek) {
+        eventsTodayOrWeek.forEach(_ => selectedEvents.push(_));
       }
-      // get first work on next day
-      const workNext = worksPreviousToNext.filter(_ => GlobalFunctions.isMinuteSameOrEarlier(nextDay, _.workBegin))[0];
-      if (workNext) {
-        selectedWorks.push(workNext);
+      // get first event on next day
+      const eventNext = eventsPreviousToNext.filter(_ => GlobalFunctions.isMinuteSameOrEarlier(nextDay, _.eventBegin))[0];
+      if (eventNext) {
+        selectedEvents.push(eventNext);
       }
-      for (let work of selectedWorks) {
-        // build workInfos if customer or issue is joined (workInfod are not persisted ...)
-        // (workInfos are rebuilt if work is updated!)
-        if ((!work.workInfo && (work.customerNr > 0 || work.issueProviderId > 0))
-          || (!(work.workInfo?.customerNr > 0) && work.customerNr > 0)
-          || (!(work.workInfo?.issueProviderId > 0) && work.issueProviderId > 0)) {
-            work = await this.workService.buildWorkInfo(work, this.name);
+      for (let event of selectedEvents) {
+        // build eventInfos if contact or issue is joined (eventInfod are not persisted ...)
+        // (eventInfos are rebuilt if event is updated!)
+        if ((!event.eventInfo && (event.contactNr > 0 || event.issueProviderId > 0))
+          || (!(event.eventInfo?.contactNr > 0) && event.contactNr > 0)
+          || (!(event.eventInfo?.issueProviderId > 0) && event.issueProviderId > 0)) {
+            event = await this.eventService.buildEventInfo(event, this.name);
         }
       }
     }
-    return (selectedWorks);
+    return (selectedEvents);
   }
 
 
@@ -591,22 +591,22 @@ export class WorkDayComponent implements OnInit {
   private getLinkedUser(): User {
     const session = this.auth.getSession(this.name);
     const linkedUser = this.auth.getLinkedUser(this.name);
-    // first we check linked user -  we actualize data in workOptions
+    // first we check linked user -  we actualize data in eventOptions
     if (linkedUser && linkedUser.userId > 0) {
       session.linkedUserId = linkedUser.userId;
       session.linkedUserName = linkedUser.userName;
-      // TODO store linked user login (from authorizations - if linked user work is at web server)
-      if (this.auth.setSessionWorkDay(session, this.name)) {
+      // TODO store linked user login (from authorizations - if linked user event is at web server)
+      if (this.auth.setSessionEventDay(session, this.name)) {
         this.sessionForViews = session;
-        this.worksChangeCounter += 1;
+        this.eventsChangeCounter += 1;
       }
     } else {
       session.linkedUserId = 0;
       session.linkedUserName = '';
       session.isShowLinkedUser = false;
-      if (this.auth.setSessionWorkDay(session, this.name)) {
+      if (this.auth.setSessionEventDay(session, this.name)) {
         this.sessionForViews = session;
-        this.worksChangeCounter += 1;
+        this.eventsChangeCounter += 1;
       }
     }
     return linkedUser;
@@ -617,11 +617,11 @@ export class WorkDayComponent implements OnInit {
     const session = this.auth.getSession(this.name);
     // we get data if session has linked userd  ...
     if (session.linkedUserId > 0) {
-      this.allLinkedUserWorks = await this.workService.getWorks(session.linkedUserId, this.name);
-      this.etag = this.workService.getEtag(this.name);
+      this.allLinkedUserEvents = await this.eventService.getEvents(session.linkedUserId, this.name);
+      this.etag = this.eventService.getEtag(this.name);
       await this.actualizeLinkedUserData();
     } else {
-      this.linkedUserWorks = [];
+      this.linkedUserEvents = [];
       this.linkedTimeSpans = [];
     }
   }
@@ -629,118 +629,118 @@ export class WorkDayComponent implements OnInit {
   private async actualizeLinkedUserData() {
     const session = this.auth.getSession(this.name);
     if (session.linkedUserId > 0) {
-      const prevDate: Date = GlobalFunctions.addDays(session.workDay, -1);
-      const nextDate: Date = GlobalFunctions.addDays(session.workDay, 2);
-      // type is 0 - we show only planned work
-      this.linkedUserWorks = this.allLinkedUserWorks.filter(_ => GlobalFunctions.getDateInMinutes(_.workBegin) >= GlobalFunctions.getDateInMinutes(prevDate)
-        && GlobalFunctions.getDateInMinutes(_.workEnd) <= GlobalFunctions.getDateInMinutes(nextDate)
+      const prevDate: Date = GlobalFunctions.addDays(session.eventDay, -1);
+      const nextDate: Date = GlobalFunctions.addDays(session.eventDay, 2);
+      // type is 0 - we show only planned event
+      this.linkedUserEvents = this.allLinkedUserEvents.filter(_ => GlobalFunctions.getDateInMinutes(_.eventBegin) >= GlobalFunctions.getDateInMinutes(prevDate)
+        && GlobalFunctions.getDateInMinutes(_.eventEnd) <= GlobalFunctions.getDateInMinutes(nextDate)
         && _.type === 0
         && _.status < 9);
-      // timee spans are works with type 2x together with recurring time spans
-      const linkedTimeSpans = this.allLinkedUserWorks.filter(_ => GlobalFunctions.getDateInMinutes(_.workBegin) >= GlobalFunctions.getDateInMinutes(prevDate)
-        && GlobalFunctions.getDateInMinutes(_.workEnd) <= GlobalFunctions.getDateInMinutes(nextDate)
-        && _.type >= WorkType.timeSpanUndefined && _.type <= WorkType.timeSpanCategory9
+      // timee spans are events with type 2x together with recurring time spans
+      const linkedTimeSpans = this.allLinkedUserEvents.filter(_ => GlobalFunctions.getDateInMinutes(_.eventBegin) >= GlobalFunctions.getDateInMinutes(prevDate)
+        && GlobalFunctions.getDateInMinutes(_.eventEnd) <= GlobalFunctions.getDateInMinutes(nextDate)
+        && _.type >= EventType.timeSpanUndefined && _.type <= EventType.timeSpanCategory9
         && _.status < 9);
-      const linkedRecurringTimeSpans = await this.workService.getRecurringTimeSpanRange( session.linkedUserId, prevDate, nextDate, this.name);
-      this.etag = this.workService.getEtag(this.name);
+      const linkedRecurringTimeSpans = await this.eventService.getRecurringTimeSpanRange( session.linkedUserId, prevDate, nextDate, this.name);
+      this.etag = this.eventService.getEtag(this.name);
       this.linkedTimeSpans = linkedTimeSpans.concat(linkedRecurringTimeSpans);
-      this.linkedTimeSpans.sort((a, b) => a.workBegin.getTime() - b.workBegin.getTime());
+      this.linkedTimeSpans.sort((a, b) => a.eventBegin.getTime() - b.eventBegin.getTime());
       this.timeSpanChangeCounter += 1;
     }
   }
 
-  // we await updated work data, with unchanged workId and unchanged type
-  private async workUpdate(work: Work): Promise<boolean> {
+  // we await updated event data, with unchanged eventId and unchanged type
+  private async eventUpdate(event: Event): Promise<boolean> {
     const session = this.auth.getSession(this.name);
-    const operation = 'work update';
+    const operation = 'event update';
     let message = 'error - undefined';
-    if (session.isPlanMaint && work.workId > 0) {
-      const formerWork: Work = GlobalFunctions.clone(this.allWorks.find(_ => _.workId === work.workId));
-      if (formerWork && formerWork.type === work.type) {
-        const targetWorkDay: Date = GlobalFunctions.getStartOfDay(work.workBegin);
-        const isPlan = work.type === WorkType.plan;
-        const targetWorks = await this.getWorksForDate(this.allWorks, isPlan, targetWorkDay, false);
+    if (session.isPlanMaint && event.eventId > 0) {
+      const formerEvent: Event = GlobalFunctions.clone(this.allEvents.find(_ => _.eventId === event.eventId));
+      if (formerEvent && formerEvent.type === event.type) {
+        const targetEventDay: Date = GlobalFunctions.getStartOfDay(event.eventBegin);
+        const isPlan = event.type === EventType.plan;
+        const targetEvents = await this.getEventsForDate(this.allEvents, isPlan, targetEventDay, false);
         let isUpdatePossible = false;
-        isUpdatePossible = targetWorks.length === 0 || (targetWorks.length > 0 && targetWorks.filter(_ =>
-          (_.workBegin < work.workEnd && _.workEnd > work.workBegin && _.workId !== work.workId)).length === 0);
+        isUpdatePossible = targetEvents.length === 0 || (targetEvents.length > 0 && targetEvents.filter(_ =>
+          (_.eventBegin < event.eventEnd && _.eventEnd > event.eventBegin && _.eventId !== event.eventId)).length === 0);
         if (!isUpdatePossible) {
-          message = 'update not possible - other work is overlapping';
+          message = 'update not possible - other event is overlapping';
           this.dbFailure(operation, message);
           return false;
         }
-        let updWork = WorkFactory.empty();
-        // setting work fields from work
-        updWork = this.setWorkContent(work, updWork);
-        if (work.customerNr > 0 || work.issueProviderId > 0) {
-          updWork = await this.setWorkIssueContent (work, updWork);
+        let updEvent = EventFactory.empty();
+        // setting event fields from event
+        updEvent = this.setEventContent(event, updEvent);
+        if (event.contactNr > 0 || event.issueProviderId > 0) {
+          updEvent = await this.setEventIssueContent (event, updEvent);
         }
-        updWork.workId = work.workId;
-        // we must take all work fields which are set by work service at insert and shall be unchanged
-        updWork.mandantId = work.mandantId;
-        updWork.userId = work.userId;
-        updWork.userToken = work.userToken;
-        updWork.type = work.type;
-        updWork.status = work.status;
-        // console.log('updWork:', JSON.stringify(updWork));
-        const updateId = await this.workService.setWork(work.workId, updWork, this.name, this.etag);
+        updEvent.eventId = event.eventId;
+        // we must take all event fields which are set by event service at insert and shall be unchanged
+        updEvent.mandantId = event.mandantId;
+        updEvent.userId = event.userId;
+        updEvent.userToken = event.userToken;
+        updEvent.type = event.type;
+        updEvent.status = event.status;
+        // console.log('updEvent:', JSON.stringify(updEvent));
+        const updateId = await this.eventService.setEvent(event.eventId, updEvent, this.name, this.etag);
         if (updateId > 0) {
-          // we actualize this.allWorks immediately .... - not necessary, is done in calling procedure
-          // this.allWorks = await this.workService.getWorks(0, this.name);
-          updWork = await this.workService.getWork(updateId, this.name);
-          if (updWork.issueProviderId > 0) {
-            const provider = this.providerService.getProvider(0, updWork.issueProviderId, this.name);
-            if (updWork.type === 1 && !updWork.isStoredAtIssue && provider?.isStoreIssueWork && (provider?.type === ProviderType.server || (provider?.type === ProviderType.jira  && provider?.isStoreJiraIssueWorkImmediately))) {
+          // we actualize this.allEvents immediately .... - not necessary, is done in calling procedure
+          // this.allEvents = await this.eventService.getEvents(0, this.name);
+          updEvent = await this.eventService.getEvent(updateId, this.name);
+          if (updEvent.issueProviderId > 0) {
+            const provider = this.providerService.getProvider(0, updEvent.issueProviderId, this.name);
+            if (updEvent.type === 1 && !updEvent.isStoredAtIssue && provider?.isStoreIssueEvent && (provider?.type === ProviderType.server || (provider?.type === ProviderType.jira  && provider?.isStoreJiraIssueEventImmediately))) {
               alert(provider.providerName + ' - ' +this.auth.txt['login_necessary']);
             }
           }
           return true;
         } else if (updateId === 0) {
-          message = 'error - no confirmation for updated work';
+          message = 'error - no confirmation for updated event';
           this.dbFailure(operation, message);
         } else if (updateId === -1) {
           message = 'etag error - file was updated by another user';
           this.dbFailure(operation, message);
         }
       } else {
-        message = 'error - former work fault';
+        message = 'error - former event fault';
         this.dbFailure(operation, message);
       }
     } // isPlanMaint
     return false;
   }
 
-  // we await inserted work with id 0 and with type for plan/actual
-  private async workInsert(work: Work): Promise<boolean> {
+  // we await inserted event with id 0 and with type for plan/actual
+  private async eventInsert(event: Event): Promise<boolean> {
     const session = this.auth.getSession(this.name);
-    const operation = 'work insert';
+    const operation = 'event insert';
     let message = 'error - undefined';
-    if (session.isPlanMaint && work.workId === 0) {
-      const targetWorkDay: Date = GlobalFunctions.getStartOfDay(work.workBegin);
-      const isPlan = work.type === WorkType.plan;
-      const targetWorks = await this.getWorksForDate(this.allWorks, isPlan, targetWorkDay, false);
+    if (session.isPlanMaint && event.eventId === 0) {
+      const targetEventDay: Date = GlobalFunctions.getStartOfDay(event.eventBegin);
+      const isPlan = event.type === EventType.plan;
+      const targetEvents = await this.getEventsForDate(this.allEvents, isPlan, targetEventDay, false);
       let isInsertPossible = false;
-      isInsertPossible = targetWorks.length === 0 || (targetWorks.length > 0 && targetWorks.filter(_ =>
-        (_.workBegin < work.workEnd && _.workEnd > work.workBegin)).length === 0);
+      isInsertPossible = targetEvents.length === 0 || (targetEvents.length > 0 && targetEvents.filter(_ =>
+        (_.eventBegin < event.eventEnd && _.eventEnd > event.eventBegin)).length === 0);
       if (!isInsertPossible) {
-        message = 'insert not possible - other work is overlapping';
+        message = 'insert not possible - other event is overlapping';
         this.dbFailure(operation, message);
         return false;
       }
-      const insertId = await this.workService.setWork(work.workId, work, this.name, this.etag);
-      // we get the new workId as result of setWork
+      const insertId = await this.eventService.setEvent(event.eventId, event, this.name, this.etag);
+      // we get the new eventId as result of setEvent
       if (insertId > 0) {
-        // we actualize this.allWorks immediately .... - not necessary, is done in calling procedure
-        // this.allWorks = await this.workService.getWorks(0, this.name);
-        work = await this.workService.getWork(insertId, this.name);
-        if (work?.issueProviderId > 0) {
-          const provider = this.providerService.getProvider(0, work.issueProviderId, this.name);
-          if (work.type === 1 && !work.isStoredAtIssue && provider?.isStoreIssueWork && (provider?.type === ProviderType.server || (provider?.type === ProviderType.jira  && provider?.isStoreJiraIssueWorkImmediately))) {
+        // we actualize this.allEvents immediately .... - not necessary, is done in calling procedure
+        // this.allEvents = await this.eventService.getEvents(0, this.name);
+        event = await this.eventService.getEvent(insertId, this.name);
+        if (event?.issueProviderId > 0) {
+          const provider = this.providerService.getProvider(0, event.issueProviderId, this.name);
+          if (event.type === 1 && !event.isStoredAtIssue && provider?.isStoreIssueEvent && (provider?.type === ProviderType.server || (provider?.type === ProviderType.jira  && provider?.isStoreJiraIssueEventImmediately))) {
             alert(provider.providerName + ' - ' +this.auth.txt['login_necessary']);
           }
         }
         return true;
       } else if (insertId === 0) {
-        message = 'error - no confirmation for updated work';
+        message = 'error - no confirmation for updated event';
         this.dbFailure(operation, message);
       } else if (insertId === -1) {
         message = 'etag error - file was updated by another user';
@@ -751,58 +751,58 @@ export class WorkDayComponent implements OnInit {
   }
 
   /** --------------------------  public methods -------------------------------------------- */
-  /** -------------------- work-day-selection-bar ------------------------- */
+  /** -------------------- event-day-selection-bar ------------------------- */
 
-  public async selectWorkDay(event: Date) {
+  public async selectEventDay(event: Date) {
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
     const session = this.auth.getSession(this.name);
-    const workDay: Date = GlobalFunctions.getStartOfDay(event);
+    const eventDay: Date = GlobalFunctions.getStartOfDay(event);
     if (this.isSelecting || this.v['card-form-view'].isAutoSelected) {
       // we are in selection mode and user searches target date ...
-      this.targetWorks = await this.getWorksForDate(this.allWorks, session.isPlan, workDay, false);
-      this.targetWorkDay = workDay;
+      this.targetEvents = await this.getEventsForDate(this.allEvents, session.isPlan, eventDay, false);
+      this.targetEventDay = eventDay;
     } else {
       // we change to days after today - only plan is possible
-      if (GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date())) < GlobalFunctions.getDateInMinutes(workDay)
+      if (GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date())) < GlobalFunctions.getDateInMinutes(eventDay)
       && !session.isPlan) {
         session.isPlan = true;
-        if (this.auth.setSessionWorkDay(session, this.name)) {
+        if (this.auth.setSessionEventDay(session, this.name)) {
           this.sessionForViews = session;
-          this.workDayChangeCounter += 1;
+          this.eventDayChangeCounter += 1;
         }
       }
       // we change to days before today from today or a day after today - we change to actual
-      if (GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date()))  > GlobalFunctions.getDateInMinutes(workDay)
-      && GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date()))  <= GlobalFunctions.getDateInMinutes(session.workDay)) {
+      if (GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date()))  > GlobalFunctions.getDateInMinutes(eventDay)
+      && GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date()))  <= GlobalFunctions.getDateInMinutes(session.eventDay)) {
         session.isPlan = false;
-        if (this.auth.setSessionWorkDay(session, this.name)) {
+        if (this.auth.setSessionEventDay(session, this.name)) {
           this.sessionForViews = session;
-          this.workDayChangeCounter += 1;
+          this.eventDayChangeCounter += 1;
         }
       }
-      if (GlobalFunctions.getDateInMinutes(workDay) !== GlobalFunctions.getDateInMinutes(session.workDay)) {
-        const oldWorkDay = session.workDay;
-        session.workDay = workDay;
-        if (this.auth.setSessionWorkDay(session, this.name)) {
-          // workIssues might change due to new date:
-          const isChooseAllCustomerIssues = ConfigurationOptionBasicFunctions.getOptionString(this.options, 'opt_works_isChooseAllCustomerIssues') ?? false;
-          if (isChooseAllCustomerIssues && session.customerNr > 0) {
-            this.workIssues = this.selectIssuesForDate(this.workCustomerIssues) ?? [];
+      if (GlobalFunctions.getDateInMinutes(eventDay) !== GlobalFunctions.getDateInMinutes(session.eventDay)) {
+        const oldEventDay = session.eventDay;
+        session.eventDay = eventDay;
+        if (this.auth.setSessionEventDay(session, this.name)) {
+          // eventIssues might change due to new date:
+          const isChooseAllContactIssues = ConfigurationOptionBasicFunctions.getOptionString(this.options, 'opt_events_isChooseAllContactIssues') ?? false;
+          if (isChooseAllContactIssues && session.contactNr > 0) {
+            this.eventIssues = this.selectIssuesForDate(this.eventContactIssues) ?? [];
           }
-          this.actualWorks = await this.getWorksForDate(this.allWorks, false, session.workDay, false);
-          this.planWorks = await this.getWorksForDate(this.allWorks, true, session.workDay, false);
+          this.actualEvents = await this.getEventsForDate(this.allEvents, false, session.eventDay, false);
+          this.planEvents = await this.getEventsForDate(this.allEvents, true, session.eventDay, false);
           this.setAssocData();
-          this.works = GlobalFunctions.clone(session.isPlan ? this.planWorks : this.actualWorks);
-          this.worksChangeCounter += 1;
+          this.events = GlobalFunctions.clone(session.isPlan ? this.planEvents : this.actualEvents);
+          this.eventsChangeCounter += 1;
           this.sessionForViews = session;
           // if we change to another week
-          if (GlobalFunctions.getYW(workDay) !== GlobalFunctions.getYW(oldWorkDay)) {
-            await this.actualizeWeekWorks();
+          if (GlobalFunctions.getYW(eventDay) !== GlobalFunctions.getYW(oldEventDay)) {
+            await this.actualizeWeekEvents();
             await this.actualizeTimeSpans();
           }
           await this.actualizeLinkedUserData();
-          if (this.actualWorks.length > 0) {
-            this.userService.setUserWorkDay(session.userId, workDay, this.name);
+          if (this.actualEvents.length > 0) {
+            this.userService.setUserEventDay(session.userId, eventDay, this.name);
           }
         }
       }
@@ -842,31 +842,31 @@ export class WorkDayComponent implements OnInit {
         }
       }
     });
-    // actualizeWeekWorks checks if week-view ...
-    if (!this.isWeekLoadedSignal) { await this.actualizeWeekWorks(); }
+    // actualizeWeekEvents checks if week-view ...
+    if (!this.isWeekLoadedSignal) { await this.actualizeWeekEvents(); }
     if (!this.isTimeSpanLoadedSignal) { await this.actualizeTimeSpans(); }
   }
 
-  // set selection of works
+  // set selection of events
   public async setSelection() {
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
     const session = this.auth.getSession(this.name);
     if (this.isSelecting) {
       this.isSelecting = false;
       if (session.isPlan) {
-        this.planWorks.forEach(_ => _.isSelected = false);
+        this.planEvents.forEach(_ => _.isSelected = false);
       } else {
-        this.actualWorks.forEach(_ => _.isSelected = false);
+        this.actualEvents.forEach(_ => _.isSelected = false);
       }
-      this.works = GlobalFunctions.clone(session.isPlan ? this.planWorks : this.actualWorks);
-      this.worksChangeCounter += 1;
-      this.weekWorksChangeCounter += 1;
+      this.events = GlobalFunctions.clone(session.isPlan ? this.planEvents : this.actualEvents);
+      this.eventsChangeCounter += 1;
+      this.weekEventsChangeCounter += 1;
       this.countSelected = 0;
       this.v['time-shift-view'].isAutoSelected = false;
     } else {
       this.isSelecting = true;
-      this.targetWorks = null;
-      this.targetWorkDay = null;
+      this.targetEvents = null;
+      this.targetEventDay = null;
       if (this.v['issue-select-view'].isAutoSelected === true) {
         this.cancelIssueSelectView();
       }
@@ -880,65 +880,65 @@ export class WorkDayComponent implements OnInit {
     const session = this.auth.getSession(this.name);
     let isPlan = event.isPlan;
     let isSessionUpdated = false;
-    if (GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date()))  < GlobalFunctions.getDateInMinutes(event.workDay)) {
+    if (GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date()))  < GlobalFunctions.getDateInMinutes(event.eventDay)) {
       isPlan = true;
     }
     if (session.isPlan !== isPlan) {
       session.isPlan = isPlan;
-      if (this.auth.setSessionWorkDay(session, this.name)) {
+      if (this.auth.setSessionEventDay(session, this.name)) {
         isSessionUpdated = true;
       }
     }
     // with updateOpts it is also possible to change the user of plan
     if (session.externalUserId !== event.externalUserId) {
       session.externalUserId = event.externalUserId;
-      if (this.auth.setSessionWorkDay(session, this.name)) {
+      if (this.auth.setSessionEventDay(session, this.name)) {
         isSessionUpdated = true;
       }
     }
     if (isSessionUpdated) {
-      // we  must renew daily works
-      this.actualWorks = await this.getWorksForDate(this.allWorks, false, session.workDay, false);
-      this.planWorks = await this.getWorksForDate(this.allWorks, true, session.workDay, false);
+      // we  must renew daily events
+      this.actualEvents = await this.getEventsForDate(this.allEvents, false, session.eventDay, false);
+      this.planEvents = await this.getEventsForDate(this.allEvents, true, session.eventDay, false);
       this.setAssocData();
-      this.works = GlobalFunctions.clone(session.isPlan ? this.planWorks : this.actualWorks);
+      this.events = GlobalFunctions.clone(session.isPlan ? this.planEvents : this.actualEvents);
       this.sessionForViews = session;
-      this.worksChangeCounter += 1;
+      this.eventsChangeCounter += 1;
     }
   }
 
 
-  /** -------------------- work-day-issue-select-view ------------------------- */
+  /** -------------------- event-day-issue-select-view ------------------------- */
 
 
   /**
-   * request customer data and all his issues
-   * (... is used also by issues-view when customer is requested ...)
+   * request contact data and all his issues
+   * (... is used also by issues-view when contact is requested ...)
    *
-   *  @param customerNr - this customer is set in workCustomerRequested and therefor shown in issue-select-view
+   *  @param contactNr - this contact is set in eventContactRequested and therefor shown in issue-select-view
    *
   */
-  public async requestCustomer(customerNr: number) {
+  public async requestContact(contactNr: number) {
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
-    // console.log('get issues for custId:', customerNr);
-    if (customerNr !== this.workCustomerRequested.customerNr) {
-      this.workIssuesRequested = [];
-      this.workCustomerRequested = CustomerFactory.empty();
-      // getCustomerIssues from session delivers actual data cause we actualized them before by getIssue()
-      const issues = this.issueService.getMyIssuesCust(customerNr, this.name);
+    // console.log('get issues for custId:', contactNr);
+    if (contactNr !== this.eventContactRequested.contactNr) {
+      this.eventIssuesRequested = [];
+      this.eventContactRequested = ContactFactory.empty();
+      // getContactIssues from session delivers actual data cause we actualized them before by getIssue()
+      const issues = this.issueService.getMyIssuesCust(contactNr, this.name);
       if (issues?.length > 0) {
-        this.workIssuesRequested = this.selectIssuesForDate(issues);
+        this.eventIssuesRequested = this.selectIssuesForDate(issues);
       }
-      const customer = await this.customerService.getCustomerNr(customerNr, this.name);
-      if (customer) {
-        this.workCustomerRequested = customer;
+      const contact = await this.contactService.getContactNr(contactNr, this.name);
+      if (contact) {
+        this.eventContactRequested = contact;
       } else {
         const session = this.auth.getSession(this.name);
-        // in case of not found customer we remember custId in displayNr ....
-        this.workCustomerRequested.customerNr = customerNr;
-        this.workCustomerRequested.displayNr = customerNr.toString();
-        // name is set to txt + custId  - so we can differ customers which have not been found ....
-        this.workCustomerRequested.name = (session.serviceLevel.customer === 1 ? this.auth.txt['contact'] : this.auth.txt['customer']) + ': ' + customerNr.toString();
+        // in case of not found contact we remember custId in displayNr ....
+        this.eventContactRequested.contactNr = contactNr;
+        this.eventContactRequested.displayNr = contactNr.toString();
+        // name is set to txt + custId  - so we can differ contacts which have not been found ....
+        this.eventContactRequested.name = (session.serviceLevel.contact === 1 ? this.auth.txt['contact'] : this.auth.txt['contact']) + ': ' + contactNr.toString();
       }
     }
 
@@ -947,49 +947,49 @@ export class WorkDayComponent implements OnInit {
 
   /**
    * issue is requested to be shown
-   * so we load issue - that means, loading customer of issue as workCustomer
-   *  and loading all issues of workCustomer as workIssuesRequested
-   *  and indicating rewuested issue as workIssueRequested
+   * so we load issue - that means, loading contact of issue as eventContact
+   *  and loading all issues of eventContact as eventIssuesRequested
+   *  and indicating rewuested issue as eventIssueRequested
    * @param issueId -id of issue which is choosen
    */
   public async requestIssue(issueId: number) {
     if (!this.auth.isSessionActive()) { await this.sessionActivate(); }
     const issue = this.issueService.getIssue(issueId, this.name);
     if (issue?.status < 9 ) {
-      this.workIssueRequested = issue;
-      const customerNr = issue.customerNr ?? 0;
-      await this.requestCustomer(customerNr);
+      this.eventIssueRequested = issue;
+      const contactNr = issue.contactNr ?? 0;
+      await this.requestContact(contactNr);
     }
 
   }
 
   /**
-   * rewuestWorkIssues() loads workIssuesRequested (again)
-   *  is used to activate workIssuesRequested if they have not been loaded before
-   *  (in case of isChooseAllCustomerIssues === false)
-   * @param event.customerNr -id of customer which is choosen
+   * rewuestEventIssues() loads eventIssuesRequested (again)
+   *  is used to activate eventIssuesRequested if they have not been loaded before
+   *  (in case of isChooseAllContactIssues === false)
+   * @param event.contactNr -id of contact which is choosen
    * @param event.isMyIssue - issues are assigned to me
-   * @param event.isStarted - only issues have dateFrom <= workDay
+   * @param event.isStarted - only issues have dateFrom <= eventDay
    * @param event.isActive - issues which are not finished
    * @param event.isParent - issues which have subtasks
    * @param event.isSub - issues which have parent
    */
-   public async requestWorkIssues(event: {customerNr: number, isMyIssue: boolean, isStarted: boolean, isActive: boolean, isParent: boolean, isSub: boolean}) {
+   public async requestEventIssues(event: {contactNr: number, isMyIssue: boolean, isStarted: boolean, isActive: boolean, isParent: boolean, isSub: boolean}) {
     if (!this.auth.isSessionActive()) { await this.sessionActivate(); }
-    const {customerNr: customerNr, isMyIssue, isStarted, isActive, isParent, isSub} = event;
-    this.workIssuesRequested = [];
+    const {contactNr: contactNr, isMyIssue, isStarted, isActive, isParent, isSub} = event;
+    this.eventIssuesRequested = [];
     let issues: Array<Issue>;
     // we load issues for  customeer - if isMyIssue, than only issue where user is the assignee
     if (isMyIssue) {
-      issues = this.issueService.getMyIssuesCust(customerNr, this.name);
+      issues = this.issueService.getMyIssuesCust(contactNr, this.name);
     } else {
-      issues = this.issueService.getIssuesCust(customerNr, this.name);
+      issues = this.issueService.getIssuesCust(contactNr, this.name);
     }
     if (issues?.length > 0) {
       const session = this.auth.getSession(this.name);
       // isStared - we select only issues which has been already started
       if (isStarted) {
-        issues = issues.filter(_ => (!_.issueDateFrom || GlobalFunctions.getDateInMinutes(GlobalFunctions.addDays(session.workDay, 1) ) > GlobalFunctions.getDateInMinutes(_.issueDateFrom) ));
+        issues = issues.filter(_ => (!_.issueDateFrom || GlobalFunctions.getDateInMinutes(GlobalFunctions.addDays(session.eventDay, 1) ) > GlobalFunctions.getDateInMinutes(_.issueDateFrom) ));
       }
       // isActive - we exclude finished issues
       if (isActive) {
@@ -1008,8 +1008,8 @@ export class WorkDayComponent implements OnInit {
       }
       if (issues?.length > 0) {
         // and sort on interval begin
-        issues.sort((a, b) => GlobalFunctions.getDateInMinutes(a.issueDateFrom ?? session.workDay) - GlobalFunctions.getDateInMinutes(b.issueDateFrom ?? session.workDay) );
-        this.workIssuesRequested = issues;
+        issues.sort((a, b) => GlobalFunctions.getDateInMinutes(a.issueDateFrom ?? session.eventDay) - GlobalFunctions.getDateInMinutes(b.issueDateFrom ?? session.eventDay) );
+        this.eventIssuesRequested = issues;
       }
     }
 
@@ -1017,31 +1017,31 @@ export class WorkDayComponent implements OnInit {
 
 
   /**
-   * customerNr is defined as selectable customer in this.workCustomer and in session
+   * contactNr is defined as selectable contact in this.eventContact and in session
    *
-   * @param customerNr
+   * @param contactNr
    */
-  public async selectCustomer(customerNr: number) {
+  public async selectContact(contactNr: number) {
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
-    if (customerNr > 0) {
-      const customer = await this.customerService.getCustomerNr(customerNr, this.name);
-      if (customer) {
+    if (contactNr > 0) {
+      const contact = await this.contactService.getContactNr(contactNr, this.name);
+      if (contact) {
         this.auth.setSessionIssueId(0, this.name);
-        this.auth.setSessionCustomerId(customerNr, this.name);
+        this.auth.setSessionContactId(contactNr, this.name);
         // we push issueSekection (check on existing selections is made by issueService)
         const issueSelected = IssueSelectionFactory.empty();
-        issueSelected.customerNr = customer.customerNr;
-        issueSelected.customerName = customer.name;
-        issueSelected.displayNr = customer.displayNr;
+        issueSelected.contactNr = contact.contactNr;
+        issueSelected.contactName = contact.name;
+        issueSelected.displayNr = contact.displayNr;
         this.issueService.pushIssueSelections(issueSelected, this.name);
-        await this.getWorkOptions();
+        await this.getEventOptions();
         this.cancelIssueSelectView();
       }
     } else {
-      // if no customer is choosen, we set back session ids
+      // if no contact is choosen, we set back session ids
       this.auth.setSessionIssueId(0, this.name);
-      this.auth.setSessionCustomerId(0, this.name);
-      await this.getWorkOptions();
+      this.auth.setSessionContactId(0, this.name);
+      await this.getEventOptions();
       this.cancelIssueSelectView();
     }
   }
@@ -1050,28 +1050,28 @@ export class WorkDayComponent implements OnInit {
  *  selectIssue()
  *  (... is used also by issues-view ...)
  *  a new session issue  is built with the selected issue
- *  all isssue (workIssue,....) and customer dependent data are renewed by this.getWorkOptions();
+ *  all isssue (eventIssue,....) and contact dependent data are renewed by this.getEventOptions();
  * @param issueId is the id of selected issue
  *
  */
   public async selectIssue(issueId: number) {
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
     const session = this.auth.getSession(this.name);
-    if (issueId !== this.workIssue.issueId) {
+    if (issueId !== this.eventIssue.issueId) {
       const issue = this.issueService.getIssue(issueId, this.name);
       if (issue) {
         const provider = this.providerService.getProvider(0, issue.issueProviderId, this.name);
-        let customerName = '';
-        if (issue.customerNr > 0) {
-          const customer = await this.customerService.getCustomerNr(issue.customerNr, this.name);
-          if (customer) {
-            customerName = customer.name;
+        let contactName = '';
+        if (issue.contactNr > 0) {
+          const contact = await this.contactService.getContactNr(issue.contactNr, this.name);
+          if (contact) {
+            contactName = contact.name;
           }
         }
         // we push issueSekection (check on existing selections is made by issueService)
         const issueSelected = IssueSelectionFactory.empty();
-        issueSelected.customerNr = issue.customerNr ?? 0;
-        issueSelected.customerName = customerName;
+        issueSelected.contactNr = issue.contactNr ?? 0;
+        issueSelected.contactName = contactName;
         issueSelected.displayNr = issue.displayNr;
         issueSelected.issueProviderId = issue.issueProviderId;
         issueSelected.providerUrl = provider.providerUrl;
@@ -1084,10 +1084,10 @@ export class WorkDayComponent implements OnInit {
         this.issueService.pushIssueSelections(issueSelected, this.name);
         // we actualize session independent of emitted event to have the latest session date for
         this.auth.setSessionIssueId(issue.issueId, this.name);
-        const customerNr = issue.customerNr ?? 0;
-        // session customer id set to id, even if we have not found a customer for it
-        this.auth.setSessionCustomerId(customerNr, this.name);
-        await this.getWorkOptions();
+        const contactNr = issue.contactNr ?? 0;
+        // session contact id set to id, even if we have not found a contact for it
+        this.auth.setSessionContactId(contactNr, this.name);
+        await this.getEventOptions();
         this.issueSelect.emit(issue);
         // issueSelect can come from issues-view also, but in this case we leave the view visible ...
         this.cancelIssueSelectView();
@@ -1100,81 +1100,81 @@ export class WorkDayComponent implements OnInit {
     let ix: number;
     let iy: number;
     const {status, id} = event;
-    // we set status in both issue lists and in workIssue ..
+    // we set status in both issue lists and in eventIssue ..
     // TODO we must check issueProvider - set status is allowed only for client, server
     // for providers with configuration for status update we must map status done to provider rules ....
-    if (id === this.workIssue.issueId) {
-      this.workIssue.status = status;
+    if (id === this.eventIssue.issueId) {
+      this.eventIssue.status = status;
     }
-    ix = this.workIssuesRequested.findIndex(_ => _.issueId === id);
+    ix = this.eventIssuesRequested.findIndex(_ => _.issueId === id);
     if (ix >= 0) {
-      this.workIssuesRequested[ix] = this.issueService.getIssue(id, this.name);
+      this.eventIssuesRequested[ix] = this.issueService.getIssue(id, this.name);
       const issueEtag = this.issueService.getEtag(this.name);
-      this.workIssuesRequested[ix].status = status;
-      // we set issue without isUpdatingIssueWork flag - status might be updated only if user has serviceLevel.maint > 0
-      await this.issueService.setIssue(this.workIssuesRequested[ix], this.name, issueEtag);
+      this.eventIssuesRequested[ix].status = status;
+      // we set issue without isUpdatingIssueEvent flag - status might be updated only if user has serviceLevel.maint > 0
+      await this.issueService.setIssue(this.eventIssuesRequested[ix], this.name, issueEtag);
     }
-    iy = this.workIssues.findIndex(_ => _.issueId === id);
+    iy = this.eventIssues.findIndex(_ => _.issueId === id);
     if (iy >= 0) {
-      this.workIssues[iy] = this.issueService.getIssue(id, this.name);
+      this.eventIssues[iy] = this.issueService.getIssue(id, this.name);
       const issueEtag = this.issueService.getEtag(this.name);
-      this.workIssues[iy].status = status;
-      // we set issue without isUpdatingIssueWork flag - status might be updated only if user has serviceLevel.maint > 0
-      await this.issueService.setIssue(this.workIssues[iy], this.name, issueEtag);
+      this.eventIssues[iy].status = status;
+      // we set issue without isUpdatingIssueEvent flag - status might be updated only if user has serviceLevel.maint > 0
+      await this.issueService.setIssue(this.eventIssues[iy], this.name, issueEtag);
     }
   }
 
   public async cancelIssueSelectView() {
-    await this.getWorkOptions();
+    await this.getEventOptions();
     if ( this.v['issue-select-view'].isAutoSelected) {
       this.v['issue-select-view'].isAutoSelected = false;
       this.v[this.formerView].isSelected = true;
     }
   }
 
-  /** -------------------- work-day-week-view ------------------------- */
+  /** -------------------- event-day-week-view ------------------------- */
 
   /**
-   * setting workDay and isPlan
+   * setting eventDay and isPlan
    * @param event date and isPlan, set by week-view - is therefore restricted on days of the chosen week
    */
-   public async selectWorkDayAndPlan(event: {date: Date, isPlan: boolean}) {
-    const workDay: Date = GlobalFunctions.getStartOfDay(event.date);
+   public async selectEventDayAndPlan(event: {date: Date, isPlan: boolean}) {
+    const eventDay: Date = GlobalFunctions.getStartOfDay(event.date);
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
     const session = this.auth.getSession(this.name);
     let isSessionUpdated = false;
-    let isWorkDayUpdated = false;
-    if (GlobalFunctions.getDateInMinutes(workDay) !== GlobalFunctions.getDateInMinutes(session.workDay)) {
-      session.workDay = workDay;
+    let isEventDayUpdated = false;
+    if (GlobalFunctions.getDateInMinutes(eventDay) !== GlobalFunctions.getDateInMinutes(session.eventDay)) {
+      session.eventDay = eventDay;
       session.isPlan = event.isPlan;
-      if (this.auth.setSessionWorkDay(session, this.name)) {
+      if (this.auth.setSessionEventDay(session, this.name)) {
         isSessionUpdated = true;
-        isWorkDayUpdated = true;
+        isEventDayUpdated = true;
 
       }
     } else if (session.isPlan !== event.isPlan) {
       session.isPlan = event.isPlan;
-      if (this.auth.setSessionWorkDay(session, this.name)) {
+      if (this.auth.setSessionEventDay(session, this.name)) {
         isSessionUpdated = true;
       }
     }
     if (isSessionUpdated) {
-      // we  must renew daily works
-      this.actualWorks = await this.getWorksForDate(this.allWorks, false, session.workDay, false);
-      this.planWorks = await this.getWorksForDate(this.allWorks, true, session.workDay, false);
+      // we  must renew daily events
+      this.actualEvents = await this.getEventsForDate(this.allEvents, false, session.eventDay, false);
+      this.planEvents = await this.getEventsForDate(this.allEvents, true, session.eventDay, false);
       this.setAssocData();
-      this.works = GlobalFunctions.clone(session.isPlan ? this.planWorks : this.actualWorks);
+      this.events = GlobalFunctions.clone(session.isPlan ? this.planEvents : this.actualEvents);
       this.sessionForViews = session;
-      this.worksChangeCounter += 1;
-      if (isWorkDayUpdated && this.actualWorks.length > 0) {
-        this.userService.setUserWorkDay(session.userId, workDay, this.name);
+      this.eventsChangeCounter += 1;
+      if (isEventDayUpdated && this.actualEvents.length > 0) {
+        this.userService.setUserEventDay(session.userId, eventDay, this.name);
       }
     }
   }
 
 
-  /** --------------------  work-day-grid-view ------------------------- */
-  /** -------------------- work-day-cards-view ------------------------- */
+  /** --------------------  event-day-grid-view ------------------------- */
+  /** -------------------- event-day-cards-view ------------------------- */
 
   public async setLinkedUser(event: boolean) {
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
@@ -1183,40 +1183,40 @@ export class WorkDayComponent implements OnInit {
       session.isShowLinkedUser = true;
       /*
       data for linked user are loaded anyway ...
-      if (this.auth.setSessionWorkDay(session, this.name)) {
+      if (this.auth.setSessionEventDay(session, this.name)) {
         this.sessionForViews = session;
         // in order to change view in view ...
-        this.worksChangeCounter += 1;
+        this.eventsChangeCounter += 1;
         this.getLinkedUserData();
       }
       */
     } else {
       session.isShowLinkedUser = false;
     }
-    this.auth.setSessionWorkDay(session, this.name);
+    this.auth.setSessionEventDay(session, this.name);
     this.sessionForViews = session;
     // in order to change view in view ...
-    this.worksChangeCounter += 1;
+    this.eventsChangeCounter += 1;
   }
 
-  public async selectWork(event: {isSelect: boolean, id: number}) {
+  public async selectEvent(event: {isSelect: boolean, id: number}) {
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
     const session = this.auth.getSession(this.name);
-    // console.log('selectWork:', event);
+    // console.log('selectEvent:', event);
     let ix = 0;
     let count = 0;
     if (session.isPlan) {
-      ix = this.planWorks.findIndex(_ => _.workId === event.id);
+      ix = this.planEvents.findIndex(_ => _.eventId === event.id);
       if (ix >= 0) {
-        this.planWorks[ix].isSelected = event.isSelect ? true : false;
+        this.planEvents[ix].isSelected = event.isSelect ? true : false;
       }
-      count = this.planWorks.filter(_ => _.isSelected).length;
+      count = this.planEvents.filter(_ => _.isSelected).length;
     } else {
-      ix = this.actualWorks.findIndex(_ => _.workId === event.id);
+      ix = this.actualEvents.findIndex(_ => _.eventId === event.id);
       if (ix >= 0) {
-        this.actualWorks[ix].isSelected = event.isSelect ? true : false;
+        this.actualEvents[ix].isSelected = event.isSelect ? true : false;
       }
-      count = this.actualWorks.filter(_ => _.isSelected).length;
+      count = this.actualEvents.filter(_ => _.isSelected).length;
     }
     if (count >= 0) {
       this.countSelected = count;
@@ -1226,8 +1226,8 @@ export class WorkDayComponent implements OnInit {
     } else {
       this.v['time-shift-view'].isAutoSelected = false;
     }
-    this.works = GlobalFunctions.clone(session.isPlan ? this.planWorks : this.actualWorks);
-    this.worksChangeCounter += 1;
+    this.events = GlobalFunctions.clone(session.isPlan ? this.planEvents : this.actualEvents);
+    this.eventsChangeCounter += 1;
   }
 
   /**
@@ -1235,30 +1235,30 @@ export class WorkDayComponent implements OnInit {
    * @param event.updateType: insert or update
    * // TODO enhance possible type: setShow (=show content without updating) - if we have the use cases for it
    *  where a user is allowed to view but not to update ... and correct the 2 other possible types to setInsert, setUpdate
-   * @param event.work: in case of update the existing work to be updated,
-   *   in case of insert work is empty except work.type which indicates 0 for work, 20 for time space
-   * @param event.d: workDay and time of inserted work
+   * @param event.event: in case of update the existing event to be updated,
+   *   in case of insert event is empty except event.type which indicates 0 for event, 20 for time space
+   * @param event.d: eventDay and time of inserted event
    */
-  public async enableCardFormView(event: {updateType: UpdateType, work: Work, d: Date}) {
+  public async enableCardFormView(event: {updateType: UpdateType, event: Event, d: Date}) {
     // we start with hiding sidebar to assure that sidebar is already hidden when  card form is activated
     this.sidebarHide.emit();
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
     const session = this.auth.getSession(this.name);
-    // work with type >= 20 are time spans ....
-    if (event.updateType === UpdateType.update && event.work.type < WorkType.timeSpanUndefined ) {
-      // in week view we allow enabling a work entry on another day as workDay
-      const isPlan = event.work.type === WorkType.plan;
-      const dayOfWork: Date = GlobalFunctions.getStartOfDay(event.work.workBegin);
-      if (GlobalFunctions.getDateInMinutes(session.workDay) !== GlobalFunctions.getDateInMinutes(dayOfWork)
+    // event with type >= 20 are time spans ....
+    if (event.updateType === UpdateType.update && event.event.type < EventType.timeSpanUndefined ) {
+      // in week view we allow enabling a event entry on another day as eventDay
+      const isPlan = event.event.type === EventType.plan;
+      const dayOfEvent: Date = GlobalFunctions.getStartOfDay(event.event.eventBegin);
+      if (GlobalFunctions.getDateInMinutes(session.eventDay) !== GlobalFunctions.getDateInMinutes(dayOfEvent)
       || session.isPlan !== isPlan) {
-        this.selectWorkDayAndPlan({date: dayOfWork, isPlan});
+        this.selectEventDayAndPlan({date: dayOfEvent, isPlan});
       }
     }
 
-    // TODO build workContainer
-    this.workContainer = event;
-    this.targetWorkDay = null;
-    this.targetWorks = null;
+    // TODO build eventContainer
+    this.eventContainer = event;
+    this.targetEventDay = null;
+    this.targetEvents = null;
     this.v['card-form-view'].isAutoSelected = true;
   }
 
@@ -1267,43 +1267,43 @@ export class WorkDayComponent implements OnInit {
   }
 
 
-  /** -------------------- work-day-card-form-view ------------------------- */
-  /** -------------------- work-day-cards-view ------------------------- */
-  /** -------------------- work-day-time-shift-view ------------------------- */
+  /** -------------------- event-day-card-form-view ------------------------- */
+  /** -------------------- event-day-cards-view ------------------------- */
+  /** -------------------- event-day-time-shift-view ------------------------- */
 
-  public async updateWork(event: {updateType: UpdateType, work: Work, works?: Array<Work>}) {
+  public async updateEvent(event: {updateType: UpdateType, event: Event, events?: Array<Event>}) {
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
     const session = this.auth.getSession(this.name);
     // let ix: number;
-    const {updateType, work, works} = event;
+    const {updateType, event, events} = event;
     let message = this.auth.txt['session_timed_out__new_login'];
     let operation = '';
-    let targetWorkDay = session.workDay;
+    let targetEventDay = session.eventDay;
     switch (updateType) {
       case UpdateType.cancelUpdate:
         // cancelUpdate is useless now - we do not block activities by isUpdated
         break;
       case UpdateType.update:
-        operation = 'update work';
+        operation = 'update event';
         message = 'update not possible - internal structure error';
         if (session.isPlanMaint) {
-          const isUpdated = await this.workUpdate(work);
-          targetWorkDay = GlobalFunctions.getStartOfDay(work.workBegin);
+          const isUpdated = await this.eventUpdate(event);
+          targetEventDay = GlobalFunctions.getStartOfDay(event.eventBegin);
           if (isUpdated) {
-            if (GlobalFunctions.isMinuteSame(session.workDay, targetWorkDay)) {
-              await this.getWorks();
-              this.worksChangeCounter += 1;
+            if (GlobalFunctions.isMinuteSame(session.eventDay, targetEventDay)) {
+              await this.getEvents();
+              this.eventsChangeCounter += 1;
               this.setAssocData();
-              await this.actualizeWeekWorks();
+              await this.actualizeWeekEvents();
             } else {
-              await this.getWorks();
-              await this.actualizeWeekWorks();
-              if (work.type === WorkType.actual) {
-                this.userService.setUserWorkDay(session.userId, targetWorkDay, this.name);
+              await this.getEvents();
+              await this.actualizeWeekEvents();
+              if (event.type === EventType.actual) {
+                this.userService.setUserEventDay(session.userId, targetEventDay, this.name);
               }
             }
           } else {
-            await this.getWorks();
+            await this.getEvents();
           }
         } else {
           message = 'not allowed due to user rights';
@@ -1311,29 +1311,29 @@ export class WorkDayComponent implements OnInit {
         }
         break;
       case UpdateType.multipleUpdate:
-        // we make multiple updates based on works ...
-        operation = 'update multiple works';
+        // we make multiple updates based on events ...
+        operation = 'update multiple events';
         message = 'update not possible - internal structure error';
         if (session.isPlanMaint) {
           this.refreshSignal.set(0);
-          for (const _ of works) {
-            if (_.workId > 0) {
-              const isUpdated =  await this.workUpdate(_);
+          for (const _ of events) {
+            if (_.eventId > 0) {
+              const isUpdated =  await this.eventUpdate(_);
               // in a series of updates we must actualize etag in between ...
-              // (in other updates this is done in this.getWorks())
-              this.etag = this.workService.getEtag(this.name);
+              // (in other updates this is done in this.getEvents())
+              this.etag = this.eventService.getEtag(this.name);
               if (!isUpdated) {
                 this.dbFailure(operation, message);
               }
             } else {
-              message = 'update not possible - no workId';
+              message = 'update not possible - no eventId';
               this.dbFailure(operation, message);
             }
           }
-          await this.getWorks();
-          this.worksChangeCounter += 1;
+          await this.getEvents();
+          this.eventsChangeCounter += 1;
           this.setAssocData();
-          await this.actualizeWeekWorks();
+          await this.actualizeWeekEvents();
           this.refreshSignal.set(1);
         } else {
           message = 'not allowed due to user rights';
@@ -1341,33 +1341,33 @@ export class WorkDayComponent implements OnInit {
         }
         break;
       case UpdateType.insert:
-        operation = 'insert work';
-        message = 'error - no confirmation for posted work';
+        operation = 'insert event';
+        message = 'error - no confirmation for posted event';
         if (session.isPlanMaint) {
-          let newWork = WorkFactory.empty();
-          // setting work fields from work
-          newWork = this.setWorkContent(work, newWork);
-          if (work.customerNr > 0 || work.issueProviderId > 0) {
-            newWork = await this.setWorkIssueContent (work, newWork);
+          let newEvent = EventFactory.empty();
+          // setting event fields from event
+          newEvent = this.setEventContent(event, newEvent);
+          if (event.contactNr > 0 || event.issueProviderId > 0) {
+            newEvent = await this.setEventIssueContent (event, newEvent);
           }
           // setting type according to session
-          newWork.type = session.isPlan ? 0 : 1;
-          const isInserted = await this.workInsert(newWork);
-          targetWorkDay = GlobalFunctions.getStartOfDay(newWork.workBegin);
+          newEvent.type = session.isPlan ? 0 : 1;
+          const isInserted = await this.eventInsert(newEvent);
+          targetEventDay = GlobalFunctions.getStartOfDay(newEvent.eventBegin);
           if (isInserted) {
-            if (GlobalFunctions.isMinuteSame(session.workDay, targetWorkDay)) {
-              await this.getWorks();
-              this.worksChangeCounter += 1;
-              await this.actualizeWeekWorks();
+            if (GlobalFunctions.isMinuteSame(session.eventDay, targetEventDay)) {
+              await this.getEvents();
+              this.eventsChangeCounter += 1;
+              await this.actualizeWeekEvents();
             } else {
-              await this.getWorks();
-              await this.actualizeWeekWorks();
+              await this.getEvents();
+              await this.actualizeWeekEvents();
             }
-            if (newWork.type === WorkType.actual) {
-              this.userService.setUserWorkDay(session.userId, targetWorkDay, this.name);
+            if (newEvent.type === EventType.actual) {
+              this.userService.setUserEventDay(session.userId, targetEventDay, this.name);
             }
           } else {
-            await this.getWorks();
+            await this.getEvents();
           }
         } else {
           message = 'not allowed due to user rights';
@@ -1377,8 +1377,8 @@ export class WorkDayComponent implements OnInit {
       case UpdateType.copyPlanToActual:
         // falls through intentionally
       case UpdateType.multipleInsert:
-        // we make multiple inserts based on works ...
-        operation = 'insert multiple works';
+        // we make multiple inserts based on events ...
+        operation = 'insert multiple events';
         message = 'insert not possible - internal structure error';
         if (session.isPlanMaint) {
           this.refreshSignal.set(0);
@@ -1386,39 +1386,39 @@ export class WorkDayComponent implements OnInit {
           let targetType = session.isPlan ? 0 : 1;
           if (updateType === UpdateType.copyPlanToActual) {
             targetType = 1;
-            operation = 'insert multiple actual works from plan';
+            operation = 'insert multiple actual events from plan';
           }
           let isAllInserted = true;
-          for (const _ of works) {
-            let newWork = WorkFactory.empty();
-            // setting work fields from work
-            newWork = this.setWorkContent(_, newWork);
-            if (_.customerNr > 0 || _.issueProviderId > 0) {
-              newWork = await this.setWorkIssueContent (_, newWork);
+          for (const _ of events) {
+            let newEvent = EventFactory.empty();
+            // setting event fields from event
+            newEvent = this.setEventContent(_, newEvent);
+            if (_.contactNr > 0 || _.issueProviderId > 0) {
+              newEvent = await this.setEventIssueContent (_, newEvent);
             }
-            newWork.type = targetType;
-            const isInserted = await this.workInsert(newWork);
+            newEvent.type = targetType;
+            const isInserted = await this.eventInsert(newEvent);
             // in a series of updates we must actualize etag in between ...
-            // (in other updates this is done in this.getWorks())
-            this.etag = this.workService.getEtag(this.name);
+            // (in other updates this is done in this.getEvents())
+            this.etag = this.eventService.getEtag(this.name);
             if (!isInserted)  {
               isAllInserted = false;
             }
           }
           // isAllInserted set true if all inserts are ok
           if (isAllInserted) {
-            await this.getWorks();
+            await this.getEvents();
             this.setAssocData();
-            this.worksChangeCounter += 1;
-            this.actualizeWeekWorks();
-            if (targetType === WorkType.actual) {
-              this.userService.setUserWorkDay(session.userId, targetWorkDay, this.name);
+            this.eventsChangeCounter += 1;
+            this.actualizeWeekEvents();
+            if (targetType === EventType.actual) {
+              this.userService.setUserEventDay(session.userId, targetEventDay, this.name);
             }
           } else {
             this.dbFailure(operation, message);
             // we must actualize - some inserts could have happened ...
-            await this.getWorks();
-            await this.actualizeWeekWorks();
+            await this.getEvents();
+            await this.actualizeWeekEvents();
           }
           this.refreshSignal.set(1);
         } else {
@@ -1427,15 +1427,15 @@ export class WorkDayComponent implements OnInit {
         }
         break;
       case UpdateType.delete:
-        operation = 'delete (disable) work';
+        operation = 'delete (disable) event';
         message = 'error - element for disabling was not found';
         if (session.isPlanMaint) {
-          const isDisabled = await this.workService.setWorkDisabled(work.workId, this.name, this.etag);
+          const isDisabled = await this.eventService.setEventDisabled(event.eventId, this.name, this.etag);
           if (isDisabled) {
-            await this.getWorks();
-            this.worksChangeCounter += 1;
-            // after getWorks to get the corrected time
-            await this.actualizeWeekWorks();
+            await this.getEvents();
+            this.eventsChangeCounter += 1;
+            // after getEvents to get the corrected time
+            await this.actualizeWeekEvents();
           } else {
             this.dbFailure(operation, message);
           }
@@ -1450,45 +1450,45 @@ export class WorkDayComponent implements OnInit {
     this.sidebarShow.emit();
   }
 
-  // updating work and also associated works
-  public async updateWorkAssoc(event: {updateType: UpdateType, work: Work}) {
-    // first we update work
-    await this.updateWork(event);
-    const {updateType, work} = event;
-    // update assoc works with customerNr, issue ids if they have changed
+  // updating event and also associated events
+  public async updateEventAssoc(event: {updateType: UpdateType, event: Event}) {
+    // first we update event
+    await this.updateEvent(event);
+    const {updateType, event} = event;
+    // update assoc events with contactNr, issue ids if they have changed
     // after alerting user
-    if (work.type === 0) {
+    if (event.type === 0) {
       let isConfirmed = false;
-      for (let _ of this.actualWorks) {
-        if (_.planId > 0 && _.planId === work.workId) {
-          if (!isConfirmed) { isConfirmed = confirm(this.auth.txt['set'] + ' ' + this.auth.txt['all_customer_issue_relations'] + '?')}
+      for (let _ of this.actualEvents) {
+        if (_.planId > 0 && _.planId === event.eventId) {
+          if (!isConfirmed) { isConfirmed = confirm(this.auth.txt['set'] + ' ' + this.auth.txt['all_contact_issue_relations'] + '?')}
           if (isConfirmed) {
-            if (work.customerNr > 0 || work.issueProviderId > 0) {
-              _ = await this.setWorkIssueContent (work, _);
+            if (event.contactNr > 0 || event.issueProviderId > 0) {
+              _ = await this.setEventIssueContent (event, _);
             }
-            await this.updateWork({updateType, work: _ });
+            await this.updateEvent({updateType, event: _ });
           } else {
             break;
           }
         }
       }
     }
-    if (work.type === 1) {
-      const ix = this.planWorks.findIndex(_ => _.workId === work.planId);
+    if (event.type === 1) {
+      const ix = this.planEvents.findIndex(_ => _.eventId === event.planId);
       if (ix >= 0) {
-        // update plan work
-        if (confirm(this.auth.txt['set'] + ' ' + this.auth.txt['all_customer_issue_relations'] + '?')) {
-          if (work.customerNr > 0 || work.issueProviderId > 0) {
-            this.planWorks[ix] = await this.setWorkIssueContent (work, this.planWorks[ix]);
+        // update plan event
+        if (confirm(this.auth.txt['set'] + ' ' + this.auth.txt['all_contact_issue_relations'] + '?')) {
+          if (event.contactNr > 0 || event.issueProviderId > 0) {
+            this.planEvents[ix] = await this.setEventIssueContent (event, this.planEvents[ix]);
           }
-          await this.updateWork({updateType, work: this.planWorks[ix]});
-          // update other actual works
-          for (let _ of this.actualWorks) {
-            if (_.planId > 0 && _.planId === this.planWorks[ix].workId && _.workId !== work.workId) {
-              if (work.customerNr > 0 || work.issueProviderId > 0) {
-                _ = await this.setWorkIssueContent (work, _);
+          await this.updateEvent({updateType, event: this.planEvents[ix]});
+          // update other actual events
+          for (let _ of this.actualEvents) {
+            if (_.planId > 0 && _.planId === this.planEvents[ix].eventId && _.eventId !== event.eventId) {
+              if (event.contactNr > 0 || event.issueProviderId > 0) {
+                _ = await this.setEventIssueContent (event, _);
               }
-              await this.updateWork({updateType, work: _});
+              await this.updateEvent({updateType, event: _});
             }
           }
         }
@@ -1496,7 +1496,7 @@ export class WorkDayComponent implements OnInit {
     }
   }
 
-  /** -------------------- work-day-card-form-view ------------------------- */
+  /** -------------------- event-day-card-form-view ------------------------- */
 
 
   public cancelCardFormView() {
@@ -1505,33 +1505,33 @@ export class WorkDayComponent implements OnInit {
   }
 
   // insert, update, delete timespan
-  public async updateTimeSpan(event: {updateType: UpdateType, work: Work}) {
+  public async updateTimeSpan(event: {updateType: UpdateType, event: Event}) {
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
     const session = this.auth.getSession(this.name);
     // let ix: number;
-    const {updateType, work} = event;
-    // let customerNr = event.customerNr;
-    const targetWorkDay: Date = GlobalFunctions.getStartOfDay(work.workBegin);
+    const {updateType, event} = event;
+    // let contactNr = event.contactNr;
+    const targetEventDay: Date = GlobalFunctions.getStartOfDay(event.eventBegin);
     switch (updateType) {
       case UpdateType.update:
         if (session.isPlanMaint) {
-          const updWork = WorkFactory.empty();
-          // setting work fields from work
-          this.setWorkContent(work, updWork);
-          updWork.workId = work.workId;
-          // we must take all work fields which are set by work service at insert and shall be unchanged
-          updWork.mandantId = work.mandantId;
-          updWork.userId = work.userId;
-          updWork.userToken = work.userToken;
-          updWork.type = work.type;
-          updWork.status = work.status;
-          // and we must take customer and login info
-          // updWork.customerNr = customerNr ?? 0;
-          updWork.customerNr = work.customerNr;
-          updWork.login = work.login;
-          const updateId = await this.workService.setWork(updWork.workId, updWork, this.name, this.etag);
+          const updEvent = EventFactory.empty();
+          // setting event fields from event
+          this.setEventContent(event, updEvent);
+          updEvent.eventId = event.eventId;
+          // we must take all event fields which are set by event service at insert and shall be unchanged
+          updEvent.mandantId = event.mandantId;
+          updEvent.userId = event.userId;
+          updEvent.userToken = event.userToken;
+          updEvent.type = event.type;
+          updEvent.status = event.status;
+          // and we must take contact and login info
+          // updEvent.contactNr = contactNr ?? 0;
+          updEvent.contactNr = event.contactNr;
+          updEvent.login = event.login;
+          const updateId = await this.eventService.setEvent(updEvent.eventId, updEvent, this.name, this.etag);
           if (updateId > 0) {
-            await this.getWorks();
+            await this.getEvents();
             this.timeSpanChangeCounter += 1;
             await this.actualizeTimeSpans();
           } else if (updateId === 0 ) {
@@ -1540,24 +1540,24 @@ export class WorkDayComponent implements OnInit {
             this.dbFailure(operation, message);
           } else if (updateId === -1) {
             alert('etag error - file was updated by another user');
-            this.etag = this.workService.getEtag(this.name);
+            this.etag = this.eventService.getEtag(this.name);
           }
         } // isPlanMaint
         break;
       case UpdateType.insert:
-        const newWork = WorkFactory.empty();
-        // setting work fields from work
-        this.setWorkContent(work, newWork);
+        const newEvent = EventFactory.empty();
+        // setting event fields from event
+        this.setEventContent(event, newEvent);
         if (session.isPlanMaint) {
           // in case of timespan custommer and login does not come from issue
-          // newWork.customerNr = customerNr ?? 0;
-          newWork.customerNr = work.customerNr;
-          newWork.workId = 0;
+          // newEvent.contactNr = contactNr ?? 0;
+          newEvent.contactNr = event.contactNr;
+          newEvent.eventId = 0;
           // category defines type !!!!!
-          newWork.type = work.type;
-          const insertId = await this.workService.setWork(newWork.workId, newWork, this.name, this.etag);
+          newEvent.type = event.type;
+          const insertId = await this.eventService.setEvent(newEvent.eventId, newEvent, this.name, this.etag);
           if (insertId > 0) {
-            await this.getWorks();
+            await this.getEvents();
             this.timeSpanChangeCounter += 1;
             await this.actualizeTimeSpans();
           } else if (insertId === 0) {
@@ -1566,15 +1566,15 @@ export class WorkDayComponent implements OnInit {
             this.dbFailure(operation, message);
           } else if (insertId === -1) {
             alert('etag error - file was updated by another user');
-            this.etag = this.workService.getEtag(this.name);
+            this.etag = this.eventService.getEtag(this.name);
           }
         } // isPlnMaint
         break;
       case UpdateType.delete:
         if (session.isPlanMaint) {
-          const isDisabled = await this.workService.setWorkDisabled(work.workId, this.name, this.etag);
+          const isDisabled = await this.eventService.setEventDisabled(event.eventId, this.name, this.etag);
           if (isDisabled) {
-            await this.getWorks();
+            await this.getEvents();
             this.timeSpanChangeCounter += 1;
             await this.actualizeTimeSpans();
           } else {
@@ -1591,55 +1591,55 @@ export class WorkDayComponent implements OnInit {
   }
 
 
-  /** -------------------- work-day-time-shift-view ------------------------- */
+  /** -------------------- event-day-time-shift-view ------------------------- */
 
   public cancelTimeShiftView() {
     this.v['time-shift-view'].isAutoSelected = false;
   }
 
 
-  /** --------------------  work-day-issues-view ------------------------- */
+  /** --------------------  event-day-issues-view ------------------------- */
 
-  // event = workId
-  public async selectIssueOfWork(event: number) {
-    const ix = this.allWorks.findIndex(_ => _.workId === event);
+  // event = eventId
+  public async selectIssueOfEvent(event: number) {
+    const ix = this.allEvents.findIndex(_ => _.eventId === event);
     if (ix >= 0) {
-      const issue = await this.issueService.getIssueByExternalId(this.allWorks[ix].issueProviderId, this.allWorks[ix].nExternalIssueId, this.allWorks[ix].sExternalIssueId, this.name)
+      const issue = await this.issueService.getIssueByExternalId(this.allEvents[ix].issueProviderId, this.allEvents[ix].nExternalIssueId, this.allEvents[ix].sExternalIssueId, this.name)
       if (issue) {
         await this.selectIssue(issue.issueId);
       }
     }
   }
 
-  /** -------------------- work-day-options-view ------------------------- */
+  /** -------------------- event-day-options-view ------------------------- */
 
 
   /**
-   * updating opts in session.workOptions - user options 1 to 7
-   * @param event workOptions - basis for updates
+   * updating opts in session.eventOptions - user options 1 to 7
+   * @param event eventOptions - basis for updates
    */
-  public async updateOpts(event: IUserWorkOptions) {
+  public async updateOpts(event: IUserEventOptions) {
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
     const session = this.auth.getSession(this.name);
     const optionKeys =  Object.keys(event);
     for (let i = 0; i <= optionKeys.length; i++) {
       // console.log('optionValue:', event[optionKeys[i]]);
-      // for each option of the workOptions - which has changed - AND is a user WorkOption 1 - 6
-      const enumStringType: { [key: string]: any } = OptionNameUserWorks;
+      // for each option of the eventOptions - which has changed - AND is a user EventOption 1 - 6
+      const enumStringType: { [key: string]: any } = OptionNameUserEvents;
       if (this.userOpts[optionKeys[i]] !== event[optionKeys[i]]
       && enumStringType[optionKeys[i]] > 0
       && enumStringType[optionKeys[i]] <= 7) {
         // we store the changed option in session
         this.userOpts[optionKeys[i]] = event[optionKeys[i]];
-        if (this.auth.setSessionWorkDay(session, this.name)) {
+        if (this.auth.setSessionEventDay(session, this.name)) {
           this.sessionForViews = session;
-          this.workDayChangeCounter += 1;
+          this.eventDayChangeCounter += 1;
           // if actual options signalize that every change of opts must be persisted
           if (event.isImmediatePersist || this.userOpts.isImmediatePersist) {
             this.auth.setUserOption(event, session.userId, optionKeys[i], this.name);
           }
           // actualize opts in component - not longer necessary
-          // this.getWorkOptions();
+          // this.getEventOptions();
         }
 
       }
@@ -1648,21 +1648,21 @@ export class WorkDayComponent implements OnInit {
   }
 
   /**
-   * userWorkOptions  shall be stored permanently as user workOptions
+   * userEventOptions  shall be stored permanently as user eventOptions
    */
   public async storeOpts() {
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
     const session = this.auth.getSession(this.name);
     /* // TODO not longer used ...
     // we store the user options which could be modified at options-view
-    const userWorkOptions: typeof OptionNameUserWorks  = OptionNameUserWorks;
+    const userEventOptions: typeof OptionNameUserEvents  = OptionNameUserEvents;
     // we take only the numeric values of the enum
-    const userOptionKeys = Object.keys(userWorkOptions).filter(_ => Number(_) >= 0);
+    const userOptionKeys = Object.keys(userEventOptions).filter(_ => Number(_) >= 0);
     for (let i = 0; i < userOptionKeys.length; i++) {
       // option name from enum
       const enumStringType: { [key: string]: any } = userOptionKeys;
-      const optionName =  userWorkOptions[enumStringType[i]];
-      this.auth.setUserOption(session.workOptions, session.userId, optionName, this.name);
+      const optionName =  userEventOptions[enumStringType[i]];
+      this.auth.setUserOption(session.eventOptions, session.userId, optionName, this.name);
     }
     */
     this.auth.setUserOptions(this.userOpts, session.userId, this.name);
@@ -1672,40 +1672,40 @@ export class WorkDayComponent implements OnInit {
   /** --------------------------  supporting functions for public methods -------------------------------------------- */
 
   /**
-   * setWorkContent - is a supprting function in updateWork
-   * sets view-relevant fields in model work element (to update model and afterwards update DB)
-   * @param view work element in view
-   * @param model work element in model
+   * setEventContent - is a supprting function in updateEvent
+   * sets view-relevant fields in model event element (to update model and afterwards update DB)
+   * @param view event element in view
+   * @param model event element in model
    */
-  private setWorkContent(view: Work, model: Work): Work {
+  private setEventContent(view: Event, model: Event): Event {
     model.summary = view.summary;
     model.description = view.description;
     model.location = view.location;
     model.locationType = view.locationType;
     model.planId = view.planId;
     model.doneId = view.doneId;
-    model.workBegin =  view.workBegin;
-    model.workEnd =  view.workEnd;
-    model.workDuration = view.workDuration;
+    model.eventBegin =  view.eventBegin;
+    model.eventEnd =  view.eventEnd;
+    model.eventDuration = view.eventDuration;
     return model;
   }
 
   /**
-   * setWorkIssueContent - is a supprting function in updateWork
-   * sets view-relevant fields in model work element (to update model and afterwards update DB)
-   * @param view work element in view
-   * @param model work element in model
+   * setEventIssueContent - is a supprting function in updateEvent
+   * sets view-relevant fields in model event element (to update model and afterwards update DB)
+   * @param view event element in view
+   * @param model event element in model
    */
-  private async setWorkIssueContent(view: Work, model: Work): Promise<Work> {
-    model.customerNr = view.customerNr;
+  private async setEventIssueContent(view: Event, model: Event): Promise<Event> {
+    model.contactNr = view.contactNr;
     model.issueProviderId = view.issueProviderId;
     model.nExternalIssueId = view.nExternalIssueId;
     model.sExternalIssueId = view.sExternalIssueId;
     model.providerUrl = view.providerUrl;
     model.login = view.login;
-    model.workInfo = view.workInfo;
-    // we (re)build workInfo with actual data
-    model = await this.workService.buildWorkInfo(model, this.name);
+    model.eventInfo = view.eventInfo;
+    // we (re)build eventInfo with actual data
+    model = await this.eventService.buildEventInfo(model, this.name);
     return model;
   }
 
