@@ -5,7 +5,7 @@ import { NgTemplateOutlet, NgClass, NgStyle, SlicePipe, DecimalPipe, DatePipe } 
 
 import { GlobalFunctions } from '../../_globals/global-functions';
 import { IcsFunctions } from '../../_globals/ics-functions';
-import { DEFAULT_TIME_SLIZE, LF, MAX_INTERVAL_LENGTH, MAX_MONTHS, WHITE, WHITE_SMOKE } from '../../_globals/constants';
+import { X_CONTACT, DEFAULT_TIME_SLIZE, X_ISSUE_NR, LF, MAX_INTERVAL_LENGTH, MAX_MONTHS, WHITE, WHITE_SMOKE } from '../../_globals/constants';
 import { StyleFactory } from '../../_globals/style-factory';
 import { ConfigurationOptionBasicFunctions } from '../../_globals/configuration-option-basic-functions';
 
@@ -26,6 +26,7 @@ import { MessageService } from '../../_services/message.service';
 import { ConfigurationService } from '../../_services/configuration.service';
 
 import { PaginatorComponent } from '../paginator/paginator';
+import { ContactService } from '../../_services/contact.service';
 
 
 
@@ -162,6 +163,7 @@ public name = 'CalendarImportComponent';
   constructor(@Inject(LOCALE_ID) public locale: string,
     private fetch: FetchApiService,
     private calendarService: CalendarService,
+    private contactService: ContactService,
     private configurationService: ConfigurationService,
     private route: ActivatedRoute,
     private router: Router,
@@ -643,6 +645,15 @@ public name = 'CalendarImportComponent';
         }
         if (icsEvent.uid && icsEvent.uid !== '') {
           sourceEvent.uid = icsEvent.uid;
+        }
+        if (icsEvent.contact && icsEvent.contact !== '') {
+          const contacts = this.contactService.searchContacts(icsEvent.contact, this.name);
+          if (contacts.length > 0) {
+            sourceEvent.contactNr = contacts[0].contactNr;
+          }
+        }
+        if (icsEvent.issueNr && icsEvent.issueNr !== '') {
+          sourceEvent.issueNr = Number(icsEvent.issueNr);
         }
         sourceEvent.eventId = eventId;
         this.sourceEvents.push(sourceEvent);

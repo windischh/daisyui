@@ -117,6 +117,12 @@ const LOCATION = 'LOCATION';
 const CLASS = 'CLASS';
 const CREATED = 'CREATED';
 const LAST_MODIFIED = 'LAST-MODIFIED';
+const X_LOC = 'X-DSY-LOC';
+const X_CONTACT = 'X-DSY-CONTACT';
+const X_ISSUE_NR = 'X-DSY-ISSUE-NR';
+const LOC_HASH_TAG = '#LOC';
+
+
 
 const VCARD = 'VCARD';
 
@@ -233,8 +239,9 @@ const TXT_BASE: string[] = [
   'could_not_be_cleared',
   'released',
   'calendarDay',
-  'eventImport',
-  'eventExport',
+  'calendar_import',
+  'calendar_export',
+  'event_export',
   'time',
   'sort',
   'evented',
@@ -265,8 +272,8 @@ const TXT_BASE: string[] = [
   'configuration',
   'count',
   'styles',
-  'event_day',
-  'event_day_style',
+  'calendar_day',
+  'calendar_day_style',
   'option_update_failure',
   'option_insert_failure',
   'option_delete_failure',
@@ -485,7 +492,6 @@ const TXT_BASE: string[] = [
   'event',
   'events',
   'calendar',
-  'calendarExport',
   'select_events',
   'companyData',
   'file',
@@ -666,8 +672,7 @@ const TXT_BASE: string[] = [
   'wrong_vcf_format',
   'accepted_count',
   'start_with',
-  'contactsExport',
-  'exprt_all_contacts',
+  'export_all_contacts',
   'export_all_actual',
   'not_accepted_count',
   'time_spans_typed',
@@ -783,6 +788,10 @@ export {
   LAST_MODIFIED,
   TXT_BASE,
   CAL_BASE,
+  X_LOC,
+  X_CONTACT,
+  X_ISSUE_NR,
+  LOC_HASH_TAG,
   VCARD,
   TYPE,
   FN,

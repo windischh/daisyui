@@ -35,11 +35,11 @@ export class Event {
     */
     public contactNr: number,
     /*
-    // TODO
     we implement an issueNr instead of diverse issue data later in this db description
-    issueNr is taken from session when user selects a contact for this event
-    user has possibility to enter an issuerNr or 0 when he selects a contact as "selected contact" for this session
+    default issueNr is taken from session
+    user has possibility to enter an issuerNr or 0 
     */
+    public issueNr: number,
     public eventBegin: Date,
     public eventEnd: Date,
     /* duration of event in in minutes

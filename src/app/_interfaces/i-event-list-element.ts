@@ -11,7 +11,7 @@ export interface IEventListElement {
   userName: string;
   contactNr: number;
   contactDisplayNr: string;
-  contactName: string;
+  contactDisplayName: string;
   contactStyle?: {[key: string]: any};
   issueNr: number;
   /* duration in minutes ... */

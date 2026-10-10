@@ -34,6 +34,7 @@ export class ContactListViewComponent {
   @Output() contactListClose = new EventEmitter();
   @Output() contactInsert = new EventEmitter();
   @Output() contactShow = new EventEmitter<number>();
+  @Output() contactSelect = new EventEmitter<number>();
   @Output() contactMaint = new EventEmitter<number>();
   @Output() contactDisable = new EventEmitter<number>();
   @Output() contactEnable = new EventEmitter<number>();
@@ -177,6 +178,12 @@ export class ContactListViewComponent {
     this.contactInsert.emit();
   }
 
+
+   // user has pressed contact select button
+  public selectContact(i: number) {
+    const ix = this.shownContacts[i].contactIx;
+    if (ix >= 0) this.contactSelect.emit(ix);
+  }
 
   // user has pressed "show contact" button
   public show(i: number) {

@@ -20,7 +20,7 @@ export class EventSelectOptionFactory {
       rawEventSelectOption.isShowDetails,
       rawEventSelectOption.sortCriterias,
       rawEventSelectOption.contactDisplayNr,
-      rawEventSelectOption.contactName,
+      rawEventSelectOption.contactDisplayName,
       rawEventSelectOption.contactColor,
       rawEventSelectOption.issueNr,
       rawEventSelectOption.isPreviousDay,

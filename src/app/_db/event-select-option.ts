@@ -25,7 +25,7 @@ export class EventSelectOption {
     public isShowDetails: boolean,
     public sortCriterias: IEventSortCriteria[],
     public contactDisplayNr?: string,
-    public contactName?: string,
+    public contactDisplayName?: string,
     public contactColor?: string,
     public issueNr?: number,
     public isPreviousDay?: boolean,

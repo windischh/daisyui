@@ -615,14 +615,14 @@ export class AuthenticationService {
   }
 
   /**
-   * setSessionContactId()
+   * setSessionContactNr()
    *  set contact nr  as session contact nr
    * (contact to this nr must not necessarily exist)
    * @param contactNr contact nr which shall be the selected session contact
    * @param comp name of calling component
    * @returns true if session is actualized
    */
-  public setSessionContactId(contactNr: number, comp: string): boolean {
+  public setSessionContactNr(contactNr: number, comp: string): boolean {
     const session = this.getSession(comp);
     if (session && contactNr >= 0) {
       session.contactNr = contactNr;
@@ -633,27 +633,6 @@ export class AuthenticationService {
       return false;
     }
   }
-
-   /**
-   * setSessionIssueNr()
-   *  set issue nr  as session issue nr
-   * (issue to this nr must not necessarily exist)
-   * @param issueNr issue nr which shall be the selected session issue
-   * @param comp name of calling component
-   * @returns true if session is actualized
-   */
-  public setSessionIssueNr(issueNr: number, comp: string): boolean {
-    const session = this.getSession(comp);
-    if (session && issueNr >= 0) {
-      session.issueNr = issueNr;
-      session.lastTx = new Date();
-      this.setSession(session, comp);
-      return true;
-    } else {
-      return false;
-    }
-  }
-
 
   /**
    * setSessionEventSelectOption()

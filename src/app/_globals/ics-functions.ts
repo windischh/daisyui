@@ -4,7 +4,7 @@
  * (static) global functions
  */
 
-import { BEGIN, CATEGORIES, DESCRIPTION, DTEND, DTSTART, END, LF, LF_ZONED, LOCATION, SUMMARY, UID, VEVENT } from "./constants";
+import { BEGIN, CATEGORIES, COLON, DESCRIPTION, DOUBLE_QUOTATION_MARK, DTEND, DTSTART, END, EQUALS, LF, LF_ZONED, LOCATION, SEMICOLON, SUMMARY, UID, VEVENT, X_CONTACT, X_ISSUE_NR, X_LOC } from "./constants";
 
 export class IcsFunctions {
 
@@ -21,7 +21,13 @@ export class IcsFunctions {
 
   static icsToJson (icsData: string): Array<any> {
 
+    // regexp to split lines - we allow CRLF or CR or LF
+    // (according to RFC 5545 we should restrict it to CRLF
     const NEW_LINE = /\r\n|\n|\r/;
+
+    // HTAB horizontal tab which is the only character beside SPACE which can be used after NEW_LINE
+    // to fold lines ...
+    const HTAB = '\t';
 
     const EVENT = VEVENT;
     const EVENT_START = BEGIN;
@@ -37,21 +43,20 @@ export class IcsFunctions {
 
     const VALUE_DATE = 'VALUE=DATE';
 
-    const LOC = 'LOC=';
-
 
     // class definition to declare type of index - required by tslint in node ts
-    class StringMap { [k: string]: any; };
+    // class StringMap { [k: string]: any; };
     // keyMap contains all element types which can occur at a VEVENT
-    const keyMap: StringMap  = {
+    const keyMap: { [k: string]: any; }  = {
       [START_DATE]: 'startDate',
       [END_DATE]: 'endDate',
       [DESCRIPTION]: 'description',
       [SUMMARY]: 'summary',
       [LOCATION]: 'location',
       [UID]: 'uid',
-      [CATEGORIES]: 'categories'
-
+      [CATEGORIES]: 'categories',
+      [X_CONTACT]: 'contact',
+      [X_ISSUE_NR]: 'issueNr'
     };
 
     // we do not unescape strings ...
@@ -65,31 +70,107 @@ export class IcsFunctions {
 
     const array: Array<EventObject> = [];
 
-    let lastKey = '';
+    const rawLines = icsData.split(NEW_LINE);
+    let lines: Array<string> = [];
 
-    const lines = icsData.split(NEW_LINE);
+    // first we must unfold lines according to RFC 5545
+
+    let foldedLineCount = 0;
+    for (let i = 0, iLen = rawLines.length; i < iLen; ++i) {
+      if (foldedLineCount > 0) {
+        foldedLineCount = foldedLineCount - 1;
+      } else {
+        let rawLine = rawLines[i];
+        // we check following lines
+        for (let iNext = i + 1; iNext < iLen; ++iNext) {
+          const nextLine = rawLines[iNext];
+          if (nextLine.substring(0,1) === ' ' ||  nextLine.substring(0,1) === HTAB) {
+            // we have a folded line
+            foldedLineCount++;
+            let restContent = nextLine;
+            for (let ix= 0; ix < nextLine.length; ix++) {
+              if (restContent.substring(0,1) === ' ' ||  restContent.substring(0,1) === HTAB) {
+                restContent = restContent.substring(1);
+              } else {
+                break;
+              }
+            }
+            rawLine = rawLine + restContent;
+          } else {
+            break;
+          }
+        }
+        // the is not at folded line (we assume that file does not start with a folded line ...)
+        lines.push(rawLine);
+      }
+      
+
+    }
 
     // we splite each line in a key and value part ....
     for (let i = 0, iLen = lines.length; i < iLen; ++i) {
-
       const line = lines[i];
-      const lineData = line.split(':');
+      // key (before :) and value (after :)
+      let key!: string;
+      let value!: string;
+      // we check how much : are in line
+      let lastColonIx = -1;
+      const countColon = line.match(/\:/g)?.length;
+      if (countColon) {
+         // we must exclude all strings which are terminated by "" and preced by =
+        for (let index = 0; index < countColon; index++) {
+          // get position ix for this colon
+          lastColonIx++;
+          const lineAfterLastColon = line.substring(lastColonIx);
+          if (lineAfterLastColon && lineAfterLastColon.length > 0) {
+            const colonIx = lineAfterLastColon.indexOf(COLON);
+            if (colonIx && colonIx >= 0) {
+              lastColonIx = lastColonIx + colonIx;
+              // check if colon is between begin and end of string
+              const openStringIx = line.substring(0, lastColonIx).lastIndexOf(EQUALS + DOUBLE_QUOTATION_MARK);
+              if (openStringIx && openStringIx >= 0) {
+                const closeStringIx = line.substring(openStringIx + 2, lastColonIx).indexOf(DOUBLE_QUOTATION_MARK);
+                if (closeStringIx && closeStringIx >= 0) {
+                  break;
+                }
+                // no cloe no break - we must search for next colon
+              } else {
+                // this colon is not part of a string - we can use it ...
+                break;
+              }
+            }
+          }
+        } // endfor countcolon
+      }
 
-      let key = lineData[0];
+      if (countColon && countColon > 0 && lastColonIx > 0) {
+        key = line.substring(0, lastColonIx);
+        if (lastColonIx < line.length - 1) {
+          value = line.substring(lastColonIx + 1);
+        }
+      } else {
+        key = line;
+      }
+
+      // console.log('key||value: ', key+'||'+value);
+
       let keyPartScnd = '';
-      const value = lineData[1];
 
-      if (key.indexOf(';') !== -1) {
+      if (key.indexOf(SEMICOLON) !== -1) {
         const keyParts = key.split(';');
         key = keyParts[0];
-        // in the moment we use second key part for checking VALUE=DATE ...
+        // in the moment we use second key part for checking VALUE=DATE and X_DSY-LOC= ...
         // we store it anyway as seconfd key part
         keyPartScnd = keyParts[1];
       }
 
+      /*
+      @deprecated
+      not mor necessary due to unfolding 
+
       // a line which has not 'KEY:value' and starts with a space ...
       // but here could be a : in text and then we have lineDate.length 2 ....
-      if (lineData.length < 2) {
+      if (!value) {
         if ((key.startsWith(' ') || key.substring(0,1) < '#20') && lastKey !== undefined && lastKey.length) {
           if (typeof currentObj[lastKey] === 'string' ) {
             let legacyString = currentObj[lastKey].toString();
@@ -113,6 +194,8 @@ export class IcsFunctions {
       } else {
         lastKey = keyMap[key];
       }
+
+      */
 
       switch (key) {
         case EVENT_START:
@@ -176,8 +259,8 @@ export class IcsFunctions {
           currentObj[keyMap[SUMMARY]] = clean(value);
           break;
         case LOCATION:
-          if (keyPartScnd.startsWith(LOC)) {
-            currentObj['locType'] = keyPartScnd.substring(4);
+          if (keyPartScnd.startsWith(X_LOC)) {
+            currentObj['locType'] = keyPartScnd.substring(10);
           }
           // console.log('location cleaned: ', clean(value));
           currentObj[keyMap[LOCATION]] = clean(value);
@@ -187,6 +270,12 @@ export class IcsFunctions {
           break;
         case CATEGORIES:
           currentObj[keyMap[CATEGORIES]] = clean(value).split(',');
+          break;
+        case X_CONTACT:
+          currentObj[keyMap[X_CONTACT]] = clean(value);
+          break;
+        case X_ISSUE_NR:
+          currentObj[keyMap[X_ISSUE_NR]] = clean(value);
           break;
         default:
           continue;

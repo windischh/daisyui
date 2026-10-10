@@ -237,17 +237,13 @@ private loadDbTexts(): void {
 
   public selectContact(i: number) {
     let contact = this.contacts[i];
-    // we build a contact at server if contact has no contactId yet
-    if (contact && contact.contactId === 0) {
-      const newId = this.contactService.setContact(contact, this.name);
-      if (newId > 0) {
-        contact = this.contactService.getContact(newId, this.name) ?? contact;
-      } else if (newId === 0) {
-        alert('communication error');
-      } else if (newId === -1) {
-        alert('storage error');
-        this.getContacts();
-      }
+    let session = this.auth.getSession(this.name);
+    if (session && contact && contact.contactId > 0) {
+      this.auth.setSessionContactNr(contact.contactNr, this.name)
+    }
+    session = this.auth.getSession(this.name);
+    if (session) {
+      this.sessionForViews  = session;
     }
   }
 

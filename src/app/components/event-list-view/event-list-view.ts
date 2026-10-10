@@ -29,7 +29,6 @@ export class EventListViewComponent implements OnInit {
   @Input({required: true}) isShowUser!: boolean;
   @Input({required: true}) isShowLocationType!: boolean;
   @Input({required: true}) isLocationTypeGrouped!: boolean;
-  @Input({required: true}) isEventIssueSelected!: boolean;
   @Input({required: true}) eventSelectOption!: EventSelectOption;
 
   @Input({required: true}) eventElements!: IEventListElement[];

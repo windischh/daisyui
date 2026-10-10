@@ -48,9 +48,8 @@ export class EventSelectFormViewComponent implements OnInit {
 
   @Input({required: true}) users!: Array<User>;
 
-  // eventContact and eventIssue are the selected contact and issue, depending on session
-  @Input({required: true}) eventContact!: Contact;
-  @Input({required: true}) eventIssueNr!: number;
+  // eventContact contact of  session
+  @Input({required: true}) sessionContact!: Contact;
 
   @Input({required: true}) eventContacts!: Array<Contact>;
 
@@ -212,33 +211,43 @@ export class EventSelectFormViewComponent implements OnInit {
     this.dateChoices = [];
     for (let value = 0; value < 11; value++) {
       let isSelected = false;
+      let text = '';
       switch (value) {
         case 0:
           isSelected = this.eventSelectOption.isPreviousDay ? true : false;
+          text = 'previous_day';
           break;
         case 1:
           isSelected = this.eventSelectOption.isPreviousWeek ? true : false;
+          text = 'previous_week';
           break;
         case 2:
           isSelected = this.eventSelectOption.isPreviousMonth ? true : false;
+          text = 'previous_month';
           break;
         case 3:
           isSelected = this.eventSelectOption.isCurrentDay ? true : false;
+          text = 'current_day';
           break;
         case 4:
           isSelected = this.eventSelectOption.isCurrentWeek ? true : false;
+          text = 'current_week';
           break;
         case 5:
           isSelected = this.eventSelectOption.isCurrentMonth ? true : false;
+          text = 'current_month';
           break;
         case 6:
           isSelected = this.eventSelectOption.isNextDay ? true : false;
+          text = 'next_day';
           break;
         case 7:
           isSelected = this.eventSelectOption.isNextWeek ? true : false;
+          text = 'next_week';
           break;
         case 8:
           isSelected = this.eventSelectOption.isNextMonth ? true : false;
+          text = 'next_month';
           break;
         case 9:
           isSelected = this.eventSelectOption.isDateInterval ? true : false;
@@ -251,7 +260,7 @@ export class EventSelectFormViewComponent implements OnInit {
         default:
           break;
       }
-      this.dateChoices.push({value, text: '', isSelected});
+      this.dateChoices.push({value, text, isSelected});
     }
 
     this.dpModel = {
@@ -287,6 +296,8 @@ export class EventSelectFormViewComponent implements OnInit {
       // + ' ' + this.txt['must_be_greater_than'] + ' 0 '),
       new ErrorMessage('option.nrString', 'max',  this.optiontxt['optionNr']
       + ' ' + this.txt['must_not_be_greater_than'] + ' 99 '),
+      new ErrorMessage('option.issueNrString', 'pattern',  this.optiontxt['issueNr']
+      + ' ' + this.txt['must_be_numeric']),
       new ErrorMessage('date.showFromString', 'pattern',  this.txt['dateFrom']
       + ' ' + this.txt['must_be_numeric']),
       new ErrorMessage('date.showFromString', 'max',  this.txt['dateFrom']
@@ -361,7 +372,7 @@ export class EventSelectFormViewComponent implements OnInit {
         isShowDetails: [this.eventSelectOption.isShowDetails],
         userId:  [this.eventSelectOption.userId],
         issueNrString: [this.eventSelectOption.issueNr ? this.eventSelectOption.issueNr : '', [
-          Validators.pattern('^[0-9]*$'),
+          Validators.pattern('^[0-9]*$')
         ]],
       }),
       date: this.fb.group({
@@ -648,7 +659,7 @@ export class EventSelectFormViewComponent implements OnInit {
     // contact: first we clear old selection
     this.eventSelectOption.contactNr = 0;
     this.eventSelectOption.contactDisplayNr = '';
-    this.eventSelectOption.contactName = '';
+    this.eventSelectOption.contactDisplayName = '';
     this.eventSelectOption.contactColor = '';
 
     // we take contact from selected - only 1 should be checked
@@ -672,7 +683,7 @@ export class EventSelectFormViewComponent implements OnInit {
           const contactIx = this.eventContacts.findIndex(_ => _.userId === this.eventSelectOption.userId && _.contactNr === this.eventSelectOption.contactNr);
           if (contactIx >= 0) {
             this.eventSelectOption.contactDisplayNr = this.eventContacts[contactIx].displayNr;
-            this.eventSelectOption.contactName = this.eventContacts[contactIx].displayName;
+            this.eventSelectOption.contactDisplayName = this.eventContacts[contactIx].displayName;
             this.eventSelectOption.contactColor = this.eventContacts[contactIx].contactColor;
           }
         }

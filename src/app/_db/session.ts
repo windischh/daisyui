@@ -45,9 +45,6 @@ export class Session {
     /* contact nr is the last contact the user has chosen as eventing-contact
       is set during session refresh  */
     public contactNr: number ,
-    /* issue nr is the issue nr which user has set when choseing as eventing-contact
-      is set during session refresh  */
-    public issueNr: number ,
     /*  calendarDay - date has been chosen by user when creating or selecting events
       set to actual day when session starts
     */

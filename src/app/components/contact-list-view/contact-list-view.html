@@ -113,7 +113,7 @@
           <th>{{contacttxt['street']}}</th>
           <th>{{contacttxt['plz']}}</th>
           <th>{{contacttxt['city']}}</th>
-          <th class="text-center" colspan="2">{{txt['show'] + (isMaint ? ' / ' + txt['update'] : '')}}</th>
+          <th class="text-center" colspan="3">{{txt['select'] + '/' + txt['show'] + (isMaint ? '/' + txt['update'] : '')}}</th>
           <th class="text-center">
             @if (isCreate && !isShowDisabled) {
               <button class="btn btn-sm btn-circle btn-warning text-primary-content tooltip tooltip-bottom tooltip-primary"
@@ -150,6 +150,19 @@
             <td class="whitespace-nowrap">
               {{contact.contactCity|slice:0:20}}
             </td>
+            <td>
+              @if (contact.contactNr !== session.contactNr) {
+                <button class="btn btn-sm btn-ghost tooltip tooltip-bottom tooltip-accent"
+                  [attr.data-tip]="txt['select_contact']" data-testid="contact-select"
+                  (click)="selectContact(i)">
+                </button>
+              }
+              @if (contact.contactNr === session.contactNr) {
+                <button class="btn btn-sm btn-success tooltip tooltip-bottom tooltip-accent"
+                  [attr.data-tip]="txt['contact_is_selected']">
+                </button>
+              }
+            </td>
             <td class="text-center">
               @if (!isShowDisabled) {
                 <button class="btn btn-sm btn-circle btn-info text-primary-content tooltip tooltip-bottom tooltip-primary"
@@ -170,7 +183,7 @@
             </td>
             <td class="text-center">
               @if (isMaint && !isShowDisabled  && contact.contactId > 0) {
-                <button class="btn btn-sm btn-circle btn-outline tooltip tooltip-bottom tooltip-accent"
+                <button class="btn btn-sm btn-circle btn-outline btn-primary tooltip tooltip-bottom tooltip-accent"
                   [attr.data-tip]="txt['disable']"
                   (click)="disable(i)">
                   <i class="fas fa-trash"></i>

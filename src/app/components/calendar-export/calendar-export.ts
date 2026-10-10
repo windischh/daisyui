@@ -1,7 +1,7 @@
 import { Component, Inject, LOCALE_ID, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { BEGIN, CATEGORIES, CLASS, CREATED, CRLF, DESCRIPTION, DTEND, DTSTAMP, DTSTART, END, LAST_MODIFIED, LF_ZONED, LOCATION, METHOD, PRODID, PUBLISH, SUMMARY, TZID, UID, VCALENDAR, VERSION, VEVENT, X_WR_TIMEZONE } from '../../_globals/constants';
+import { BEGIN, CATEGORIES, CLASS, X_CONTACT, CREATED, CRLF, DESCRIPTION, DTEND, DTSTAMP, DTSTART, END, X_ISSUE_NR, LAST_MODIFIED, LF_ZONED, LOCATION, METHOD, PRODID, PUBLISH, SUMMARY, TZID, UID, VCALENDAR, VERSION, VEVENT, X_WR_TIMEZONE, LOC_HASH_TAG } from '../../_globals/constants';
 import { GlobalFunctions } from '../../_globals/global-functions';
 import { ConfigurationOptionBasicFunctions } from '../../_globals/configuration-option-basic-functions';
 
@@ -257,7 +257,7 @@ export class CalendarExportComponent implements OnInit {
       // ics Calendar Component
       textContent += this.icsLine(BEGIN, VCALENDAR);
       textContent += this.icsLine(VERSION, '2.0');
-      textContent += this.icsLine(PRODID, '-//pEvent-log//');
+      textContent += this.icsLine(PRODID, '-//daisytest//');
       /*
       if (this.isExportLocalTimezone) {
       // we build X-WR-TIMEZONE anyway ...
@@ -291,42 +291,17 @@ export class CalendarExportComponent implements OnInit {
           textContent += this.icsLine(DESCRIPTION, _.description.replaceAll(/\n/g, LF_ZONED));
         }
         let location = '';
-        let isText = false;
+        let isLocationText = false;
         if (_.locationType  &&_.locationType > 0) {
-          location += this.auth.txt[LocationType[_.locationType]];
-          isText = true;
+          location += LOC_HASH_TAG+ ' ' + this.auth.txt[LocationType[_.locationType]];
+          isLocationText = true;
         }
         if (_.location && _.location !== '') {
-          location += (isText ? LF_ZONED : '') + _.location;
-          isText = true;
+          location += (isLocationText ? LF_ZONED : '') + _.location;
+          isLocationText = true;
         }
-        // name and address are concatenated from contact fields in DB query
-        const contact = contacts.find(contact => contact.contactNr === _.contactNr);
-        if (contact && contact?.displayName && contact.displayName !== '') {
-          location += (isText ? LF_ZONED : '') + contact.displayName;
-          isText = true;
-        }
-        // TODO regard also companyPlz, companyStreet, ...
-        if (contact?.contactPlz && contact?.contactPlz> 0) {
-          location += (isText ? LF_ZONED : '') + contact.contactPlz;
-          isText = true;
-        }
-        if (contact?.contactCity && contact?.contactCity !== '') {
-          location += (isText && !(contact?.contactPlz && contact?.contactPlz> 0) ? LF_ZONED : '') + contact.contactCity;
-          isText = true;
-        }
-        if (contact?.contactStreet && contact?.contactStreet !== '') {
-          location += (isText ? LF_ZONED : '') + contact.contactStreet;
-          isText = true;
-        }
-        if (location !== '') {
-          // we use LOC to code location type (LOC=location type, and repeated in text also ..)
-          if (_.locationType  && _.locationType > 0) {
-            const LOC = 'LOC=';
-            textContent += this.icsLine(LOCATION +';' + LOC + _.locationType, location);
-          } else {
-            textContent += this.icsLine(LOCATION, location);
-          }
+        if (isLocationText) {
+          textContent += this.icsLine(LOCATION, location);
         }
         if (_.type >= EventType.timeSpanUndefined && _.type <= EventType.timeSpanCategory9) {
           const category = timeSpanTypes.filter(cat => Number(cat.value) === _.type % 10)[0]?.text ?? '';
@@ -336,6 +311,24 @@ export class CalendarExportComponent implements OnInit {
         textContent += this.icsLine(CREATED, GlobalFunctions.getIcsDateStringUTC(_.created));
         if (_.updated) {
           textContent += this.icsLine(LAST_MODIFIED, GlobalFunctions.getIcsDateStringUTC(_.updated));
+        }
+        // name and address are concatenated from contact fields in DB query
+        const contact = contacts.find(contact => _.contactNr > 0 && contact.contactNr === _.contactNr);
+        if (contact && contact?.displayName && contact.displayName !== '') {
+          let contactValue = contact.displayName;
+          if (contact?.contactPlz && contact?.contactPlz> 0) {
+            contactValue += LF_ZONED + contact.contactPlz;
+          }
+          if (contact?.contactCity && contact?.contactCity !== '') {
+            contactValue += (!(contact?.contactPlz && contact?.contactPlz> 0) ? LF_ZONED : ' ') + contact.contactCity;
+          }
+          if (contact?.contactStreet && contact?.contactStreet !== '') {
+            contactValue += LF_ZONED + contact.contactStreet;
+          }
+          textContent += this.icsLine(X_CONTACT, contactValue);
+        }
+        if (_.issueNr > 0) {
+          textContent += this.icsLine(X_ISSUE_NR, _.issueNr.toString());
         }
         textContent += this.icsLine(END, VEVENT);
         this.recordCount += 1;

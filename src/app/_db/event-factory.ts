@@ -4,7 +4,7 @@ import { EventRaw } from './event-raw';
 export class EventFactory {
 
   static empty(): Event {
-    return new Event(0, 0, 0, 0, new Date(), new Date(), 0,
+    return new Event(0, 0, 0, 0, 0, new Date(), new Date(), 0,
      '', '', '', 0, 0, 0, 0, false,
      0, 0, new Date(), '', 0, null, '', 0, 0);
   }
@@ -15,6 +15,7 @@ export class EventFactory {
       rawEvent.userId,
       rawEvent.userToken,
       rawEvent.contactNr,
+      rawEvent.issueNr,
       typeof(rawEvent.eventBegin) === 'string' ?
       new Date(rawEvent.eventBegin) : rawEvent.eventBegin,
       typeof(rawEvent.eventEnd) === 'string' ?

@@ -331,6 +331,33 @@ export class HeaderComponent {
           item.link = 'document';
           this.routerMenu.items.push(item);
         }
+      }
+
+      if (session.app !== App.admin) {
+
+        item = MenuItemFactory.empty();
+        item.hasIconLeft = true;
+        item.iconClassLeft = 'far fa-file-image'
+        item.text = 'chronicle';
+        item.link = 'chronicle';
+        this.routerMenu.items.push(item);
+
+        item = MenuItemFactory.empty();
+        item.hasIconLeft = true;
+        item.iconClassLeft = 'far fa-calendar-days';
+        item.text = 'calendar';
+        item.link = 'calendar';
+        this.routerMenu.items.push(item);
+      }
+
+        item = MenuItemFactory.empty();
+        item.hasIconLeft = true;
+        item.iconClassLeft = 'fas fa-list'
+        item.text = 'event_list';
+        item.link = 'event';
+        this.routerMenu.items.push(item);
+
+      if (session.app === App.admin) {
 
         let subMenu = MenuFactory.empty();
         let subItem = MenuItemFactory.empty();
@@ -376,28 +403,6 @@ export class HeaderComponent {
 
         item = MenuItemFactory.empty();
         item.hasIconLeft = true;
-        item.iconClassLeft = 'far fa-file-image'
-        item.text = 'chronicle';
-        item.link = 'chronicle';
-        this.routerMenu.items.push(item);
-
-        item = MenuItemFactory.empty();
-        item.hasIconLeft = true;
-        item.iconClassLeft = 'far fa-calendar-days';
-        item.text = 'calendar';
-        item.link = 'calendar';
-        this.routerMenu.items.push(item);
-
-
-        item = MenuItemFactory.empty();
-        item.hasIconLeft = true;
-        item.iconClassLeft = 'fas fa-list'
-        item.text = 'event_list';
-        item.link = 'event';
-        this.routerMenu.items.push(item);
-
-        item = MenuItemFactory.empty();
-        item.hasIconLeft = true;
         item.iconClassLeft = 'fas fa-user'
         item.text = 'contacts';
         item.link = 'contact';
@@ -437,7 +442,7 @@ export class HeaderComponent {
         subMenu = MenuFactory.empty();
 
         subItem = MenuItemFactory.empty();
-        subItem.text = 'contactsExport'
+        subItem.text = 'contact_export'
         subItem.link = 'contactExport';
         subItem.hasIconLeft = true;
         subItem.iconClassLeft = 'fas fa-file-export';

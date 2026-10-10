@@ -7,6 +7,7 @@ export interface EventRaw {
     externalUserId: string;
     serverUserToken: string;
     contactNr: number;
+    issueNr: number;
     eventBegin: Date;
     eventEnd: Date;
     eventDuration: number;

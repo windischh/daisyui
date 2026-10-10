@@ -19,7 +19,6 @@ export interface SessionRaw {
   serviceLevel: IServiceLevel;
   language: number
   contactNr: number;
-  issueNr: number;
   calendarDay: Date;
   eventSelectOption: EventSelectOption;
   isPlan: boolean;

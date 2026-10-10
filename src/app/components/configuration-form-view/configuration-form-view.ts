@@ -401,7 +401,7 @@ export class ConfigurationFormViewComponent implements OnInit {
           // no opt_style_name record
           const nameKey = this.area.optionArea + '_' + '0'.concat(this.style.toString()).substr((this.style).toString().length - 1, 2) + '_';
           const isExists = await this.configurationService.checkConfigurationOptionName(nameKey + 'opt_style_name', this.name);
-          if (!isExists && this.session && this.session?.securityLevel?.maint >= 2 && confirm(this.txt['create_new_style'] + ': ' + this.style.toString() + '?')) {
+          if (!isExists && this.session &&confirm(this.txt['create_new_style'] + ': ' + this.style.toString() + '?')) {
             const newOption = ConfigurationOptionFactory.empty();
             newOption.optionName = nameKey + 'opt_style_name';
             newOption.optionArea = this.area.optionArea;
@@ -492,8 +492,7 @@ export class ConfigurationFormViewComponent implements OnInit {
         },
         {
           asyncValidator: ConfigurationValidators.optionNameExists(this.configurationService,
-              this.session?.serviceLevel.contact ?? 0, this.session?.securityLevel.maint ?? 0,
-              this.shownOptions[i]['name'] ?? '')
+            this.shownOptions[i]['name'] ?? '')
         })
       });
       this.onChangesOption();

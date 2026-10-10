@@ -96,7 +96,15 @@ export class EventComponent implements OnInit {
   // difference of browser timezone to UTC - is used to set dates in component
   timeZoneUtcOffset!: number;
 
-  // contactStyle of auth.custOrderc -might be checked or not
+   // eventContactis the selected contact  depending on session
+  sessionContact!: Contact;
+
+  // if the actual eventContact is used to filter events
+  isSessionContactSelected = false;
+  // if the actual eventContact equals session.eventSelectOption contact
+  isSessionContactAutoSelected = false;
+
+  // contactStyle of session contact
   contactStyle!: {};
   contactHiddenStyle!: {};
   contactVisibleStyle!: {};
@@ -112,20 +120,6 @@ export class EventComponent implements OnInit {
   isUpdate = false;
   // isInsert marks that update delivers a cloned option; can only be true if isUpdate is true
   isInsert = false;
-
-  // eventContact and eventIssueNr are the selected contact and issue, depending on session
-  eventContact!: Contact;
-  eventIssueNr!: number;
-
-  // if the actual eventContact is used to filter events
-  isEventContactSelected = false;
-  // if the actual eventContact equals session.eventSelectOption contact
-  isEventContactAutoSelected = false;
-
-  // if the actual eventIssue is used to filter events
-  isEventIssueSelected = false;
-  // if the actual eventIssue equals session.eventSelectOption issue
-  isEventIssueAutoSelected = false;
 
   // we show user in list only if more than 1 or the shown user is different from session, sort-criteria, user selected
   isShowUser = false;
@@ -166,7 +160,7 @@ export class EventComponent implements OnInit {
         this.getUsers();
         await this.getEventOptions();
         this.getTimeSpans();
-        await this.getEvents();
+        this.getEvents();
         this.filterEvents();
       }
     } else {
@@ -209,7 +203,7 @@ export class EventComponent implements OnInit {
       // we build  eventContact structures in component
       const eventContactElement = this.calendarService.getEventContact(this.name);
       if (eventContactElement) {
-        this.eventContact = eventContactElement.eventContact;
+        this.sessionContact = eventContactElement.eventContact;
         this.contactHiddenStyle = eventContactElement.contactHiddenStyle;
         this.contactVisibleStyle = eventContactElement.contactVisibleStyle;
         this.contactStyle = this.contactHiddenStyle;
@@ -248,29 +242,22 @@ export class EventComponent implements OnInit {
         eventSelectOption.dateTo = choosen.dateTo;
          // set component display values
         this.dateFromDisplay = eventSelectOption.isCurrentDay ? formatDate(eventSelectOption.dateFrom, 'd.MM.yyyy', this.locale)
-        : formatDate(eventSelectOption.dateFrom, 'd.MM', this.locale);;
+        : formatDate(eventSelectOption.dateFrom, 'd.MM.yyyy', this.locale);;
         this.dateToDisplay = eventSelectOption.isCurrentDay ? ''
         : formatDate(eventSelectOption.dateTo, 'd.MM.yyyy', this.locale);
         this.eventSelectVisibleStyle = StyleFactory.getBgColorStyle(eventSelectOption.contactColor ?? '', 0);
         this.eventSelectHiddenStyle = StyleFactory.getBgColorStyle(eventSelectOption.contactColor ?? '', 90);
         this.eventSelectStyle = this.eventSelectVisibleStyle;
-        // set event contact, issue as autoSelected if they are equal to option selection
+        // set event contact as autoSelected if it is equal to option selection
         if (eventSelectOption.contactNr > 0
           && eventSelectOption.contactNr === session.contactNr) {
-          this.isEventContactAutoSelected = true;
+          this.isSessionContactAutoSelected = true;
           this.contactStyle = this.contactVisibleStyle;
         } else {
-          this.isEventContactAutoSelected = false;
+          this.isSessionContactAutoSelected = false;
           this.contactStyle = this.contactHiddenStyle;
         }
-        if (eventSelectOption.issueNr && eventSelectOption.issueNr > 0
-          && eventSelectOption.issueNr === session.issueNr) {
-          this.isEventIssueAutoSelected = true;
-        } else {
-          this.isEventIssueAutoSelected = false;
-        }
-        this.isEventContactSelected = false;
-        this.isEventIssueSelected = false;
+        this.isSessionContactSelected = false;
         // we actualize user name - could have changed meanwhile
         if (eventSelectOption.userId > 0 && this.users.length > 0) {
           eventSelectOption.userName = this.users.filter(_ => _.userId === eventSelectOption.userId)[0].userName;
@@ -320,7 +307,9 @@ export class EventComponent implements OnInit {
       const lastDay = GlobalFunctions.addDays(session.eventSelectOption?.dateTo ?? new Date(), 1);
       const allEvents =  this.calendarService.getEvents(this.name);
       const allContacts = this.contactService.getContacts(this.name);
-      this.eventContacts = allContacts.filter(_ => allEvents.findIndex(event => event.contactNr === _.contactNr) >= 0);
+      // TODO for test we use all contacts
+      // this.eventContacts = allContacts.filter(_ => allEvents.findIndex(event => event.contactNr === _.contactNr) >= 0);
+      this.eventContacts = allContacts;
       if (session.app === App.admin) {
         // in case of App.admin userId is not relevant
         this.eventUsers = this.users?.filter(_ => allEvents.findIndex(event => event.userId === _.userId) >= 0);
@@ -334,7 +323,7 @@ export class EventComponent implements OnInit {
       }
 
       if (this.events?.length > 0) for (let event of this.events) {
-        // build eventInfos if contact or issue is joined (eventInfod are not persisted ...)
+        // build eventInfos if contact is joined (eventInfos are not persisted ...)
         // (eventInfos are rebuilt if event is updated!)
         if (!event.eventInfo && event.contactNr > 0) {
           event = this.calendarService.buildEventInfo(event, this.name);
@@ -352,16 +341,9 @@ export class EventComponent implements OnInit {
     if (session && session?.eventSelectOption && session?.eventSelectOption?.contactNr > 0) {
       filterContactNr = session.eventSelectOption.contactNr;
     }
-    if (session && session?.eventSelectOption && session?.eventSelectOption?.issueNr && session?.eventSelectOption?.issueNr > 0) {
-      filterIssueNr = session.eventSelectOption.issueNr;
-    }
     // if selected, custumer selected has priority over selectOption
-    if (this.isEventContactSelected && this.eventContact?.contactNr > 0) {
-      filterContactNr = this.eventContact.contactNr;
-    }
-    // selected issue
-    if (this.isEventIssueSelected) {
-      filterIssueNr = this.eventIssueNr;
+    if (this.isSessionContactSelected && this.sessionContact?.contactNr > 0) {
+      filterContactNr = this.sessionContact.contactNr;
     }
     if (session && session?.eventSelectOption && session.eventSelectOption?.sortCriterias?.length > 0) {
       this.isLocationTypeGrouped = session.eventSelectOption.sortCriterias.filter(_ => _.isSortCriteria && _.sortField === EventSortCriteria[4]).length > 0;
@@ -488,12 +470,13 @@ export class EventComponent implements OnInit {
     this.filterEvents();
   }
 
+  // we choose eventContact (which is contact accordingt to session.contactNr) as contact for event list selection ...
   setShowContact(event: any) {
     const session = this.auth.getSession(this.name);
-    this.isEventContactSelected = event.target.checked;
-    if (this.isEventContactSelected ) {
+    this.isSessionContactSelected = event.target.checked;
+    if (this.isSessionContactSelected ) {
       this.contactStyle = this.contactVisibleStyle;
-      if (session?.eventSelectOption?.contactNr !== this.eventContact?.contactNr) {
+      if (session?.eventSelectOption?.contactNr !== this.sessionContact?.contactNr) {
         this.eventSelectStyle = this.eventSelectHiddenStyle;
       }
     } else {
@@ -502,6 +485,7 @@ export class EventComponent implements OnInit {
     }
     this.filterEvents();
   }
+
   async setEventSelectOption(event: any) {
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
     await this.getEventOptions();
@@ -513,7 +497,7 @@ export class EventComponent implements OnInit {
       }
     });
     this.setEventSelectOptionSelected();
-    await this.getEvents();
+    this.getEvents();
     this.filterEvents();
   }
 
@@ -591,7 +575,15 @@ export class EventComponent implements OnInit {
     this.auth.setSessionEventSelectOption(event, this.name);
     // getEventOptions sets selected and loads selections ...
     await this.getEventOptions();
-    await this.getEvents();
+    this.eventSelectChoices.forEach(_ => {
+      if (_.nr === event.nr) {
+        _.isSelected = true;
+      } else {
+        _.isSelected = false;
+      }
+    });
+    this.setEventSelectOptionSelected();
+    this.getEvents();
     this.filterEvents();
     this.cancelUpdate();
   }

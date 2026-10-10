@@ -211,19 +211,30 @@ export class CalendarService {
     return null;
   }
 
-  public getEventContact(comp: string): {eventContact: Contact, contactVisibleStyle: {},  contactHiddenStyle: {}} | null {
+  /**
+   * get contact data for contact of event
+   * @param comp name of calling component
+   * @param event optional event - if not provided, we return data from session contactNr
+   * @returns event contact element 
+   */
+  public getEventContact(comp: string, event?: Event): {eventContact: Contact, contactVisibleStyle: {},  contactHiddenStyle: {}} | null {
     let eventContact = ContactFactory.empty();
     let contactVisibleStyle: {} = {};
     let contactHiddenStyle: {} = {};
     const session = this.auth.getSession(comp);
     if (session) {
-      let contactNr = session.contactNr ?? 0;
+      let contactNr = 0;
+      if (event && event.contactNr > 0) {
+        contactNr = event.contactNr;
+      } else {
+        contactNr = session.contactNr ?? 0;
+      }
       // contact id is either  session.contactNr, or - if 0 - issue.contactNr
       if (contactNr > 0) {
-        const contact = this.contactService.getContactNr(session?.contactNr, comp);
+        const contact = this.contactService.getContactNr(contactNr, comp);
         if (contact) {
           eventContact = contact;
-          if (contact?.contactColor) {
+          if (contact.contactColor) {
             contactVisibleStyle = StyleFactory.getBgColorStyle(contact.contactColor, 0);
             contactHiddenStyle = StyleFactory.getBgColorStyle(contact.contactColor, 90);
           }
@@ -231,8 +242,8 @@ export class CalendarService {
           // in case of not found contact we remember custId in displayNr ....
           eventContact.contactNr = contactNr;
           eventContact.displayNr = contactNr.toString();
-          // displayNr is set to txt + contactNr - so we can differ contacts which have not been found ....
-          eventContact.displayNr = (this.auth.txt['contact']) + ': ' + contactNr.toString();
+          // displayName is set to txt + contactNr - so we can differ contacts which have not been found ....
+          eventContact.displayName = (this.auth.txt['contact']) + ': ' + contactNr.toString();
         }
       }
     }
@@ -522,8 +533,7 @@ export class CalendarService {
               break;
             // user
             case _.sortField === EventSortCriteria[3]:
-              sortElements.push({sortField: _.sortField, key: 'login', object: 'event'});
-              sortElements.push({sortField: _.sortField, key: 'userName'});
+              sortElements.push({sortField: _.sortField, key: 'userName', object: 'event'});
               break;
             // locationType
             case _.sortField === EventSortCriteria[4]:
@@ -535,11 +545,11 @@ export class CalendarService {
               break;
             // contact
             case _.sortField === EventSortCriteria[6]:
-              sortElements.push({sortField: _.sortField, key: 'contactDisplayNr'});
+              sortElements.push({sortField: _.sortField, key: 'contactNr'});
               break;
             // order
             case _.sortField === EventSortCriteria[7]:
-              sortElements.push({sortField: _.sortField, key: 'issueDisplayNr'});
+              sortElements.push({sortField: _.sortField, key: 'issueNr'});
               break;
             default:
               break;
@@ -691,7 +701,7 @@ export class CalendarService {
           userName,
           contactNr :  _.eventInfo?.contactNr ?? 0,
           contactDisplayNr :  _.eventInfo?.contactDisplayNr ?? '',
-          contactName : _.eventInfo?.contactDisplayName ?? '',
+          contactDisplayName : _.eventInfo?.contactDisplayName ?? '',
           contactStyle : StyleFactory.getBgColorStyle(_.eventInfo?.contactColor ?? '', 0),
           issueNr :  _.eventInfo?.issueNr ?? 0,
           // rounded duration is calculated if rounding on each event

@@ -16,7 +16,7 @@ export interface EventSelectOptionRaw {
   isShowDetails: boolean;
   sortCriterias: IEventSortCriteria[];
   contactDisplayNr?: string;
-  contactName?: string;
+  contactDisplayName?: string;
   contactColor?: string;
   issueNr?: number,
   isPreviousDay?: boolean;

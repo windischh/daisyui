@@ -426,7 +426,7 @@ export class GlobalFunctions {
    static getSpaceBefore(eventBegin: Date, events: Array<Event>, calendarDay: Date, eventId?: number): number {
     if (calendarDay?.getTime() > 0 && eventBegin?.getTime() >= calendarDay.getTime()) {
       let endBefore: Date;
-      let ixBefore : number = 0;
+      let ixBefore : number | undefined;
       let filtered: Event[] = [];
       if (events?.length > 0) {
         // we build a local of events array, filtered anyway, to sort in ascending order
@@ -444,9 +444,9 @@ export class GlobalFunctions {
         });
       }
       // have we found a record before?
-      if (ixBefore === -1) {
+      if (ixBefore && ixBefore === -1) {
         return 0;
-      } else if (ixBefore >= 0) {
+      } else if (ixBefore && ixBefore >= 0) {
         endBefore = filtered[ixBefore].eventEnd;
       } else {
         endBefore = calendarDay;
@@ -471,7 +471,7 @@ export class GlobalFunctions {
   static getSpaceAfter(eventEnd: Date, events: Array<Event>, calendarDay: Date, eventId?: number): number {
     if (calendarDay?.getTime() > 0 && eventEnd?.getTime() >= calendarDay.getTime()) {
       let beginAfter: Date;
-      let ixAfter : number = 0;
+      let ixAfter : number | undefined;
       let filtered: Event[] = [];
       if (events?.length > 0) {
         // we build a local of events array, filtered anyway, to sort in descending order
@@ -489,9 +489,9 @@ export class GlobalFunctions {
         });
       }
       // have we found a record after?
-      if (ixAfter== -1) {
+      if (ixAfter && ixAfter === -1) {
         return 0;
-      } else if (ixAfter >= 0) {
+      } else if (ixAfter && ixAfter >= 0) {
         beginAfter = filtered[ixAfter].eventBegin;
       } else {
         beginAfter = GlobalFunctions.addMinutes(calendarDay, 24 * 60 + MAX_INTERVAL_LENGTH);

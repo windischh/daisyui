@@ -99,7 +99,7 @@ export class EventExportComponent {
   fileName!: string;
   fileExtension!: string;
   isFileExtension = false;
-  fileType!: string;
+  fileType: string = '';
   extendedFileName!: string;
 
   exportEvents!: Event[];
@@ -123,8 +123,8 @@ export class EventExportComponent {
 
   styleChoices!: Array<{value: number, text: string, isSelected: boolean}>;
 
-  // the style element which contains export styles and column styles
-  style!: number;
+  // the style element which contains export styles and column styles - default 0
+  style: number = 0;
 
   // exportStyles are filled from style
   exportStyles!: IEventExportStyle;
@@ -162,7 +162,6 @@ export class EventExportComponent {
       await this.getEventOptions();
       await this.getStyles();
       // we load all option values with the default style
-      this.style = 0;
       this.maxColumn = this.getMaxColumnFromStyle(this.style);
       if (this.maxColumn < 0) {
         alert(this.auth.txt['no_matching_export_field']);
@@ -279,9 +278,8 @@ export class EventExportComponent {
       const s = ConfigurationOptionBasicFunctions.getStyleOptionSeq(this.options, area, style,
         enumStringType[k], isStylesHaveDefault);
       const column: number = Number(enumStringType[k]) - 100;
-      if (column >= 0 && column < 100 && s !== undefined) {
-        // TODO repair this 
-        // columnStyles[column] = s;
+      if (s && column >= 0 && column < 100) {
+        columnStyles[column] = s;
       }
     });
 
@@ -331,22 +329,19 @@ export class EventExportComponent {
     this.exportStyles = IEventExportStyleFactory.default();
 
     const enumStringType: { [key: string]: any } = OptionGroupEventExport;
-    // set this.styles from eventExport options
-
-    /*
-    // TODO repair this
+    // set this.exportStyles from eventExport options
     Object.keys(this.exportStyles)
     .forEach(k => {
       if (k.startsWith('is')) {
-        const s = ConfigurationOptionBasicFunctions.getStyleOptionBoolean(this.options, area, style,
+        const s: boolean | null = ConfigurationOptionBasicFunctions.getStyleOptionBoolean(this.options, area, style,
           enumStringType['opt_eventExport_' + k]);
-        if (s !== undefined) {
+        if (s) {
           this.exportStyles[k] = s;
         }
       } else {
-        const s: string = ConfigurationOptionBasicFunctions.getStyleOptionString(this.options, area, style,
+        const s = ConfigurationOptionBasicFunctions.getStyleOptionString(this.options, area, style,
           enumStringType['opt_eventExport_' + k], isStylesHaveDefault);
-        if (s !== undefined && k === 'columnDelimiter') {
+        if (s && k === 'columnDelimiter') {
           switch (true) {
             case  (s.indexOf(COMMA) >= 0 || s.indexOf('comma') >= 0 ):
               this.exportStyles[k] = COMMA;
@@ -361,7 +356,7 @@ export class EventExportComponent {
               this.exportStyles[k] = COMMA;
               break;
             }
-        } else if (s !== undefined && k === 'stringDelimiter') {
+        } else if (s && k === 'stringDelimiter') {
           switch (true) {
             case  (s.indexOf(QUOTATION_MARK) >= 0 || (s.indexOf('quotation') >= 0 && s.indexOf('double') >= 0 )):
               this.exportStyles[k] = QUOTATION_MARK;
@@ -373,7 +368,7 @@ export class EventExportComponent {
               this.exportStyles[k] = DOUBLE_QUOTATION_MARK;
               break;
             }
-        } else if (s !== undefined && k === 'rowDelimiter') {
+        } else if (s && k === 'rowDelimiter') {
           switch (true) {
             case  (s.indexOf('CR') >= 0):
               this.exportStyles[k] = CRLF;
@@ -385,7 +380,7 @@ export class EventExportComponent {
               this.exportStyles[k] = CRLF;
               break;
             }
-        } else if (s !== undefined) {
+        } else if (s) {
           this.exportStyles[k] = s;
         }
       }
@@ -398,18 +393,16 @@ export class EventExportComponent {
     Object.keys(OptionGroupEventExport)
     .filter((k: any) => typeof OptionGroupEventExport[k] === 'number' && enumStringType[k] > 100 && enumStringType[k] < 200)
     .forEach(k => {
-      const s = ConfigurationOptionBasicFunctions.getStyleOptionSeq(this.options, area, style,
-        enumStringType[k], isStylesHaveDefault);
+      const s:{ [key: string]: any } = ConfigurationOptionBasicFunctions.getStyleOptionSeq(this.options, area, style,
+        enumStringType[k], isStylesHaveDefault) ?? [];
       const column: number = Number(enumStringType[k]) - 100;
-      if (column >= 0 && column < 100 && s !== undefined) {
-        // TODO repair this
-        // columnStyles[column] = s;
+      if (s && column >= 0 && column < 100) {
+        columnStyles[column] = s;
       }
     });
 
     this.columnStyles = columnStyles;
 
-    */
 
     const exportElement = IEventExportElementFactory.default();
     this.columnStyles

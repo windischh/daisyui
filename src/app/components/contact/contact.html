@@ -16,7 +16,7 @@
     [contacts]="contacts" [contactsLoadCounter]="contactsLoadCounter" [contact]="contact"
     [txt]="auth.txt" [contacttxt]="contacttxt"
     (contactListClose)="closeContactList()" (contactInsert)="insertContact()"
-    (contactShow)="showContact($event)" (contactMaint)="maintContact($event)"
+    (contactSelect)="selectContact($event)" (contactShow)="showContact($event)" (contactMaint)="maintContact($event)"
     (contactDisable)="disableContact($event)" (contactEnable)="enableContact($event)">
   </dsy-contact-list-view>
 }
