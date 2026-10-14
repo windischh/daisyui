@@ -1,69 +1,72 @@
 @if (session && sessionContact && txt && isStylesReady) {
-  <div class="ui grid container">
-    <div class="row" [ngStyle]="rowBottomNoPaddingStyle">
-      <div class="two wide left aligned column">
+  <div class="container mx-auto">
+    <div class="flex flex-wrap items-center gap-x-2 gap-y-1" [ngStyle]="rowBottomNoPaddingStyle">
+      <div class="w-1/6">
         @if (sessionContact.contactNr > 0) {
-          <div class="ui label"
+          <div class="badge text-left tooltip tooltip-right tooltip-accent"
             [ngStyle]="contactStyle"
-            [attr.data-tooltip]="txt['contact'] + ': ' + sessionContact.displayName" data-position="right center"
+            [attr.data-tip]="txt['contact'] + ': ' + sessionContact.displayName"
             (click)="setContactSelection()">
             {{sessionContact.displayName}}
           </div>
         }
       </div>
       @if (viewSelected() !== 'week-view') {
-        <div class="two wide column">
+        <div class="w-1/6 flex flex-col items-start gap-1">
           @for (p of planActualChoices; track p.value; let i = $index) {
-            <div class="ui radio checkbox">
-              <input type="radio" [value]="p.value" [checked] = "p.isChecked"
-                [disabled]="isSelecting || isCreating || planActualChoices.length < 2 || viewSelected() === 'options-view'"
-                data-testid="calendar-day-plan-select"
-                (change)="toggleShowPlan($event)"  >
-              <label>{{txt[p.value]}}</label>
+            <div class="form-control">
+              <label class="label cursor-pointer gap-2">
+                <input type="radio" [value]="p.value" [checked] = "p.isChecked"
+                  [disabled]="isSelecting || isCreating || planActualChoices.length < 2 || viewSelected() === 'options-view'"
+                  data-testid="calendar-day-plan-select"
+                  class="radio radio-sm"
+                  (change)="toggleShowPlan($event)"  >
+                <span class="label-text">{{txt[p.value]}}</span>
+              </label>
               @if (i === 0) {
-                <div class="divider"></div>
+                <div class="divider my-1"></div>
               }
             </div>
           }
         </div>
       }
       @if (viewSelected() === 'week-view') {
-        <div class="two wide column">
-          <h4>
-            <i class="fitted link angle left icon" (click)="goWeekBack()"></i>
+        <div class="w-1/6">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-angle-left cursor-pointer" (click)="goWeekBack()"></i>
             @if (windowWidth >= WINDOW_WIDTH_TABLET) {
-              <span>{{weekDisplay}}</span>
+              <span class="text-base font-semibold">{{weekDisplay}}</span>
             }
             @if (windowWidth < WINDOW_WIDTH_TABLET) {
-              <small>{{weekDisplay}}</small>
+              <small class="font-semibold">{{weekDisplay}}</small>
             }
-            <i class="fitted link angle right icon" (click)="goWeekForward()"></i>
-          </h4>
+            <i class="fas fa-angle-right cursor-pointer" (click)="goWeekForward()"></i>
+          </div>
         </div>
       }
-      <div class="five wide column">
+      <div class="w-5/12 flex justify-center">
         @if (windowWidth >= WINDOW_WIDTH_TABLET) {
-          <h2>
+          <h2 class="text-2xl md:text-3xl font-bold text-center flex items-center gap-2">
             @if (viewSelected() === 'grid-view' || viewSelected() === 'cards-view' || viewSelected() === 'issues-view') {
-              <i class="link angle left icon"
+              <i class="fas fa-angle-left cursor-pointer"
               (click)="goBack()"></i>
             }
             <span [ngStyle]="calendarDayStyle">{{calendarDayDisplay}}</span>
             @if (viewSelected() === 'grid-view' || viewSelected() === 'cards-view' || viewSelected() === 'issues-view') {
-              <i class="link angle right icon"
+              <i class="fas fa-angle-right cursor-pointer"
               (click)="goForward()"></i>
             }
           </h2>
         }
         @if (windowWidth < WINDOW_WIDTH_TABLET) {
-          <h3>
+          <h3 class="text-xl md:text-2xl font-semibold text-center flex items-center gap-2">
             @if (viewSelected() === 'grid-view' || viewSelected() === 'cards-view' || viewSelected() === 'issues-view') {
-              <i class="link angle left icon"
+              <i class="fas fa-angle-left cursor-pointer"
               (click)="goBack()"></i>
             }
             <span [ngStyle]="calendarDayStyle">{{calendarDayDisplay}}</span>
             @if (viewSelected() === 'grid-view' || viewSelected() === 'cards-view' || viewSelected() === 'issues-view') {
-              <i class="link angle right icon"
+              <i class="fas fa-angle-right cursor-pointer"
               (click)="goForward()"></i>
             }
           </h3>
@@ -72,19 +75,19 @@
         <h5 *ngIf="session && session.externalUserName !== ''">
           {{txt['calendar']}} {{txt['of']}}: {{session.externalUserName}}
           <button class="ui mini yellow circular icon button" *ngIf="session.planUserId !== session.userId"
-            [attr.data-tooltip]="txt['switch_to'] + ': ' + txt['my_plan']"
+            [attr.data-tip]="txt['switch_to'] + ': ' + txt['my_plan']"
             [disabled]="isSelecting || isCreating  || viewSelected() === 'options-view'"
-            type ="button" (click)="setPlanUser()">
+            type = "button" (click)="setPlanUser()">
             <i class="left arrow icon"></i>
           </button>
         </h5>
         -->
       </div>
-      <div class="one wide column">
-        <button type="button" class="ui small icon button" (click)="dp.toggleCalendar()"
+      <div class="w-1/12">
+        <button type="button" class="btn btn-sm btn-circle btn-outline btn-primary tooltip tooltip-bottom tooltip-accent" (click)="dp.toggleCalendar()"
           [disabled]="isCreating  || viewSelected() === 'options-view'"
-          [attr.data-tooltip]="txt['select'] + ' ' + txt['date']" data-position="bottom center">
-          <i class="calendar alternate outline icon"></i>
+          [attr.data-tip]="txt['select'] + ' ' + txt['date']">
+          <i class="fas fa-calendar-alt"></i>
         </button>
         <!-- with type="hidden" display of date input is deactivated - calendarDayDisplay is shown! -->
         <input angular-mydatepicker name="mydate"
@@ -92,37 +95,40 @@
           (inputFieldChanged)="onInputFieldChanged($event)" (dateChanged)="onDateChanged($event)"
           [attr.disabled]="dpDisabled?'':null"/>
       </div>
-      <div class="two wide column">
-        <button type="button" class="ui label" [ngStyle]="pointerStyle"
-          [attr.data-tooltip]="txt['time_slize'] + ': ' + userOpts.timeSlize + ' ' + txt['minutes']" data-position="bottom center"
+      <div class="w-1/6">
+        <button type="button" class="btn btn-sm btn-outline tooltip tooltip-bottom tooltip-accent" [ngStyle]="pointerStyle"
+          [attr.data-tip]="txt['time_slize'] + ': ' + userOpts.timeSlize + ' ' + txt['minutes']"
           [disabled]="isSelecting || isCreating"
           (click)="selectView('options-view')">
           {{userOpts.startHour + '-' +  userOpts.lastHour + ' [' + userOpts.timeSlize + ']'}}
         </button>
       </div>
-      <div class="two wide column">
-        <div class="ui checkbox">
-          <input type="checkbox" [checked]="isSelecting"
-            [disabled]="(viewSelected() !== 'week-view' && viewSelected() !== 'grid-view' && viewSelected() !== 'cards-view') || isCreating || !session.isPlanMaint"
-            (change)="setSelection()">
-            <label>{{session.serviceLevel.contact === 1 ? txt['select_events'] : txt['select_events']}}</label>
+      <div class="w-1/6">
+        <div class="form-control">
+          <label class="label cursor-pointer gap-2">
+            <input type="checkbox" [checked]="isSelecting"
+              [disabled]="(viewSelected() !== 'week-view' && viewSelected() !== 'grid-view' && viewSelected() !== 'cards-view') || isCreating || !session.isPlanMaint"
+              class="checkbox checkbox-sm"
+              (change)="setSelection()">
+            <span class="label-text">{{session.serviceLevel.contact === 1 ? txt['select_events'] : txt['select_events']}}</span>
+          </label>
         </div>
         <!--
         <button type="button" class="ui fluid icon button" *ngIf="!isSelecting"
-          [attr.data-tooltip]="isSelecting ? txt['stop_selecting'] : txt['select_events']" data-position="bottom center"
+          [attr.data-tip]="isSelecting ? txt['stop_selecting'] : txt['select_events']"
           (click)="setSelection()">
           <i class="check square outline icon"></i>
         </button>
         <button type="button" class="ui fluid button" *ngIf="isSelecting"
-          [attr.data-tooltip]="txt['stop_selecting']" data-position="bottom center"
+          [attr.data-tip]="txt['stop_selecting']"
           (click)="setSelection()">
           <small>{{countSelected + ' ' + txt['events'] + ' ' + txt['selected']}}</small>
         </button>
         -->
       </div>
-      <div class="two wide column">
+      <div class="w-1/6">
         @if (isSelecting) {
-          <div class="ui teal circular label">
+          <div class="badge badge-success">
             {{countSelected}}
           </div>
         }
@@ -138,35 +144,31 @@
       </div>
       -->
     </div>
-    <div class="row" [ngStyle]="rowTopNoPaddingStyle">
-      <div class="two wide column">
+    <div class="flex flex-wrap items-center gap-x-2" [ngStyle]="rowTopNoPaddingStyle">
+      <div class="w-1/6">
       </div>
-      <div class="eleven wide column">
+      <div class="w-2/3">
          @if (windowWidth >= WINDOW_WIDTH_MOBILE) {
-          <div class="ui tabular menu">
+          <div role="tablist" class="tabs tabs-boxed">
           @for (v of viewsSelectable; track v) {
-            <a class="item"
+            <a role="tab" class="tab"
               (click)="selectView(v.name)"
-              [ngClass]="{ active: v.isSelected }">
+              [ngClass]="{ 'tab-active': v.isSelected }">
               {{v.displayName}}
             </a>
           }
         </div>
         } @else {
-          <div class="one inline field">
-            <select class="ui search dropdown" id="viewChoice" (change)="selectViewChoice($event)">
-              @for (v of viewChoices; track v) {
-                <option [value]="v.value"
-                  [selected]="v.isSelected">
-                  {{v.text}}
-                </option>
-              }
-            </select>
-          </div>
+          <select class="select select-primary" id="viewChoice" (change)="selectViewChoice($event)">
+            @for (v of viewChoices; track v) {
+              <option [value]="v.value"
+                [selected]="v.isSelected">
+                {{v.text}}
+              </option>
+            }
+          </select>
         }
-
       </div>
     </div>
   </div>
 }
-

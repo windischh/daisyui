@@ -1,22 +1,17 @@
 @if (refreshSignal() === 1 && !v['issue-select-view']?.isAutoSelected) {
-  <div class="ui grid">
-    <div class="row">
-      <div class="two wide column">
-      </div>
-      <div class="twelve wide column">
-        <h2 class="ui center aligned header">
-          {{auth.txt['event_day_title']}}
-        </h2>
-      </div>
-      <div class="two wide column">
-      </div>
+  <div class="container mx-auto p-4">
+    <div class="flex justify-center">
+      <h2 class="text-2xl md:text-3xl font-bold text-center">
+        {{auth.txt['event_day_title']}}
+      </h2>
     </div>
   </div>
 }
 <!-- we await update and getting new data from server   -->
 @if (refreshSignal() === 0) {
-  <div class="ui active inverted dimmer">
-    <div class="ui large text loader">processing data on server  ...</div>
+  <div class="flex flex-col items-center justify-center gap-2 py-8">
+    <span class="loading loading-spinner loading-lg"></span>
+    <span>processing data on server  ...</span>
   </div>
 }
 @if (sessionForViews && auth.txt && locale) {
@@ -25,7 +20,7 @@
     [calendarDayChangeCounter]="calendarDayChangeCounter"
     [targetCalendarDay]="targetCalendarDay" [firstCalendarDay]="firstCalendarDay"
     [session]="sessionForViews"
-    [sessionContact]="sessionContact" 
+    [sessionContact]="sessionContact"
     [timeSpans]="timeSpans"
     [isCreating]="isCreating" [isSelecting]="isSelecting"  [countSelected]="countSelected"
     (selectionSet)="setSelection()"
@@ -52,7 +47,7 @@
     [timeSpanTypeChoices]="timeSpanTypeChoices" [events]="events"
     [targetEvents]="targetEvents" [targetCalendarDay]="targetCalendarDay"
     [eventsChangeCounter]="eventsChangeCounter"
-    [sessionContact]="sessionContact" 
+    [sessionContact]="sessionContact"
     (calendarDaySelected)="selectCalendarDay($event)"
     (cardFormCancel)="cancelCardFormView()" (timeSpanUpdate)="updateTimeSpan($event)" (eventUpdate)="updateEvent($event)"
     (eventUpdateAssoc)="updateEventAssoc($event)">
@@ -101,8 +96,8 @@
 }
 @if (sessionForViews && auth.txt && v['contacts-view'] && v['contacts-view'].isSelected && isDayLoadedSignal() > 0) {
   <dsy-calendar-day-contacts-view
-    [txt]="auth.txt" [eventtxt]="eventtxt" [contacttxt]="contacttxt" 
-    [locale]="locale" [sessionContact]="sessionContact" 
+    [txt]="auth.txt" [eventtxt]="eventtxt" [contacttxt]="contacttxt"
+    [locale]="locale" [sessionContact]="sessionContact"
     [session]="sessionForViews" [opts]="opts"
     [actualEvents]="weekActualEvents" [planEvents]="weekPlanEvents"
     [eventsChangeCounter]="weekEventsChangeCounter">

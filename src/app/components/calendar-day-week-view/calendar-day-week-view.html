@@ -1,15 +1,12 @@
-
-<!-- we try to modify table width and to place tableBgStyle
-<div class="ui four columns centered grid container" [ngStyle]="styles.tableBgStyle">
-  -->
-  <!-- table-layout: 'fixed' - table head defines column width -->
-  @if (txt && userOpts && readySignal() > 0) {
-    <table class="ui fixed celled very compact unstackable table" [ngStyle]="styles.tableStyle">
+<!-- table-layout: 'fixed' - table head defines column width -->
+@if (txt && userOpts && readySignal() > 0) {
+  <div class="overflow-x-auto">
+    <table class="table table-fixed table-zebra w-full" [ngStyle]="styles.tableStyle">
       <thead>
         <tr [ngStyle]="styles.tableHeaderStyle">
-          <th class="one wide left aligned">{{txt['time']}}</th>
+          <th class="w-[8%] text-left">{{txt['time']}}</th>
           @for (d of weekDays; track $index; let i = $index) {
-            <th class="center aligned"
+            <th class="text-center"
               [ngStyle]="setHeaderDayStyle(i)"
               [attr.colspan]="d.isToday && !isShowPlan ? 2 : 1"
             (click)="!isSelecting ? setCalendarDay(i) : null">{{(isSelecting && !d.isSelected) ? '' : d.dateDisplay}}</th>
@@ -17,17 +14,19 @@
         </tr>
         <tr [ngStyle]="styles.tableHeaderStyle">
           <!-- we need "overflow: visible" to show tooltip over other table elements  -->
-          <th class="one wide left aligned" style="overflow: visible;">
+          <th class="w-[8%] text-left" style="overflow: visible;">
             @if (isTodayInWeek || isTodayAfterWeek) {
-              <div class="ui checkbox"
-                [attr.data-tooltip]="txt['show_plan']">
-                <input type=checkbox  [checked]="isShowPlan" (change)="toggleShowPlan($event)">
-                <label><small>P</small></label>
+              <div class="form-control tooltip tooltip-bottom tooltip-accent"
+                [attr.data-tip]="txt['show_plan']">
+                <label class="label cursor-pointer gap-2">
+                  <input type=checkbox class="checkbox checkbox-sm" [checked]="isShowPlan" (change)="toggleShowPlan($event)">
+                  <span class="label-text"><small>P</small></span>
+                </label>
               </div>
             }
           </th>
           @for (c of weekColumns; track $index; let ix = $index) {
-            <th class="center aligned"
+            <th class="text-center"
               [ngStyle]="c.isSelected ? planHeaderBoldStyle : planHeaderNormalStyle"
             (click)="!isSelecting?setPlan(ix):null">{{(isSelecting && !c.isSelected) ? '' : c.isPlan ? txt['plan'] : txt['actual']}}</th>
           }
@@ -40,12 +39,12 @@
               <td [ngStyle]="styles.timeElementOutsideStyle"
                 (click)="toggleShowBeforeStartHour()">
                 @if (isShowBeforeStartHour) {
-                  <i class="sort down icon"
+                  <i class="fas fa-sort-down cursor-pointer"
                     [ngStyle]="expandIconStyle">
                   </i>
                 }
                 @if (!isShowBeforeStartHour) {
-                  <i class="sort up icon"
+                  <i class="fas fa-sort-up cursor-pointer"
                     [ngStyle]="expandIconStyle">
                   </i>
                 }
@@ -63,31 +62,29 @@
                 <td [ngStyle]="timeSpan[column]?.eventElementStyle"
                   [attr.colspan]="1 + (timeSpan[column]?.ixTo ?? 0) - (timeSpan[column]?.ixFrom ?? 0)"
                   (click)="!isSelecting && timeSpan[column]?.event && (timeSpan[column]?.event?.type ?? 0)  > 22 ? enableEventCard(timeSpan[column]?.event ?? undefined) : null" >
-                  <div class="ui grid">
-                    <div class="row">
-                      <div class="column">
-                        <small>
-                          @if ((timeSpan[column]?.event?.type ?? 0) > 22 && timeSpan[column]?.category !== '') {
-                            <span
-                              [ngStyle]="setTimeSpanCategoryStyle(column, timeSpan[column] ?? undefined)">
-                              {{timeSpan[column]?.category}} -
-                            </span>
-                          }
-                          @if (timeSpan[column]?.contactDisplayNr && timeSpan[column]?.contactDisplayNr !== '' && styles.isShowCustIssueColumn) {
-                            <span class="ui label"
-                              [ngStyle]="timeSpan[column]?.leftCustStyle"
-                              [attr.data-tooltip]="timeSpan[column]?.contactDisplayName" [attr.data-position]="timeSpan[column]?.ixFrom === timeSpan[column]?.ixTo ? 'bottom center' : 'right center'">
-                              {{timeSpan[column]?.contactDisplayNr}}
-                            </span>
-                          }
-                          <span [ngStyle]="setTimeSpanSummaryStyle(column, timeSpan[column] ?? undefined)">
-                            <!-- 1 or 2 columns: text is limited by pipe, in case of 3++ columns we use nowrap -->
-                            {{timeSpan[column]?.ixFrom === timeSpan[column]?.ixTo ? (timeSpan[column]?.summaryDisplay|slice:0:(windowFactor * (33 - (timeSpan[column]?.category?.length ?? 0) - (timeSpan[column]?.contactDisplayNr?.length ?? 0))))
-                            : (timeSpan[column]?.ixFrom ?? 0) + 1 === timeSpan[column]?.ixTo ? (timeSpan[column]?.summaryDisplay|slice:0:(windowFactor * (80 - (timeSpan[column]?.category?.length ?? 0) - (timeSpan[column]?.contactDisplayNr?.length ?? 0))))
-                            : (timeSpan[column]?.summaryDisplay|slice:0:(windowFactor * ((timeSpan[column]?.summaryDisplay?.length ?? 0)- (timeSpan[column]?.contactDisplayNr?.length ?? 0))))}}
+                  <div class="flex items-center gap-1">
+                    <div class="flex-1">
+                      <small>
+                        @if ((timeSpan[column]?.event?.type ?? 0) > 22 && timeSpan[column]?.category !== '') {
+                          <span
+                            [ngStyle]="setTimeSpanCategoryStyle(column, timeSpan[column] ?? undefined)">
+                            {{timeSpan[column]?.category}} -
                           </span>
-                        </small>
-                      </div>
+                        }
+                        @if (timeSpan[column]?.contactDisplayNr && timeSpan[column]?.contactDisplayNr !== '' && styles.isShowCustIssueColumn) {
+                          <span class="badge text-left"
+                            [ngStyle]="timeSpan[column]?.leftCustStyle"
+                            [attr.data-tip]="timeSpan[column]?.contactDisplayName" [ngClass]="timeSpan[column]?.ixFrom === timeSpan[column]?.ixTo ? 'tooltip tooltip-bottom tooltip-accent' : 'tooltip tooltip-right tooltip-accent'">
+                            {{timeSpan[column]?.contactDisplayNr}}
+                          </span>
+                        }
+                        <span [ngStyle]="setTimeSpanSummaryStyle(column, timeSpan[column] ?? undefined)">
+                          <!-- 1 or 2 columns: text is limited by pipe, in case of 3++ columns we use nowrap -->
+                          {{timeSpan[column]?.ixFrom === timeSpan[column]?.ixTo ? (timeSpan[column]?.summaryDisplay|slice:0:(windowFactor * (33 - (timeSpan[column]?.category?.length ?? 0) - (timeSpan[column]?.contactDisplayNr?.length ?? 0))))
+                          : (timeSpan[column]?.ixFrom ?? 0) + 1 === timeSpan[column]?.ixTo ? (timeSpan[column]?.summaryDisplay|slice:0:(windowFactor * (80 - (timeSpan[column]?.category?.length ?? 0) - (timeSpan[column]?.contactDisplayNr?.length ?? 0))))
+                          : (timeSpan[column]?.summaryDisplay|slice:0:(windowFactor * ((timeSpan[column]?.summaryDisplay?.length ?? 0)- (timeSpan[column]?.contactDisplayNr?.length ?? 0))))}}
+                        </span>
+                      </small>
                     </div>
                   </div>
                 </td>
@@ -100,12 +97,12 @@
             <td [ngStyle]="styles.timeElementOutsideStyle"
               (click)="toggleShowBeforeStartHour()">
               @if (isShowBeforeStartHour) {
-                <i class="sort down icon"
+                <i class="fas fa-sort-down cursor-pointer"
                   [ngStyle]="expandIconStyle">
                 </i>
               }
               @if (!isShowBeforeStartHour) {
-                <i class="sort up icon"
+                <i class="fas fa-sort-up cursor-pointer"
                   [ngStyle]="expandIconStyle">
                 </i>
               }
@@ -137,47 +134,46 @@
               @if (c.eventBegins) {
                 <td [attr.rowspan]="c.eventRowSpan" [ngStyle]="c.eventElementStyle"
                   (click)="!isSelecting && c.event ? enableEventCard(c.event) : null" >
-                  <!-- // [attr.data-tooltip] events due overflow: visible -->
+                  <!-- // [attr.data-tip] events due overflow: visible -->
                   <p [ngStyle]="weekColumns[ix].isSelected ? choosenEventStyle : eventStyle"
-                [attr.data-tooltip]="(c.event?.eventBegin|date:'H:mm') + ' - ' +
-                (c.event?.eventEnd|date:'H:mm') + ' : ' + c.eventDurationDisplay"
-                    data-position="top left">
+                class="tooltip tooltip-top tooltip-left tooltip-accent"
+                    [attr.data-tip]="(c.event?.eventBegin|date:'H:mm') + ' - ' +
+                (c.event?.eventEnd|date:'H:mm') + ' : ' + c.eventDurationDisplay">
                     {{c.event?.eventBegin|date:'HH:mm'}}
                     @if (c.event?.locationType && (c.event?.locationType ?? 0) >= 1 && (c.event?.locationType ?? 0) <= 5) {
                       <span
-                        [attr.data-tooltip]="c.event?.locationType?.toString() + ' - ' + txt[locationTypeEnum[c.event?.locationType ?? 0]]"
-                        data-position="bottom center">
+                        class="tooltip tooltip-bottom tooltip-accent"
+                        [attr.data-tip]="c.event?.locationType?.toString() + ' - ' + txt[locationTypeEnum[c.event?.locationType ?? 0]]">
                         @if (c.event?.locationType === 1) {
-                          <i class="wrench icon"></i>
+                          <i class="fas fa-wrench"></i>
                         }
                         @if (c.event?.locationType === 2) {
-                          <i class="motorcycle icon"></i>
+                          <i class="fas fa-motorcycle"></i>
                         }
                         @if (c.event?.locationType === 3) {
-                          <i class="users icon"></i>
+                          <i class="fas fa-users"></i>
                         }
                         @if (c.event?.locationType === 4) {
-                          <i class="laptop icon"></i>
+                          <i class="fas fa-laptop"></i>
                         }
                         @if (c.event?.locationType === 5) {
-                          <i class="mobile alternate icon"></i>
+                          <i class="fas fa-mobile-screen"></i>
                         }
                         @if (c.event?.locationType === 6) {
-                          <i class="briefcase icon"></i>
+                          <i class="fas fa-briefcase"></i>
                         }
                       </span>
                     }
                     @if (c.contactDisplayNr && c.contactDisplayNr !== '' && styles.isShowCustIssueColumn) {
-                      <span class="ui label" [ngStyle]="c.rightCustStyle"
-                        [attr.data-tooltip]="c.contactDisplayName" data-position="right center">{{c.contactDisplayNr}}
+                      <span class="badge text-left tooltip tooltip-right tooltip-accent" [ngStyle]="c.rightCustStyle"
+                        [attr.data-tip]="c.contactDisplayName">{{c.contactDisplayNr}}
                       </span>
                     }
                   </p>
                   <p [ngStyle]="weekColumns[ix].isSelected ? choosenEventStyle : eventStyle">{{c.event?.summary|slice:0:80}}</p>
                   @if (weekColumns[ix].isSelected && isSelecting && c.event) {
-                    <div class="ui right aligned checkbox">
-                      <input type="checkbox"  [checked]="c.event.isSelected" (change)="selectEvent(c.event)">
-                      <label></label>
+                    <div class="flex justify-end">
+                      <input type="checkbox" class="checkbox checkbox-sm" [checked]="c.event.isSelected" (change)="selectEvent(c.event)">
                     </div>
                   }
                 </td>
@@ -189,12 +185,12 @@
           <td [ngStyle]="styles.timeElementOutsideStyle"
             (click)="toggleShowAfterLastHour()">
             @if (isShowAfterLastHour) {
-              <i class="sort up icon"
+              <i class="fas fa-sort-up cursor-pointer"
                 [ngStyle]="expandIconStyle">
               </i>
             }
             @if (!isShowAfterLastHour) {
-              <i class="sort down icon"
+              <i class="fas fa-sort-down cursor-pointer"
                 [ngStyle]="expandIconStyle">
               </i>
             }
@@ -207,4 +203,5 @@
         </tr>
       </tbody>
     </table>
-  }
+  </div>
+}
