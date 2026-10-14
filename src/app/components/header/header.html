@@ -138,12 +138,6 @@
           (userSelect)="selectUser($event)" >
         </dsy-user>
       }
-      @if (c['calendar']?.isSelected) {
-        <dsy-calendar
-          [calendarLoadCounter]="calendarLoadCounter" [isShowEvent]="isShowEvent" [eventId]="eventId"
-          (restart)="restart()">
-        </dsy-calendar>
-      }
       <router-outlet>
       </router-outlet>
       <p></p>

@@ -66,7 +66,7 @@
                 @if (el.contactNr > 0 && (eventSelectOption.contactNr > 0)) {
                   <div class="badge tooltip tooltip-bottom tooltip-accent"
                     [ngStyle]="el.contactStyle"
-                    [attr.data-tip]="el.contactName + (el.issueNr !== 0 ? ' | ' + el.issueNr : '')">
+                    [attr.data-tip]="el.contactDisplayName + (el.issueNr !== 0 ? ' | ' + el.issueNr : '')">
                     {{el.issueNr !== 0? el.issueNr : ''}}
                   </div>
                 }
@@ -114,7 +114,7 @@
               }
               @if (el.changedCriteria === 'contact') {
                 <td class="text-left" colspan="5">
-                  {{el.contactDisplayNr}} {{el.contactName}}
+                  {{el.contactDisplayNr}} {{el.contactDisplayName}}
                 </td>
               }
               @if (el.changedCriteria === 'issue') {
@@ -220,7 +220,7 @@
                 @if (el.contactDisplayNr !== '' || el.issueNr !== 0) {
                   <div class="badge badge-sm tooltip tooltip-bottom tooltip-accent"
                     [ngStyle]="el.contactStyle"
-                    [attr.data-tip]="el.contactName + (el.contactName !== '' && el.issueNr !== 0 ? ' | ' : '')">
+                    [attr.data-tip]="el.contactDisplayName + (el.contactDisplayName !== '' && el.issueNr !== 0 ? ' | ' : '')">
                     {{el.issueNr !== 0 ? el.issueNr : el.contactDisplayNr}}
                   </div>
                 }

@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 import { HeaderComponent } from './components/header/header';
 import { StatusComponent } from './components/status/status';
 import { ContactComponent } from './components/contact/contact';
-import { CalendarComponent } from './components/calendar/calendar';
+import { CalendarDayComponent } from './components/calendar-day/calendar-day';
 import { CalendarImportComponent } from './components/calendar-import/calendar-import';
 import { ContactImportComponent } from './components/contact-import/contact-import';
 import { CalendarExportComponent } from './components/calendar-export/calendar-export';
@@ -21,9 +21,6 @@ export const routes: Routes = [
   { path: 'admin', component: HeaderComponent},
   { path: 'local', component: HeaderComponent},
   { path: 'restart', component: HeaderComponent},
-  { path: 'localShowEvent/:eventId', component: HeaderComponent},
-  { path: 'serverShowEvent/:eventId', component: HeaderComponent},
-  { path: 'restart', component: HeaderComponent},
   { path: 'header', component: HeaderComponent,
     // router children are used for all components which are not called directly from header as sub-componts with @Input and @Output
     children: [
@@ -31,7 +28,7 @@ export const routes: Routes = [
       },
       { path: 'contact', component: ContactComponent
       },
-      { path: 'calendar', component: CalendarComponent
+      { path: 'calendarDay', component: CalendarDayComponent
       },
       { path: 'calendarImport', component: CalendarImportComponent
       },

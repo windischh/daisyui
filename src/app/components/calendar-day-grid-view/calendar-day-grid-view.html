@@ -1,1 +1,382 @@
-<p>calendar-day-grid-view works!</p>
+
+<!-- we try to modify table width and to place tableBgStyle
+<div class="ui four columns centered grid container" [ngStyle]="styles.tableBgStyle">
+  -->
+  <!-- table-layout: 'fixed' - table head defines column width -->
+  @if (txt && userOpts) {
+    <table class="ui fixed celled very compact unstackable table" [ngStyle]="styles.tableStyle">
+      <thead>
+        <tr [ngStyle]="styles.tableHeaderStyle">
+          <th [ngClass]="windowWidth >= WINDOW_WIDTH_MOBILE ? 'one ' : 'two '" class="wide left aligned">{{txt['time']}}</th>
+          @if (windowWidth >= WINDOW_WIDTH_MOBILE || !session.isPlan ) {
+            <th [ngStyle]="session.isPlan ? planHeaderNormalStyle : planHeaderBoldStyle"
+            (click)="!isSelecting?togglePlan():null">{{(isSelecting && session.isPlan ? '' : (this.session.serviceLevel.contact === 1 ? txt['events'] : txt['event']) + ' ' + txt['actual']) }}</th>
+          }
+          @if (windowWidth >= WINDOW_WIDTH_MOBILE || session.isPlan ) {
+            <th [ngStyle]="session.isPlan ? planHeaderBoldStyle : planHeaderNormalStyle"
+            (click)="!isSelecting?togglePlan():null">{{(isSelecting && !session.isPlan ? '' : (this.session.serviceLevel.contact === 1 ? txt['events'] : txt['event']) + ' ' + txt['plan'])}}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        <!-- // TODO timeSpanGrid, category 1,2 and 3++ side by side  -->
+        @for (t of timeSpanGrid; track $index; let i = $index) {
+          <tr [ngStyle]="styles.tableRowStyle">
+            <td></td>
+            <!-- td for time span element category 1,2  -->
+            <td [ngStyle]="t.recurring ? t.recurring.eventElementStyle : null">
+              @if (t.recurring) {
+                <div class="ui grid container">
+                  <div class="twelve wide middle aligned not vertically padded column">
+                    <div class="ui grid">
+                      <div class="fourteen wide column">
+                        <p [ngStyle]="t.recurring.event?.type === 21 ? {color: 'Red'} : {}">@if (t.recurring.category !== '') {
+                          <span>{{t.recurring.category}} - </span>
+                        }{{t.recurring.event?.summary}}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="two wide middle aligned right aligned column">
+                    @if (t.recurring.contactDisplayNr && t.recurring.contactDisplayNr !== '' && styles.isShowCustIssueColumn) {
+                      <div class="ui label" [ngStyle]="t.recurring.leftCustStyle"
+                        [attr.data-tooltip]="t.recurring.contactDisplayName" data-position="left center">{{t.recurring.contactDisplayNr}}
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </td>
+            @if (windowWidth >= WINDOW_WIDTH_MOBILE) {
+              <!-- td for time span element category 3++ -->
+              <td [ngStyle]="t.timeSpan ? setPointer(t.timeSpan.eventElementStyle ?? {}, !isSelecting) : null"
+                (click)="t.timeSpan && t.timeSpan.event && !isSelecting ? enableEventCard(t.timeSpan.event) : null">
+                @if (t.timeSpan) {
+                  <div class="ui grid container">
+                    <div class="twelve wide middle aligned not vertically padded column">
+                      <div class="ui grid">
+                        <div class="fourteen wide column">
+                          <p>@if (t.timeSpan.category !== '') {
+                            <span>{{t.timeSpan.category}} - </span>
+                          }{{t.timeSpan.event?.summary}}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="two wide middle aligned right aligned column">
+                      @if (t.timeSpan.contactDisplayNr && t.timeSpan.contactDisplayNr !== '' && styles.isShowCustIssueColumn) {
+                        <div class="ui label" [ngStyle]="t.timeSpan.leftCustStyle"
+                          [attr.data-tooltip]="t.timeSpan.contactDisplayName" data-position="left center">{{t.timeSpan.contactDisplayNr}}
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </td>
+            }
+          </tr>
+          <!-- when we have a 2 column design, we must plce timespans below ...-->
+          @if (windowWidth < WINDOW_WIDTH_MOBILE) {
+            <tr>
+              <td></td>
+              <!-- td for time span element category 3++ -->
+              <td [ngStyle]="t.timeSpan ? setPointer(t.timeSpan.eventElementStyle ?? {}, !isSelecting) : null"
+                (click)="t.timeSpan && t.timeSpan.event && !isSelecting ? enableEventCard(t.timeSpan.event) : null">
+                @if (t.timeSpan) {
+                  <div class="ui grid container">
+                    <div class="twelve wide middle aligned not vertically padded column">
+                      <div class="ui grid">
+                        <div class="fourteen wide column">
+                          <p>@if (t.timeSpan.category !== '') {
+                            <span>{{t.timeSpan.category}} - </span>
+                          }{{t.timeSpan.event?.summary}}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="two wide middle aligned right aligned column">
+                      @if (t.timeSpan.contactDisplayNr && t.timeSpan.contactDisplayNr !== '' && styles.isShowCustIssueColumn) {
+                        <div class="ui label" [ngStyle]="t.timeSpan.leftCustStyle"
+                          [attr.data-tooltip]="t.timeSpan.contactDisplayName" data-position="left center">{{t.timeSpan.contactDisplayNr}}
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </td>
+            </tr>
+          }
+        }
+        <tr [ngStyle]="styles.tableRowStyle">
+          <td [ngStyle]="styles.timeElementOutsideStyle"
+            (click)="toggleShowBeforeStartHour()">
+            @if (isShowBeforeStartHour) {
+              <i class="sort down icon"
+                [ngStyle]="expandIconStyle">
+              </i>
+            }
+            @if (!isShowBeforeStartHour) {
+              <i class="sort up icon"
+                [ngStyle]="expandIconStyle">
+              </i>
+            }
+          </td>
+          @if (windowWidth >= WINDOW_WIDTH_MOBILE) {
+            <!-- td below time span element category 1,2  -->
+            <td></td>
+          }
+          <!-- td for empty row to insert time span element -->
+          <td>
+            @if (!isSelecting) {
+              <button class="right floated ui mini circular teal icon button"
+                [attr.data-tooltip]="txt['insert'] + ' ' + txt['time_span']" data-position="left center"
+                (click)="insertTimeSpan()">
+                <i class="plus icon"></i>
+              </button>
+            }
+          </td>
+        </tr>
+        @for (g of grid; track $index; let i = $index) {
+          <tr [ngStyle]="g.actual.tableRowStyle">
+            @if (g.actual.timeBegins) {
+              <td [ngStyle]="g.actual.timeElementStyle"
+                [attr.rowspan]="g.actual.timeRowSpan">
+                <span [ngStyle]="g.actual.timeInTimeElementStyle">{{g.actual.timeElement}}</span>
+              </td>
+            }
+            @if (windowWidth >= WINDOW_WIDTH_MOBILE || !session.isPlan ) {
+              <!-- td  if no event or at begin of event (with rowspan)-->
+              @if (!g.actual.event) {
+                <td [ngStyle]="setPointer(g.actual.rowElementStyle ?? {}, !session.isPlan && !isSelecting)"
+                  data-testid="calendar-day-grid-insert-actual"
+                (click)="session.isPlanMaint && !session.isPlan && !isSelecting ? insertEventCard(g.actual.roundedMinutes) : null"></td>
+              }
+              <!-- td for event -->
+              @if (g.actual.eventBegins) {
+                <td [attr.rowspan]="g.actual.eventRowSpan" [ngStyle]="g.actual.eventElementStyle"
+                  (click)="g.actual.event && !isSelecting? enableEventCard(g.actual.event) : null">
+                  <div class="ui grid container">
+                    <!-- time entries are center aligned within column -->
+                    @if (styles.isShowTimeColumn) {
+                      <div class="one wide left floated middle aligned column"
+                        [attr.data-tooltip]="(g.actual.event?.eventBegin|date:'H:mm') + ' - ' +
+                        (g.actual.event?.eventEnd|date:'H:mm') + ' : ' +g.actual.eventDurationDisplay"
+                        data-position="right center">
+                        <p [ngStyle]="styles.timeStyle">{{g.actual.event?.eventBegin|date:'HH:mm'}}</p>
+                        @if (styles.isShowDuration) {
+                          <p [ngStyle]="styles.durationStyle">{{'[' + GlobalFunctions.getTimeFormatted(g.actual.event?.eventDuration ?? 0) + ']'}}</p>
+                        }
+                        <p [ngStyle]="styles.timeStyle">{{g.actual.event?.eventEnd|date:'HH:mm'}}</p>
+                      </div>
+                    }
+                    @if (!styles.isShowTimeColumn) {
+                      <div class="one wide left floated middle aligned column">
+                        <p class="left aligned" [ngStyle]="actualEventStyle" [attr.data-tooltip]="(g.actual.event?.eventBegin|date:'H:mm') + ' - ' +
+                          (g.actual.event?.eventEnd|date:'H:mm') + ' : ' +g.actual.eventDurationDisplay"
+                          data-position="right center">{{g.actual.event?.eventBegin|date:'HH:mm'}}
+                        </p>
+                      </div>
+                    }
+                    <div class="twelve wide middle aligned not vertically padded column">
+                      <div class="ui grid">
+                        <div class="fourteen wide column">
+                          <p [ngStyle]="actualEventStyle">{{g.actual.event?.summary}}</p>
+                          @if (styles.isShowLocation && g.actual.event?.location) {
+                            <p [ngStyle]="locationStyle">{{g.actual.event?.location}}</p>
+                          }
+                          @if (styles.isShowDescription && g.actual.event?.description) {
+                            <p [ngStyle]="descriptionStyle" [innerHtml]="g.actual.event?.description">
+                              <!-- 
+                              {{g.actual.event?.description|slice:0:240}}
+                              @if (g.actual.event?.description?.length > 240) {
+                                <span>...</span>
+                              }
+                              -->
+                            </p>
+                          }
+                        </div>
+                        @if (!session.isPlan && isSelecting && g.actual.event) {
+                          <div class="one wide middle aligned column" >
+                            <div class="ui checkbox">
+                              <input type="checkbox"  [checked]="g.actual.event.isSelected" (change)="selectEvent(g.actual.event)">
+                              <label></label>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                    <div class="two wide middle aligned right aligned column">
+                      @if ((g.actual.event?.locationType ?? 0) >= 1 && (g.actual.event?.locationType ?? 0) <= 5) {
+                        <div class="ui label" style="background-color: inherit;"
+                          [attr.data-tooltip]="g.actual.event?.locationType?.toString() + ' - ' + txt[locationTypeEnum[g.actual.event?.locationType ?? 0]]" data-position="left center">
+                          @if (g.actual.event?.locationType === 1) {
+                            <i class="wrench icon"></i>
+                          }
+                          @if (g.actual.event?.locationType === 2) {
+                            <i class="motorcycle icon"></i>
+                          }
+                          @if (g.actual.event?.locationType === 3) {
+                            <i class="users icon"></i>
+                          }
+                          @if (g.actual.event?.locationType === 4) {
+                            <i class="laptop icon"></i>
+                          }
+                          @if (g.actual.event?.locationType === 5) {
+                            <i class="mobile alternate icon"></i>
+                          }
+                          @if (g.actual.event?.locationType === 6) {
+                            <i class="briefcase icon"></i>
+                          }
+                        </div>
+                      }
+                      @if (g.actual.contactDisplayNr && g.actual.contactDisplayNr !== '' && styles.isShowCustIssueColumn) {
+                        <div class="ui label" [ngStyle]="g.actual.leftCustStyle"
+                          [attr.data-tooltip]="g.actual.contactDisplayName" data-position="left center">{{g.actual.contactDisplayNr}}
+                        </div>
+                      }
+                      @if ((g.actual.event?.planId ?? 0) > 0) {
+                        <div class="ui label" style="background-color: inherit;"
+                          [attr.data-tooltip]="(!g.actual.assocTxt  || g.actual.assocTxt === '') ? ('= ' + txt['plan']) : (txt['plan'] + ': ' + g.actual.assocTxt)"data-position="left center">
+                          @if (!g.actual.event?.assocDone) {
+                            <i class="right arrow icon"></i>
+                          }
+                          @if (g.actual.event?.assocDone) {
+                            <i class="green check icon"></i>
+                          }
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </td>
+              }
+            }
+            @if (windowWidth >= WINDOW_WIDTH_MOBILE || session.isPlan ) {
+              <!-- td  if no planned event or at begin of event (with rowspan)-->
+              @if (!g.plan.event) {
+                <td [ngStyle]="setPointer(g.plan.rowElementStyle ?? {}, session.isPlan && !isSelecting)"
+                (click)="session.isPlanMaint && session.isPlan && !isSelecting ? insertEventCard(g.plan.roundedMinutes) : null" ></td>
+              }
+              <!-- td for planned event -->
+              @if (g.plan.eventBegins) {
+                <td [attr.rowspan]="g.plan.eventRowSpan" [ngStyle]="g.plan.eventElementStyle"
+                  (click)="!isSelecting && g.plan.event ? enableEventCard(g.plan.event) : null">
+                  <div class="ui grid container">
+                    <div class="two wide middle aligned column" [ngStyle]="leftIconStyle">
+                      @if ((g.plan.event?.locationType ?? 0) >= 1 && (g.plan.event?.locationType ?? 0) <= 5) {
+                        <div class="ui label" style="background-color: inherit;"
+                          [attr.data-tooltip]="g.plan.event?.locationType?.toString() + ' - ' + txt[locationTypeEnum[g.plan.event?.locationType ?? 0]]" data-position="right center">
+                          @if (g.plan.event?.locationType === 1) {
+                            <i class="wrench icon"></i>
+                          }
+                          @if (g.plan.event?.locationType === 2) {
+                            <i class="motorcycle icon"></i>
+                          }
+                          @if (g.plan.event?.locationType === 3) {
+                            <i class="users icon"></i>
+                          }
+                          @if (g.plan.event?.locationType === 4) {
+                            <i class="laptop icon"></i>
+                          }
+                          @if (g.plan.event?.locationType === 5) {
+                            <i class="mobile alternate icon"></i>
+                          }
+                          @if (g.plan.event?.locationType === 6) {
+                            <i class="briefcase icon"></i>
+                          }
+                        </div>
+                      }
+                      @if (g.plan.contactDisplayNr && g.plan.contactDisplayNr !== '' && styles.isShowCustIssueColumn) {
+                        <div class="ui label" [ngStyle]="g.plan.rightCustStyle"
+                          [attr.data-tooltip]="g.plan.contactDisplayName" data-position="right center">{{g.plan.contactDisplayNr}}
+                        </div>
+                      }
+                      @if ((g.plan.event?.assocCount ?? 0) > 0 || (g.plan.event?.doneId ?? 0) > 0) {
+                        <div class="ui label" style="background-color: inherit;"
+                          [attr.data-tooltip]="(g.plan.event?.doneId ?? 0) > 0 ? txt['done'] : (!g.plan.assocTxt || g.plan.assocTxt === '') ? ('= ' + txt['actual']) : (txt['actual'] + ': ' + g.plan.assocTxt)" data-position="right center">
+                          @if (!((g.plan.event?.doneId ?? 0) > 0) && (g.plan.event?.assocCount ?? 0)  > 0) {
+                            <i class="left arrow icon" ></i>
+                          }
+                          @if ((g.plan.event?.doneId ?? 0) > 0) {
+                            <i class="green check icon" ></i>
+                          }
+                          @if (!((g.plan.event?.doneId ?? 0)  > 0) && (g.plan.event?.assocCount ?? 0)  > 1) {
+                            <small>{{g.plan.event?.assocCount}}</small>
+                          }
+                        </div>
+                      }
+                    </div>
+                    <div class="eleven wide left aligned middle aligned not vertically padded column">
+                      <p [ngStyle]="planEventStyle">{{g.plan.event?.summary}}</p>
+                      @if (styles.isShowLocation && g.plan.event?.location) {
+                        <p [ngStyle]="locationStyle">{{g.plan.event?.location}}</p>
+                      }
+                      @if (styles.isShowDescription && g.plan.event?.description) {
+                        <p [ngStyle]="descriptionStyle" [innerHtml]="g.plan.event?.description">
+                          <!-- 
+                          {{g.plan.event?.description|slice:0:240}}
+                          @if (g.plan.event?.description?.length > 240) {
+                            <span>...</span>
+                          }
+                          -->
+                        </p>
+                      }
+                    </div>
+                    <!-- time entries are center aligned within column -->
+                    @if (styles.isShowTimeColumn) {
+                      <div class="two wide left floated middle aligned column"
+                        [attr.data-tooltip]="(g.plan.event?.eventBegin|date:'H:mm')  + ' - '
+                        + (g.plan.event?.eventEnd|date:'H:mm') + ' : ' + g.plan.eventDurationDisplay	"
+                        data-position="left center">
+                        <p [ngStyle]="styles.timeStyle">{{g.plan.event?.eventBegin|date:'HH:mm'}}</p>
+                        @if (styles.isShowDuration) {
+                          <p [ngStyle]="styles.durationStyle">{{'[' + GlobalFunctions.getTimeFormatted(g.plan.event?.eventDuration ?? 0) + ']'}}</p>
+                        }
+                        <p [ngStyle]="styles.timeStyle">{{g.plan.event?.eventEnd|date:'HH:mm'}}
+                        </p>
+                      </div>
+                    }
+                    @if (!styles.isShowTimeColumn) {
+                      <div class="two wide left floated middle aligned column">
+                        <p [ngStyle]="planEventStyle" [attr.data-tooltip]="(g.plan.event?.eventBegin|date:'H:mm') + ' - ' +
+                          (g.plan.event?.eventEnd|date:'H:mm') + ' : ' +g.plan.eventDurationDisplay"
+                          data-position="left center">{{g.plan.event?.eventBegin|date:'HH:mm'}}
+                        </p>
+                      </div>
+                    }
+                    @if (session.isPlan && isSelecting && g.plan.event) {
+                      <div class="one wide left floated middle aligned column">
+                        <div class="ui checkbox">
+                          <input type="checkbox"  [checked]="g.plan.event.isSelected" (change)="selectEvent(g.plan.event)">
+                          <label></label>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </td>
+              }
+            }
+          </tr>
+        }
+        <tr [ngStyle]="styles.tableRowStyle">
+          <td [ngStyle]="styles.timeElementOutsideStyle"
+            (click)="toggleShowAfterLastHour()">
+            @if (isShowAfterLastHour) {
+              <i class="sort up icon"
+                [ngStyle]="expandIconStyle">
+              </i>
+            }
+            @if (!isShowAfterLastHour) {
+              <i class="sort down icon"
+                [ngStyle]="expandIconStyle">
+              </i>
+            }
+          </td>
+          <!-- td below actual (eventually to place issues which should be finished this day or before and are not finished yet
+          except those which start on this day - only at today) -->
+          <td></td>
+          @if (windowWidth >= WINDOW_WIDTH_MOBILE) {
+            <!-- td below plan  (eventually to place issues which start on this day) -->
+            <td></td>
+          }
+      </tbody>
+    </table>
+  }
+
+

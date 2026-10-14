@@ -1,1 +1,116 @@
-<p>calendar-day works!</p>
+@if (refreshSignal() === 1 && !v['issue-select-view']?.isAutoSelected) {
+  <div class="ui grid">
+    <div class="row">
+      <div class="two wide column">
+      </div>
+      <div class="twelve wide column">
+        <h2 class="ui center aligned header">
+          {{auth.txt['event_day_title']}}
+        </h2>
+      </div>
+      <div class="two wide column">
+      </div>
+    </div>
+  </div>
+}
+<!-- we await update and getting new data from server   -->
+@if (refreshSignal() === 0) {
+  <div class="ui active inverted dimmer">
+    <div class="ui large text loader">processing data on server  ...</div>
+  </div>
+}
+@if (sessionForViews && auth.txt && locale) {
+  <dsy-calendar-day-selection-bar
+    [locale]="locale" [txt]="auth.txt" [opts]="opts" [userOpts]="userOpts" [views]="views"
+    [calendarDayChangeCounter]="calendarDayChangeCounter"
+    [targetCalendarDay]="targetCalendarDay" [firstCalendarDay]="firstCalendarDay"
+    [session]="sessionForViews"
+    [sessionContact]="sessionContact" 
+    [timeSpans]="timeSpans"
+    [isCreating]="isCreating" [isSelecting]="isSelecting"  [countSelected]="countSelected"
+    (selectionSet)="setSelection()"
+    (sessionPlanUpdate)="updateSessionPlan($event)"
+    (viewSelection)="selectView($event)"  (calendarDaySelected)="selectCalendarDay($event)">
+  </dsy-calendar-day-selection-bar>
+}
+@if (sessionForViews && auth.txt && v['time-shift-view'] && v['time-shift-view'].isAutoSelected) {
+  <dsy-calendar-day-time-shift-view
+    [txt]="auth.txt" [eventtxt]="eventtxt" [timeZoneIdentifier]="timeZoneIdentifier"
+    [session]="sessionForViews" [locale]="locale" [userOpts]="userOpts"
+    [events]="events" [actualEvents]="actualEvents"
+    [targetEvents]="targetEvents" [targetCalendarDay]="targetCalendarDay"
+    [eventsChangeCounter]="eventsChangeCounter"
+    (timeShiftCancel)="cancelTimeShiftView()"
+    (eventUpdate)="updateEvent($event)" (selectionSet)="setSelection()">
+  </dsy-calendar-day-time-shift-view>
+}
+@if (sessionForViews && auth.txt && locale && v['card-form-view'] && v['card-form-view'].isAutoSelected) {
+  <dsy-calendar-day-card-form-view
+    [txt]="auth.txt" [contacttxt]="contacttxt" [issuetxt]="issuetxt" [eventtxt]="eventtxt"
+    [session]="sessionForViews" [locale]="locale" [opts]="opts" [userOpts]="userOpts" [options]="options"
+    [eventContainer]="eventContainer" [timeSpans]="timeSpans"
+    [timeSpanTypeChoices]="timeSpanTypeChoices" [events]="events"
+    [targetEvents]="targetEvents" [targetCalendarDay]="targetCalendarDay"
+    [eventsChangeCounter]="eventsChangeCounter"
+    [sessionContact]="sessionContact" 
+    (calendarDaySelected)="selectCalendarDay($event)"
+    (cardFormCancel)="cancelCardFormView()" (timeSpanUpdate)="updateTimeSpan($event)" (eventUpdate)="updateEvent($event)"
+    (eventUpdateAssoc)="updateEventAssoc($event)">
+  </dsy-calendar-day-card-form-view>
+}
+@if (sessionForViews && auth.txt && locale && v['cards-view'] && v['cards-view'].isSelected && isDayLoadedSignal() > 0) {
+  <dsy-calendar-day-cards-view
+    [locale]="locale"  [txt]="auth.txt"  [eventtxt]="eventtxt"
+    [session]="sessionForViews" [opts]="opts" [userOpts]="userOpts" [options]="options" [events]="events"
+    [eventsChangeCounter]="eventsChangeCounter"
+    [isCreating]="isCreating" [isSelecting]="isSelecting"
+    (eventCreate)="setCreating($event)"
+    (eventUpdate)="updateEvent($event)" (eventSelect)="selectEvent($event)"
+    (cardFormViewEnabled)="enableCardFormView($event)">
+  </dsy-calendar-day-cards-view>
+}
+@if (sessionForViews && auth.txt && locale && options  && v['week-view'] && v['week-view'].isSelected && isWeekLoadedSignal() > 0) {
+  <dsy-calendar-day-week-view
+    [session]="sessionForViews" [userOpts]="userOpts" [txt]="auth.txt" [eventtxt]="eventtxt"
+    [locale]="locale"  [options]="options"
+    [actualEvents]="weekActualEvents" [planEvents]="weekPlanEvents"
+    [eventsChangeCounter]="weekEventsChangeCounter"
+    [timeSpanChangeCounter]="timeSpanChangeCounter" [timeSpans]="timeSpans"
+    [timeSpanTypeColors]="timeSpanTypeColors"
+    [isSelecting]="isSelecting" (eventSelect)="selectEvent($event)"
+    (calendarDayAndPlanSelected)="selectCalendarDayAndPlan($event)"
+    (viewSelected)="selectView($event)"
+    (cardFormViewEnabled)="enableCardFormView($event)">
+  </dsy-calendar-day-week-view>
+}
+@if (sessionForViews && auth.txt && options && v['grid-view'] && v['grid-view'].isSelected && isDayLoadedSignal() > 0) {
+  <dsy-calendar-day-grid-view
+    [userOpts]="userOpts" [txt]="auth.txt" [eventtxt]="eventtxt"
+    [session]="sessionForViews" [options]="options"
+    [locale]="locale"
+    [timeSpanTypeColors]="timeSpanTypeColors" [timeSpans]="timeSpans"
+    [actualEvents]="actualEvents" [planEvents]="planEvents"
+    [eventsChangeCounter]="eventsChangeCounter"
+    [timeSpanChangeCounter]="timeSpanChangeCounter"
+    [linkedUserEvents]="linkedUserEvents"
+    [linkedTimeSpans]="linkedTimeSpans"
+    [isSelecting]="isSelecting" (eventSelect)="selectEvent($event)"
+    (sessionPlanUpdate)="updateSessionPlan($event)"
+    (cardFormViewEnabled)="enableCardFormView($event)">
+  </dsy-calendar-day-grid-view>
+}
+@if (sessionForViews && auth.txt && v['contacts-view'] && v['contacts-view'].isSelected && isDayLoadedSignal() > 0) {
+  <dsy-calendar-day-contacts-view
+    [txt]="auth.txt" [eventtxt]="eventtxt" [contacttxt]="contacttxt" 
+    [locale]="locale" [sessionContact]="sessionContact" 
+    [session]="sessionForViews" [opts]="opts"
+    [actualEvents]="weekActualEvents" [planEvents]="weekPlanEvents"
+    [eventsChangeCounter]="weekEventsChangeCounter">
+  </dsy-calendar-day-contacts-view>
+}
+@if (sessionForViews && auth.txt && options && v['options-view'] && v['options-view'].isSelected) {
+  <dsy-calendar-day-options-view
+    [userOpts]="userOpts" [txt]="auth.txt" [options]="options"
+    (optsUpdate)="updateOpts($event)" (optsStore)="storeOpts()">
+  </dsy-calendar-day-options-view>
+}

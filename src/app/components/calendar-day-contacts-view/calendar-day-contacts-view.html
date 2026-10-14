@@ -1,1 +1,49 @@
-<p>calendar-day-contacts-view works!</p>
+@if (txt && contacttxt && eventtxt) {
+  <table class="ui celled structured table">
+    <thead>
+      <tr>
+        <th class="one wide">{{session.serviceLevel.contact === 1 ? txt['contact'] : txt['contact']}} {{contacttxt['contactNr']}}</th>
+        <th class="two wide">{{contacttxt['name']}}</th>
+        <th class="one wide"></th>
+        <th class="one wide">{{txt['date']}}</th>
+        <th class="two wide">{{eventtxt['eventBegin']}}
+        <th class="two wide">{{eventtxt['eventDuration']}}
+        </thead>
+        <tbody>
+          @for (event of eventsFiltered; track $index; let i = $index) {
+            <tr [ngStyle]="event['style']">
+              <td class="left aligned">
+                @if (event.eventInfo && event.eventInfo.contactDisplayNr && event.eventInfo.contactDisplayNr !== ''
+                  && (i === 0 || event.eventInfo.contactDisplayNr !== eventsFiltered[i-1].eventInfo?.contactDisplayNr)) {
+                  <div class="ui label"
+                    [ngStyle]="setContactBgColorStyle(event.eventInfo.contactColor ?? '')"
+                    [attr.data-tooltip]="event.eventInfo.contactDisplayName" data-position="bottom center">
+                    {{event.eventInfo.contactDisplayNr}}
+                  </div>
+                }
+              </td>
+              <td class="left aligned">
+                {{(i === 0 || event.eventInfo?.contactDisplayNr !== eventsFiltered[i-1].eventInfo?.contactDisplayNr) ?  (event.eventInfo?.contactDisplayName|slice:0:20) : ''}}
+              </td>
+              <td class="left aligned">
+                @if (event.contactNr > 0 && (event.contactNr !== sessionContact?.contactNr )
+                  && (i === 0 || event.eventInfo?.contactDisplayNr !== eventsFiltered[i-1].eventInfo?.contactDisplayNr) ) {
+                  <button class="ui tiny circular teal icon button"
+                    [attr.data-tooltip]="txt['select_contact']"
+                    (click)="setContact(event.contactNr)">
+                    <i class="arrow right icon"></i>
+                  </button>
+                }
+              </td>
+              <td class="left aligned">
+                {{i === 0 || (event.eventBegin|date:'dd.MM.yyyy') !== (eventsFiltered[i-1].eventBegin|date:'dd.MM.yyyy') ? (event.eventBegin|date:'dd.MM.yyyy') : ''}}
+              </td>
+              <td class="right aligned">{{event.eventBegin|date:'HH:mm'}}</td>
+              <td>{{event.summary}}</td>
+              <td class="right aligned">{{event.eventDuration/60|number: '3.2-2'}}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+

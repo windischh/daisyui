@@ -82,14 +82,14 @@ export class EventExportComponent {
 
   // day of event - 00:00 in browser timezone
   // if no auth eventOptions exist, we need it for default eventOptions
-  eventDay!: Date;
+  calendarDay!: Date;
   dateFromDisplay = '';
   dateToDisplay = '';
 
   // export dates are usually related to today
-  isRelatedToEventDay = false;
+  isRelatedToCalendarDay = false;
 
-  exportDayChoices: Array<{value: string, isRelatedToEventDay: boolean, isChecked: boolean}> = [];
+  exportDayChoices: Array<{value: string, isRelatedToCalendarDay: boolean, isChecked: boolean}> = [];
 
   timeZoneIdentifier!: string;
   // difference of browser timezone to UTC - is used to set dates in component
@@ -216,18 +216,18 @@ export class EventExportComponent {
       // let user choose related day
       this.exportDayChoices = [];
       const showToday = formatDate(new Date(), 'd.MM.yyyy', this.locale);
-      const showEventDay = formatDate(session.calendarDay, 'd.MM.yyyy', this.locale);
-      if (showToday !== showEventDay) {
-        this.exportDayChoices.push({value: this.auth.txt['today'] + ': ' + showToday, isRelatedToEventDay: false, isChecked: true});
-        this.exportDayChoices.push({value: this.auth.txt['calendar'] + ' ' + this.auth.txt['date'] + ': '  + showEventDay, isRelatedToEventDay: true, isChecked: false});
+      const showCalendarDay = formatDate(session.calendarDay, 'd.MM.yyyy', this.locale);
+      if (showToday !== showCalendarDay) {
+        this.exportDayChoices.push({value: this.auth.txt['today'] + ': ' + showToday, isRelatedToCalendarDay: false, isChecked: true});
+        this.exportDayChoices.push({value: this.auth.txt['calendar'] + ' ' + this.auth.txt['date'] + ': '  + showCalendarDay, isRelatedToCalendarDay: true, isChecked: false});
       }
     }
 
     // with buildEventSelectOptions we assure at least default eventSelectOptions and set session eventSelectOption
     this.calendarService.buildEventSelectOptions(this.name);
     // load choices from  session.eventSelectOptions
-    this.eventSelectChoices = this.calendarService.getEventSelectChoices(this.isRelatedToEventDay, this.name);
-    // set the choosen selectChoice (with actual eventDay => dateFrom, dateTo values) => in this.session.eventSelectOptions
+    this.eventSelectChoices = this.calendarService.getEventSelectChoices(this.isRelatedToCalendarDay, this.name);
+    // set the choosen selectChoice (with actual calendarDay => dateFrom, dateTo values) => in this.session.eventSelectOptions
     this.setEventSelectOptionSelected();
   }
 
@@ -606,10 +606,10 @@ export class EventExportComponent {
         _.isChecked = false;
       }
     });
-    if (this.exportDayChoices.filter(_ => _.isRelatedToEventDay)[0].isChecked) {
-      this.isRelatedToEventDay = true;
+    if (this.exportDayChoices.filter(_ => _.isRelatedToCalendarDay)[0].isChecked) {
+      this.isRelatedToCalendarDay = true;
     } else {
-      this.isRelatedToEventDay = false;
+      this.isRelatedToCalendarDay = false;
     }
     await this.getEventOptions();
     this.resetExport();

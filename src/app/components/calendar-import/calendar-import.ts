@@ -805,8 +805,8 @@ public name = 'CalendarImportComponent';
     // we build events which must be not overlapping
     let checkedEvents: Array<EventExtended> = [];
     let timeSpans: Array<EventExtended> = [];
-    // eventDayStartMinute keeps start of day which are currently treating (is day start of all elements of overlappingEvents)
-    let eventDayStartMinute = 0;
+    // ealendarDayStartMinute keeps start of day which are currently treating (is day start of all elements of overlappingEvents)
+    let ealendarDayStartMinute = 0;
     // overlappingEvents are stored intermediately in this array until we release them
     let overlappingEvents: Array<EventExtended> = [];
     // lastMinute is the latest eventEnd of all elements of overlappingEvents
@@ -814,14 +814,14 @@ public name = 'CalendarImportComponent';
     for (let sourceEvent of this.events) {
       if (sourceEvent.type === EventType.actual || sourceEvent.type === EventType.plan) {
         const newDayStartMinute = GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(sourceEvent.eventBegin));
-        if (overlappingEvents.length > 0 && (newDayStartMinute > eventDayStartMinute || GlobalFunctions.getDateInMinutes(sourceEvent.eventBegin) >= lastMinute)) {
+        if (overlappingEvents.length > 0 && (newDayStartMinute > ealendarDayStartMinute || GlobalFunctions.getDateInMinutes(sourceEvent.eventBegin) >= lastMinute)) {
           const overlapResolved = this.checkOverlapping(overlappingEvents, sourceEvent.eventBegin);
           checkedEvents = checkedEvents.concat(overlapResolved);
           overlappingEvents = [];
-          eventDayStartMinute = 0;
+          ealendarDayStartMinute = 0;
           lastMinute = 0;
         }
-        eventDayStartMinute = newDayStartMinute;
+        ealendarDayStartMinute = newDayStartMinute;
         lastMinute = GlobalFunctions.getDateInMinutes(sourceEvent.eventEnd) > lastMinute ? GlobalFunctions.getDateInMinutes(sourceEvent.eventEnd) : lastMinute;
         overlappingEvents.push(sourceEvent);
       } else {
@@ -878,11 +878,11 @@ public name = 'CalendarImportComponent';
         _.type === event.type
         &&  (_.eventId.toString() + '@daisytest_' + session?.userName) === event.uid
       ));
-      const eventDay = GlobalFunctions.getStartOfDay(event.eventBegin);
+      const ealendarDay = GlobalFunctions.getStartOfDay(event.eventBegin);
       // check if there is no other actual event overlapping eventBegin of (eventually) generated new actual
       if (legacyEvents.filter(legacyEvent => legacyEvent.eventBegin <= event.eventBegin && legacyEvent.eventEnd > event.eventBegin).length === 0) {
         // spaceAfter is the max. length for imported event
-        const spaceAfter = GlobalFunctions.getSpaceAfter(event.eventBegin, legacyEvents, eventDay);
+        const spaceAfter = GlobalFunctions.getSpaceAfter(event.eventBegin, legacyEvents, ealendarDay);
         if (spaceAfter >= 5) {
           if (spaceAfter >=  event.eventDuration) {
             // all is ok - event is imported without change
@@ -914,7 +914,7 @@ public name = 'CalendarImportComponent';
           let isSearchNext = true;
           for (let index = 0; isSearchNext; index++) {
             if (legacyEvent) {
-              let spaceAfter = GlobalFunctions.getSpaceAfter(legacyEvent.eventEnd, legacyEvents, eventDay);
+              let spaceAfter = GlobalFunctions.getSpaceAfter(legacyEvent.eventEnd, legacyEvents, ealendarDay);
               // it is possible that spaceAfter is 0, due to directly follwing next event ...
               if (spaceAfter >= 5) {
                 isSearchNext = false;
@@ -936,7 +936,7 @@ public name = 'CalendarImportComponent';
                   this.partiallyOverlap++;
                 }
               } else {
-                const untilDate = GlobalFunctions.addDays(eventDay, 1);
+                const untilDate = GlobalFunctions.addDays(ealendarDay, 1);
                 if (legacyEvent) legacyEvent = GlobalFunctions.getNextEvent(legacyEvents, legacyEvent.eventEnd, untilDate);
                 if (!legacyEvent || index > 100) {
                   isSearchNext = false;

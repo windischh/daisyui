@@ -18,7 +18,7 @@ import { AuthenticationService } from '../../_services/authentication.service';
 
 import { ErrorMessage } from '../../_validators/error-message';
 import { ConfigurationValidators } from '../../_validators/configuration.validators';
-import { OptionGroupCalendar } from '../../_enums/option-group-event-calendar.enum';
+import { OptionGroupCalendar } from '../../_enums/option-group-calendar.enum';
 import { OptionGroupEventExport } from '../../_enums/option-group-event-export.enum';
 
 

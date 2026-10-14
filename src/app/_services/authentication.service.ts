@@ -608,7 +608,7 @@ export class AuthenticationService {
     // there must be a valid session
     const session = this.getSession(this.name);
     if (session && session.userId > 0 && session.duration >= 0 && session.lastTxClient?.getTime() > 0) {
-      if (GlobalFunctions.getYMDHM(new Date()) ?? 0 - (GlobalFunctions.getYMDHM(session.lastTxClient) ?? 0) < session.duration) {
+      if ((GlobalFunctions.getYMDHM(new Date()) ?? 0) - (GlobalFunctions.getYMDHM(session.lastTxClient) ?? 0) < session.duration) {
         return true;
       } else return false;
     } else return false;

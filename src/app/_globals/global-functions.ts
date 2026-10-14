@@ -347,9 +347,10 @@ export class GlobalFunctions {
    * @param calendarDay
    * @param isPreviousEvent - include event at previous day which reaches on today
    * @param nextEvent - include first event on next day
+   * @returns array events (can be empty)
    */
-   static buildEvents(events: Event[],  calendarDay: Date, isPreviousEvent: boolean, isNextEvent: boolean): Event[] | null {
-    let dailyEvents: Array<Event>;
+   static buildEvents(events: Event[],  calendarDay: Date, isPreviousEvent: boolean, isNextEvent: boolean): Event[] {
+    let dailyEvents: Array<Event> = [];
     // we take all events in range except "dayStartCard" - which has eventBegin === eventEnd
     if (events?.length > 0) {
       // we do not need to use array prototype here ...
@@ -366,7 +367,7 @@ export class GlobalFunctions {
       }
       return dailyEvents.sort((a, b) => a.eventBegin.getTime() - b.eventBegin.getTime());
     } else {
-      return null;
+      return dailyEvents;
     }
   }
 
@@ -417,7 +418,7 @@ export class GlobalFunctions {
    *  returns 0 if eventBegin is alread overlapped by another event which is not event with eventId
    * @param eventBegin - we take this as begin for which spaceBefore is calculated
    * @param events array of events (assumed all events of calendarDay including events of previous day
-   *  reaching in this eventday)
+   *  reaching in this calendarDay)
    * @param calendarDay - should be start of this calendarDay
    * @param eventId - event with this id is excluded from before-calculation. Used if we just are editing a eventBegin
    *  of an existing event which might be recognized as event before. We need not exclude a event which begins just at given eventBegin
@@ -1911,7 +1912,7 @@ export class GlobalFunctions {
    * @param locale locale string, such as 'en-US'
    * @returns weekDay of given date as index - 0 is first day of week, 6 is last day
    */
-  static getWeekDay(date: Date, firstDay?: number, locale?: string): number | null{
+  static getWeekDay(date: Date, firstDay?: number, locale?: string): number {
     if (date && date instanceof Date) {
       let effectiveFirstDay: number;
       if (firstDay && firstDay >= 1 && firstDay <= 7) {
@@ -1928,7 +1929,7 @@ export class GlobalFunctions {
       let weekDay = date.getDay() - effectiveFirstDay;
       weekDay = weekDay < 0 ? weekDay + 7 : weekDay;
       return weekDay;
-    } else return null;
+    } else return 0;
   }
 
   static getDateByWeek(week: number, year: number) {

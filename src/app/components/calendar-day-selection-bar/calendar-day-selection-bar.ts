@@ -6,13 +6,12 @@ import { GAINSBORO, LIGHT_CORAL, LIGHT_GREY, MAX_MONTHS, WHITE_SMOKE, WINDOW_WID
 import { StyleFactory } from '../../_globals/style-factory';
 
 import { IView } from '../../_interfaces/i-view';
-import { IWorkOptions } from '../../_interfaces/i-work-options';
-import { IUserWorkOptions } from '../../_interfaces/i-user-work-options';
+import { IEventOptions } from '../../_interfaces/i-event-options';
+import { IUserEventOptions } from '../../_interfaces/i-user-event-options';
 
 import { Session } from '../../_db/session';
-import { Work } from '../../_db/work';
-import { Customer } from '../../_db/customer';
-import { Issue } from '../../_db/issue';
+import { Event } from '../../_db/event';
+import { Contact } from '../../_db/contact';
 
 import { AngularMyDatePickerDirective, DefaultView, IAngularMyDpOptions, IMyCalendarViewChanged, IMyDate, IMyDateModel, IMyDefaultMonth, IMyInputFieldChanged, IMyMarkedDate, IMyRangeDateSelection, IMyDateRange, AngularMyDatePickerModule } from '@nodro7/angular-mydatepicker';
 import { FormsModule } from '@angular/forms';
@@ -23,29 +22,29 @@ import { IChoice } from '../../_interfaces/i-choice';
   selector: 'dsy-calendar-day-selection-bar',
   templateUrl: './calendar-day-selection-bar.html',
   styleUrl: './calendar-day-selection-bar.css',
-  imports: [NgStyle, FormsModule, AngularMyDatePickerModule, NgClass, SlicePipe]
+  imports: [NgStyle, FormsModule, AngularMyDatePickerModule, NgClass]
 })
-export class WorkDaySelectionBarComponent implements OnInit {
+export class CalendarDaySelectionBarComponent implements OnInit {
 
-  public name = 'WorkDaySelectionBarComponent';
+  public name = 'CalendarDaySelectionBarComponent';
 
   public App = App;
 
-  @Input({required: true}) session: Session;
+  @Input({required: true}) session!: Session;
 
-  @Input({required: true}) locale: string;
+  @Input({required: true}) locale!: string;
 
-  @Input({required: true}) txt: { [key: string]: string };
+  @Input({required: true}) txt!: { [key: string]: string };
 
   // window width for selecting size of header
   windowWidth = window.innerWidth;
   WINDOW_WIDTH_TABLET = WINDOW_WIDTH_TABLET;
   WINDOW_WIDTH_MOBILE = WINDOW_WIDTH_MOBILE;
 
-  // day of work - 00:00 in browser timezone
+  // day of event - 00:00 in browser timezone
   // can be selected by user
-  // workDay is in opts @Input({required: true}) workDay: Date;
-  workDayDisplay = '';
+  // calendarDay is in opts @Input({required: true}) calendarDay: Date;
+  calendarDayDisplay = '';
   weekDisplay = '';
   dateString = '';
 
@@ -56,32 +55,31 @@ export class WorkDaySelectionBarComponent implements OnInit {
   timeSlizeChoices: Array<{value: number, isChecked: boolean}> = [];
   */
 
-  // startHour, timeSlize, defaultIntervalSize are model parameters, managed by work-day-component
-  @Input({required: true}) opts: IWorkOptions;
-  @Input({required: true}) userOpts: IUserWorkOptions;
-  @Input({required: true}) workDayChangeCounter: number;
+  // startHour, timeSlize, defaultIntervalSize are model parameters, managed by event-day-component
+  @Input({required: true}) opts!: IEventOptions;
+  @Input({required: true}) userOpts!: IUserEventOptions;
+  @Input({required: true}) calendarDayChangeCounter!: number;
 
-  @Input({required: true}) views: Array<IView>;
+  @Input({required: true}) views!: Array<IView>;
 
   // for use in html template
-  viewsSelectable: Array<IView>;
+  viewsSelectable!: Array<IView>;
 
   // view menu for small viewport
-  viewChoices: Array<IChoice>;
+  viewChoices!: Array<IChoice>;
 
   // @Input({required: true}) locale: string;
 
-  @Input({required: true}) timeSpans: Array<Work>;
-  @Input({required: true}) workCustomer: Customer;
-  @Input({required: true}) workIssue: Issue;
+  @Input({required: true}) timeSpans!: Array<Event>;
+  @Input({required: true}) sessionContact!: Contact | undefined;
 
-  @Input({required: true}) isCreating: boolean;
-  @Input({required: true}) isSelecting: boolean;
+  @Input({required: true}) isCreating!: boolean;
+  @Input({required: true}) isSelecting!: boolean;
   @Input({required: true}) countSelected = 0;
-  @Input({required: true}) targetWorkDay: Date;
-  @Input({required: true}) firstWorkDay: Date;
+  @Input({required: true}) targetCalendarDay!: Date | null;
+  @Input({required: true}) firstCalendarDay!: Date;
 
-  @Output() workDaySelected = new EventEmitter<Date>();
+  @Output() calendarDaySelected = new EventEmitter<Date>();
   @Output() sessionPlanUpdate = new EventEmitter<Session>();
   @Output() selectionSet = new EventEmitter();
   @Output() viewSelection = new EventEmitter<string>();
@@ -89,8 +87,8 @@ export class WorkDaySelectionBarComponent implements OnInit {
 
   // date picker configuration
   // ViewChild static (since angular 8) not necessary cause ngxdp not used at ngOnInit
-  @ViewChild('dp') ngxdp: AngularMyDatePickerDirective;
-  public dpModel: IMyDateModel = null;   // not initial date set
+  @ViewChild('dp') ngxdp!: AngularMyDatePickerDirective;
+  public dpModel!: IMyDateModel;   // not initial date set
 
   public dpDisabled = false;
 
@@ -109,16 +107,16 @@ export class WorkDaySelectionBarComponent implements OnInit {
     showWeekNumbers: true
   };
 
-  public dateOpts: IAngularMyDpOptions;
+  public dateOpts!: IAngularMyDpOptions;
 
-  workDayStyle = {
+  calendarDayStyle = {
   };
 
   pointerStyle = {
     'cursor':  'pointer'
   }
 
-  customerStyle: {
+  contactStyle!: {
   };
 
   rowTopNoPaddingStyle = {
@@ -129,7 +127,7 @@ export class WorkDaySelectionBarComponent implements OnInit {
     'padding-bottom': '0'
   }
 
-  // styles signals if workDay lays inside interval: issueFrom - issueTo
+  // styles signals if calendarDay lays inside interval: issueFrom - issueTo
   dateInsideStyle = {
     // 'background-color': 'White'
   };
@@ -158,22 +156,22 @@ export class WorkDaySelectionBarComponent implements OnInit {
     this.addDpOptions();
     this.loadPlanActual();
     this.loadTimeSlizes();
-    this.setCustIssueStyles();
+    this.setContactStyles();
   }
 
   ngOnChanges(changes: {[propKey: string]: SimpleChange}) {
     for (const [propKey, propValue] of Object.entries(changes)) {
-      if (propKey === 'workCustomerSelected') {
-        this.setCustIssueStyles();
+      if (propKey === 'eventContactSelected') {
+        this.setContactStyles();
       }
       if (propKey === 'locale') {
         this.locale = propValue.currentValue;
       }
-      if (propKey === 'session' || propKey === 'opts' || propKey === 'workDayChangeCounter') {
+      if (propKey === 'session' || propKey === 'opts' || propKey === 'calendarDayChangeCounter') {
         this.isStylesReady = false;
-        if (this.session?.workDay) {
-          const jsDate: Date = this.isSelecting && this.targetWorkDay ? GlobalFunctions.clone(this.targetWorkDay) : GlobalFunctions.clone(this.session.workDay);
-          this.workDayDisplay = formatDate( this.session.workDay, 'EEE d.MM.yyyy', this.locale);
+        if (this.session?.calendarDay) {
+          const jsDate: Date = this.isSelecting && this.targetCalendarDay ? GlobalFunctions.clone(this.targetCalendarDay) : GlobalFunctions.clone(this.session.calendarDay);
+          this.calendarDayDisplay = formatDate( this.session.calendarDay, 'EEE d.MM.yyyy', this.locale);
           // sundays (and holidays) are red
           let firstDay: number;
           // weekInfo is yet in proposal stage ...
@@ -183,28 +181,28 @@ export class WorkDaySelectionBarComponent implements OnInit {
           // we set firstDay to monday
           firstDay = 1;
           const sundayWeekDay = 7 - firstDay;
-          // this.workDayStyle = GlobalFunctions.getWeekDay(this.session.workDay, 0, this.locale)  === sundayWeekDay
-          this.workDayStyle = GlobalFunctions.getWeekDay(this.session.workDay, 1)  === sundayWeekDay
-          || (this.timeSpans && this.timeSpans?.filter(_ => _.type === 21 && GlobalFunctions.getDateInMinutes(_.workBegin) < GlobalFunctions.getDateInMinutes(GlobalFunctions.addDays(this.session.workDay, 1) )
-          && GlobalFunctions.getDateInMinutes(_.workEnd) > GlobalFunctions.getDateInMinutes(this.session.workDay))).length > 0
+          // this.calendarDayStyle = GlobalFunctions.getWeekDay(this.session.calendarDay, 0, this.locale)  === sundayWeekDay
+          this.calendarDayStyle = GlobalFunctions.getWeekDay(this.session.calendarDay, 1)  === sundayWeekDay
+          || (this.timeSpans && this.timeSpans?.filter(_ => _.type === 21 && GlobalFunctions.getDateInMinutes(_.eventBegin) < GlobalFunctions.getDateInMinutes(GlobalFunctions.addDays(this.session.calendarDay, 1) )
+          && GlobalFunctions.getDateInMinutes(_.eventEnd) > GlobalFunctions.getDateInMinutes(this.session.calendarDay))).length > 0
             ? {
               'color': 'Red'
             }
             : {};
           // today is underlined
-          this.workDayStyle = GlobalFunctions.getYMD(this.session.workDay) === GlobalFunctions.getYMD(new Date())
+          this.calendarDayStyle = GlobalFunctions.getYMD(this.session.calendarDay) === GlobalFunctions.getYMD(new Date())
             ? {
-              ...this.workDayStyle,
+              ...this.calendarDayStyle,
               // 'text-decoration': 'underline'
               'background-color': GAINSBORO
             }
-            : this.workDayStyle;
-          this.weekDisplay = formatDate(this.session.workDay, 'ww/yyyy', this.locale);
+            : this.calendarDayStyle;
+          this.weekDisplay = formatDate(this.session.calendarDay, 'ww/yyyy', this.locale);
           this.dpModel = {isRange: false, singleDate: {jsDate}};
           this.addDpOptions();
           this.loadPlanActual();
           this.loadTimeSlizes();
-          this.setCustIssueStyles();
+          this.setContactStyles();
         }
       }
       if (propKey === 'views') {
@@ -212,26 +210,26 @@ export class WorkDaySelectionBarComponent implements OnInit {
         this.viewChoices = [];
         for (let v of this.viewsSelectable) {
           this.viewChoices.push({value: v.name, text: v.displayName, isSelected: v.isSelected});
-        }  
+        }
       }
-      if (propKey ===  'targetWorkDay') {
-        // intentionally no change of workDayDisplay cause here the user is selecting a shift target ...!
-        const jsDate: Date = this.isSelecting && this.targetWorkDay ? GlobalFunctions.clone(this.targetWorkDay) : GlobalFunctions.clone(this.session.workDay);
+      if (propKey ===  'targetCalendarDay') {
+        // intentionally no change of calendarDayDisplay cause here the user is selecting a shift target ...!
+        const jsDate: Date = this.isSelecting && this.targetCalendarDay ? GlobalFunctions.clone(this.targetCalendarDay) : GlobalFunctions.clone(this.session.calendarDay);
         this.dpModel = {isRange: false, singleDate: {jsDate}};
         this.addDpOptions();
       }
       if (propKey ===  'isSelecting') {
-        // console.log('work-day-selection-bar propkey: ', propKey, 'propvalue: ', JSON.stringify(propValue));
+        // console.log('event-day-selection-bar propkey: ', propKey, 'propvalue: ', JSON.stringify(propValue));
         this.addDpOptions();
       }
-      // console.log('work-day-selection-bar propkey: ', propKey, 'propvalue: ', JSON.stringify(propValue));
+      // console.log('event-day-selection-bar propkey: ', propKey, 'propvalue: ', JSON.stringify(propValue));
     }
   }
 
   // dateOpts are built
   private addDpOptions() {
 
-    // utils.clone would not work
+    // utils.clone would not event
     this.dateOpts = this.getCopyOfDpOptions(this.myDatepickerOptions);
 
     this.dateOpts.todayTxt = this.txt['today'];
@@ -244,9 +242,9 @@ export class WorkDaySelectionBarComponent implements OnInit {
     // cause component would not reset option otherwise)
     let disableSince = GlobalFunctions.addMonths(GlobalFunctions.getStartOfDay(new Date()), MAX_MONTHS);
     let disableUntil = GlobalFunctions.addMonths(GlobalFunctions.getStartOfDay(new Date()), MAX_MONTHS * -1);
-    // in case of viewing old calendars we must have the possibility to go back to first workday
-    if (this.firstWorkDay && GlobalFunctions.getDateInMinutes(this.firstWorkDay) < GlobalFunctions.getDateInMinutes(disableUntil)) {
-      disableUntil = this.firstWorkDay;
+    // in case of viewing old calendars we must have the possibility to go back to first calendarDay
+    if (this.firstCalendarDay && GlobalFunctions.getDateInMinutes(this.firstCalendarDay) < GlobalFunctions.getDateInMinutes(disableUntil)) {
+      disableUntil = this.firstCalendarDay;
     }
     if (this.isSelecting) {
       if (this.session.isPlan) {
@@ -267,7 +265,7 @@ export class WorkDaySelectionBarComponent implements OnInit {
       this.timeSpans.forEach(_ => {
         if (_.type === 21) {
           const holiday = {
-            year: _.workBegin.getFullYear(), month: _.workBegin.getMonth() + 1, day: _.workBegin.getDate()
+            year: _.eventBegin.getFullYear(), month: _.eventBegin.getMonth() + 1, day: _.eventBegin.getDate()
           }
           this.highlightDates.push(holiday);
         }
@@ -286,7 +284,7 @@ export class WorkDaySelectionBarComponent implements OnInit {
 
   private loadPlanActual() {
     this.planActualChoices = [];
-    if (GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date())) >= GlobalFunctions.getDateInMinutes(this.session?.workDay)) {
+    if (GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date())) >= GlobalFunctions.getDateInMinutes(this.session?.calendarDay)) {
       this.planActualChoices.push({value: 'actual', isPlan: false, isChecked: !this.session?.isPlan});
     }
     this.planActualChoices.push({value: 'plan', isPlan: true, isChecked: this.session?.isPlan});
@@ -303,49 +301,9 @@ export class WorkDaySelectionBarComponent implements OnInit {
       */
   }
 
-
-
-  private setCustIssueStyles() {
-    /* not necessary - if we have no customerColor, getBgColorStyle delivers light gray
-    if (this.workCustomer?.customerColor && this.workCustomer?.customerColor !== '') {
-      this.customerStyle = StyleFactory.getBgColorStyle(this.workCustomer?.customerColor, 0, 0, GlobalFunctions.clone(this.pointerStyle));
-    } else {
-      this.customerStyle = StyleFactory.addBgStyle(LIGHT_GREY, GlobalFunctions.clone(this.pointerStyle));
-    }
-    */
-    this.customerStyle = StyleFactory.getBgColorStyle(this.workCustomer?.customerColor, 0, 0, GlobalFunctions.clone(this.pointerStyle));
-    if (this.workCustomer && this.workIssue.issueDateFrom) {
-      if (GlobalFunctions.getY(GlobalFunctions.getStartOfDay(this.workIssue.issueDateFrom))
-        < GlobalFunctions.getY(this.session.workDay)) {
-        this.dateFromStyle = this.dateOtherYearStyle;
-        this.showDateFrom = '1.01. -';
-      } else {
-        this.showDateFrom = formatDate(this.workIssue.issueDateFrom, 'd.MM.', this.locale ) + ' - ';
-        if (GlobalFunctions.getYMDHM(GlobalFunctions.getStartOfDay(this.workIssue.issueDateFrom))
-        <= GlobalFunctions.getYMDHM(this.session.workDay)) {
-        this.dateFromStyle = this.dateInsideStyle;
-        } else {
-          this.dateFromStyle = this.dateOutsideStyle;
-        }
-      }
-    }
-    if (this.workCustomer && this.workIssue.issueDateTo) {
-      this.showDateTo = this.showDateFrom === '' ? '- ' : ' '
-      if (GlobalFunctions.getY(GlobalFunctions.getStartOfDay(this.workIssue.issueDateTo))
-        > GlobalFunctions.getY(this.session.workDay))  {
-        this.dateToStyle = this.dateOtherYearStyle;
-        this.showDateTo += '31.12.';
-      } else {
-        this.showDateTo += formatDate(this.workIssue.issueDateTo, 'd.MM.', this.locale );
-        if (GlobalFunctions.getYMDHM(GlobalFunctions.getStartOfDay(this.workIssue.issueDateTo))
-        >= GlobalFunctions.getYMDHM(this.session.workDay)) {
-          this.dateToStyle = this.dateInsideStyle;
-        } else {
-          this.dateToStyle = this.dateOutsideStyle;
-        }
-      }
-    }
-    if (this.session?.workDay && this.workCustomer) this.isStylesReady = true;
+  private setContactStyles() {
+    this.contactStyle = StyleFactory.getBgColorStyle(this.sessionContact?.contactColor ?? '', 0, 0, GlobalFunctions.clone(this.pointerStyle));
+    if (this.session?.calendarDay && this.sessionContact) this.isStylesReady = true;
   }
 
   @HostListener('window:resize', ['$event'])
@@ -376,17 +334,6 @@ export class WorkDaySelectionBarComponent implements OnInit {
     this.sessionPlanUpdate.emit(session);
   }
 
-/*
-  public setPlanUser() {
-    // we set session user as plan user
-      // we must clone opts to get a new object reference for this.opts in model
-      const session: Session = GlobalFunctions.clone(this.session);
-      session.externalUserId = this.session.externalUserId;
-      session.externalUserName = '';
-      session.isPlanMaint = true;
-      this.sessionPlanUpdate.emit(session);
-  }
-*/
 
 
   public clearDate(): void {
@@ -402,37 +349,37 @@ export class WorkDaySelectionBarComponent implements OnInit {
     // console.log('onDateChanged(): ', event);
     // in this surrounding we do not set isRange
     if (!event.isRange) {
-      // this.session.workDay = event.singleDate.jsDate;
-      const choosenDate = event.singleDate.jsDate;
-      this.workDaySelected.emit(choosenDate);
+      // this.session.calendarDay = event.singleDate.jsDate;
+      const choosenDate = event.singleDate?.jsDate;
+      if (choosenDate) this.calendarDaySelected.emit(choosenDate);
     }
   }
 
   public goBack():void {
     if (!this.isSelecting && !this.isCreating ) {
-      const choosenDate = GlobalFunctions.addDays(this.session.workDay, -1);
-      this.workDaySelected.emit(choosenDate);
+      const choosenDate = GlobalFunctions.addDays(this.session.calendarDay, -1);
+      this.calendarDaySelected.emit(choosenDate);
     }
   }
 
   public goForward():void {
     if (!this.isSelecting && !this.isCreating  ) {
-      const choosenDate = GlobalFunctions.addDays(this.session.workDay, 1);
-      this.workDaySelected.emit(choosenDate);
+      const choosenDate = GlobalFunctions.addDays(this.session.calendarDay, 1);
+      this.calendarDaySelected.emit(choosenDate);
     }
   }
 
   public goWeekBack():void {
     if (!this.isSelecting && !this.isCreating ) {
-      const choosenDate = GlobalFunctions.addDays(this.session.workDay, -7);
-      this.workDaySelected.emit(choosenDate);
+      const choosenDate = GlobalFunctions.addDays(this.session.calendarDay, -7);
+      this.calendarDaySelected.emit(choosenDate);
     }
   }
 
   public goWeekForward():void {
     if (!this.isSelecting && !this.isCreating  ) {
-      const choosenDate = GlobalFunctions.addDays(this.session.workDay, 7);
-      this.workDaySelected.emit(choosenDate);
+      const choosenDate = GlobalFunctions.addDays(this.session.calendarDay, 7);
+      this.calendarDaySelected.emit(choosenDate);
     }
   }
 
@@ -470,7 +417,7 @@ export class WorkDaySelectionBarComponent implements OnInit {
     this.selectionSet.emit();
   }
 
-  public setIssueSelection() {
+  public setContactSelection() {
     // this.autoViewSelected.emit('issue-select-view');
     if (!this.isSelecting && !this.isCreating && this.viewSelected() !== 'options-view') {
       this.viewSelection.emit('issue-select-view');

@@ -586,17 +586,17 @@ export class CalendarService {
 /**
  * load choices from array of all eventSelectOptions
  * we recognize a eventually choosen option (this.session.eventSelectOption) by its nr
- * we actualize date values from eventDay and build dateFrom, dateTo in all choices
- * @param isRelatedToEventDay if true, choices are related to session eventday, if false, related to today
+ * we actualize date values from calendarDay and build dateFrom, dateTo in all choices
+ * @param isRelatedToCalendarDay if true, choices are related to session calendarDay, if false, related to today
  * @param comp name of calling component
  * @returns event select options which are stored in local storage for the session user
  */
-  public getEventSelectChoices(isRelatedToEventDay: boolean, comp: string): Array<IEventSelectChoice> {
+  public getEventSelectChoices(isRelatedToCalendarDay: boolean, comp: string): Array<IEventSelectChoice> {
     let eventSelectChoices: Array<IEventSelectChoice> = [];
     const session = this.auth.getSession(comp);
     if (session) {
       const nrSelected = session.eventSelectOption?.nr;
-      const listDay = isRelatedToEventDay ? session.calendarDay : GlobalFunctions.getStartOfDay(new Date());
+      const listDay = isRelatedToCalendarDay ? session.calendarDay : GlobalFunctions.getStartOfDay(new Date());
       let eventSelectOptions = this.getEventSelectOptions(comp);
       if (eventSelectOptions && eventSelectOptions.length > 0) {
         eventSelectOptions.forEach((c, ix)  => {

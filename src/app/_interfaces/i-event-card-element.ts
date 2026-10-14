@@ -20,7 +20,7 @@ export interface IEventCardElement {
   isShowTimeChange?: boolean;
   isShowTimeShift?: boolean;
   isShowLocationTypeDropdown?: boolean;
-  contactIssueNr: string;
-  contactIssueName: string;
+  contactDisplayNr: string;
+  contactDisplayName: string;
   contactStyle?: {};
 }

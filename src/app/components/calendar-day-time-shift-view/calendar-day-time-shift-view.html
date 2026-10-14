@@ -1,1 +1,88 @@
-<p>calendar-day-time-shift-view works!</p>
+@if (txt) {
+  <div class="ui grid container">
+    <div class="row" [ngStyle]="rowTopNoPaddingStyle">
+      <div class="seven wide column"></div>
+      <div class="column">
+        @if (!session.isPlan) {
+          <button type="button" class="ui mini teal basic icon button"
+            [attr.data-tooltip]="txt['shift_events']  + ' ' + txt['to_another_day'] + ': ' + shiftActualDisplay" data-position="bottom center"
+            (click)="shiftAnotherDay()">
+            <i class="backward icon"></i>
+          </button>
+        }
+        @if (session.isPlan) {
+          <button type="button" class="ui mini green basic icon button"
+            [attr.data-tooltip]="txt['copy_events_to_actual']" data-position="bottom center"
+            [disabled]="isAfterToday || !isCopyToActual"
+            (click)="copyToActual()">
+            <i class="fast backward icon"></i>
+          </button>
+        }
+      </div>
+      <div class="column">
+        <button type="button" class="ui mini teal icon button"
+          [attr.data-tooltip]="txt['shift_events'] + ' ' + txt['to_before']" data-position="bottom center"
+          [disabled]="!(shiftSpaceBefore > 0)"
+          (click)="shiftBefore()">
+          <i class="angle double left icon"></i>
+        </button>
+      </div>
+      <div class="column">
+        <button type="button" class="ui mini teal icon button"
+          [attr.data-tooltip]="txt['shift_events'] + ' ' + txt['to_earlier']" data-position="bottom center"
+          [disabled]="!(directSpaceBefore > 0)"
+          (click)="shiftEarlier()">
+          <i class="angle left icon"></i>
+        </button>
+      </div>
+      <div class="column">
+        <button type="button" class="ui mini teal icon button"
+          [attr.data-tooltip]="txt['shift_events'] + ' ' + txt['to_later']" data-position="bottom center"
+          [disabled]="!(directSpaceAfter > 0)"
+          (click)="shiftLater()">
+          <i class="angle right icon"></i>
+        </button>
+      </div>
+      <div class="column">
+        <button type="button" class="ui mini teal icon button"
+          [attr.data-tooltip]="txt['shift_events']  + ' ' + txt['to_after']" data-position="bottom center"
+          [disabled]="!(shiftSpaceAfter > 0)"
+          (click)="shiftAfter()">
+          <i class="angle double right icon"></i>
+        </button>
+      </div>
+      <div class="column">
+        @if (session.isPlan) {
+          <button type="button" class="ui mini green basic icon button"
+            [attr.data-tooltip]="txt['copy_events']  + ' -> ' + copyPlanDisplay" data-position="bottom center"
+            (click)="copyPlan()">
+            <i class="fast forward icon"></i>
+          </button>
+        }
+      </div>
+      <div class="column">
+        @if (session.isPlan && !isBeforeYesterday) {
+          <button type="button" class="ui mini teal basic icon button"
+            [attr.data-tooltip]="txt['shift_events']  + ' -> ' + shiftPlanDisplay" data-position="bottom center"
+            [disabled]="!isNoneDone"
+            (click)="shiftAnotherDay()">
+            <i class="forward icon"></i>
+          </button>
+        }
+      </div>
+      <div class="column">
+        @if (session.isPlan) {
+          <button class="ui tiny circular icon button" [ngClass]="isAllDone || isNoneDone ? 'basic' : ''"
+            [attr.data-tooltip]="txt['set_to'] + ' ' + (isAllDone ? txt['not'] + ' ' : '' ) + txt['done']" data-position="top center"
+            type="button" (click)="setDone()">
+            @if (!isNoneDone) {
+              <i class="green check icon"></i>
+            }
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+

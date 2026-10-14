@@ -1,1 +1,119 @@
-<p>calendar-day-options-view works!</p>
+<div class="ui grid container">
+  <div class="row">
+    <div class="eight wide column">
+      <h2>{{txt['user']}} {{txt['options']}}</h2>
+    </div>
+  </div>
+  <div class="row">
+    <div class="four wide column">
+      <h3>{{txt['store']}} - {{txt['now']}}</h3>
+    </div>
+    <div class="twelve wide column">
+      <button class="left aligned ui tiny circular green icon button"
+        [attr.data-tooltip]="txt['store']" data-position="bottom center"
+        type="button" (click)="storeOptions()">
+        <i class="check icon"></i>
+      </button>
+    </div>
+  </div>
+  <div class="row">
+    <div class="four wide column">
+      <h3>{{txt['store']}} - {{txt['at_every_change']}}</h3>
+    </div>
+    <div class="twelve wide column">
+      @for (p of persistChoices; track p) {
+        <div class="ui radio checkbox">
+          <input type="radio" [value]="p.value" [checked]="p.isChecked" (change)="setPersist($event)"  >
+          <label>
+            <span>{{p.value}}
+              @if (p.value === 'true') {
+                <i class="green check icon"></i>
+              }
+              @if (p.value === 'false') {
+                <i class="red x icon"></i>
+              }
+            </span>
+          </label>
+        </div>
+      }
+    </div>
+  </div>
+<div class="row">
+  <div class="four wide column">
+    <h3>{{txt['calendar'] + ' ' + txt['style']}}</h3>
+  </div>
+  <div class="twelve wide column">
+    <select class="ui search dropdown" (change)="selectStyle($event)">
+      @for (s of styleChoices; track s) {
+        <option [value]="s.value"
+          [selected]="s.isSelected">
+          {{s.value}} - {{s.text}}
+        </option>
+      }
+    </select>
+  </div>
+</div>
+<div class="row">
+  <div class="four wide column">
+    <h3>{{txt['time_slizes']}}</h3>
+  </div>
+  <div class="eight wide column">
+    @for (t of timeSlizeChoices; track t) {
+      <div class="ui radio checkbox">
+        <input type="radio" [value]="t.value" [checked] = "t.isChecked" (change)="setTimeSlize($event)"  >
+        <label>{{t.value}}&nbsp;&nbsp;&nbsp;&nbsp;</label>
+      </div>
+    }
+  </div>
+  <div class="four wide column">
+    <h3>{{txt['minutes']}}</h3>
+  </div>
+</div>
+<div class="row">
+  <div [style]="tableScrollStyle">
+    <table class="ui celled structured table">
+      <thead>
+        <tr>
+          <td colspan="25">
+            <h3>{{txt['startHour']}}</h3>
+          </td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          @for (s of startHourChoices; track s) {
+            <td >
+              <div class="ui radio checkbox">
+                <input type="radio" [value]="s.value" [checked]="s.isChecked" (change)="setStartHour($event)"  >
+                <label><small>{{s.value}}</small></label>
+              </div>
+            </td>
+          }
+          <td></td>
+        </tr>
+        <thead>
+          <tr>
+            <td colspan="25">
+              <h3>{{txt['lastHour']}}</h3>
+            </td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td></td>
+            @for (l of lastHourChoices; track l) {
+              <td >
+                <div class="ui radio checkbox">
+                  <input type="radio" [value]="l.value" [checked]="l.isChecked" (change)="setLastHour($event)"  >
+                  <label><small>{{l.value}}</small></label>
+                </div>
+              </td>
+            }
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+

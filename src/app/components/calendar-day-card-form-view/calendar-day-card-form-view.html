@@ -1,1 +1,378 @@
-<p>calendar-day-card-form-view works!</p>
+<!-- FORM starts here                    -->
+<form [formGroup] = "thisForm"
+  (ngSubmit)="submitForm()">
+
+  <!-- outer grid with 2 wide empty columns on each side-->
+  <div class="ui grid" id="cardForm">
+    <div class="two wide column">
+    </div>
+    <div class="twelve wide column">
+      <!-- modal - needs modal-background to hide other content  ... -->
+      <div class="ui active fullscreen modal">
+        <div [ngClass]="session.isPlan ? 'ui green segment' : 'ui segment'">
+          <!-- segment to show an outlined form - the grid container in this segment has also 16 columns per default-->
+          <div class="ui grid container">
+            <div class="row">
+              <div class="three wide column">
+                @if (event.type < EventType.timeSpanUndefined) {
+                  <div class="column">
+                    <button class="left floated ui tiny button"
+                      [attr.data-tooltip]="eventtxt['eventBegin']" data-position="left center"
+                      type="button"
+                      (click)="setShowTimeChange(1)">
+                      {{event.eventBegin|date:'HH:mm'}}
+                    </button>
+                    <span  [attr.data-tooltip]="txt['to_before']" data-position="bottom left" >
+                      @if (!(eventContainer.updateType === updateTypeEnum.insert) && !(event && event.cardElement?.isShowTimeChange)  && (event.cardElement?.shiftSpaceBefore ?? 0) > 0) {
+                        <i class="link angle double left icon"
+                          (click)="shiftBefore()">
+                        </i>
+                      }
+                    </span>
+                  </div>
+                }
+                @if (event.type >= EventType.timeSpanUndefined) {
+                  <div class="column">
+                    {{txt['from']}}:
+                  </div>
+                }
+              </div>
+              <div class="center aligned eight wide column">
+                @if (event.type < EventType.timeSpanUndefined) {
+                  <h2>{{calendarDayDisplay}}</h2>
+                }
+                @if (event.type >= EventType.timeSpanUndefined) {
+                  <h2>{{beginDisplay}}</h2>
+                }
+              </div>
+              <div class="one wide column">
+                <button type="button" class="ui small icon button" (click)="dp.toggleCalendar()"
+                  [disabled]="eventContainer.updateType === updateTypeEnum.insert"
+                  [attr.data-tooltip]="txt['select'] + ' ' + txt['date']" data-position="bottom center">
+                  <i class="calendar alternate outline icon"></i>
+                </button>
+                <!-- with type="hidden" display of date input is deactivated - calendarDayDisplay is shown! -->
+                <!-- ngModelOptions standalone - this input is outside of form!!  -->
+                <input angular-mydatepicker name="mydate"
+                  [(ngModel)]="dpModel" [options]="dateOpts" [locale]="locale" type="hidden" #dp="angular-mydatepicker"                   [ngModelOptions]="{standalone: true}"
+                  (inputFieldChanged)="onInputFieldChanged($event)" (dateChanged)="onDateChanged($event)"
+                  [attr.disabled]="dpDisabled?'':null"/>
+              </div>
+              <div class="one wide column">
+              </div>
+              <div class="three wide column">
+                @if (event.type < EventType.timeSpanUndefined) {
+                  <div class="column">
+                    <button class="right floated ui tiny button"
+                      [attr.data-tooltip]="eventtxt['eventEnd']" data-position="right center"
+                      type="button"
+                      (click)="setShowTimeChange(2)">
+                      {{event.eventEnd|date:'HH:mm'}}
+                    </button>
+                    <span  [attr.data-tooltip]="txt['to_after']" data-position="bottom right" >
+                      @if (!(eventContainer.updateType === updateTypeEnum.insert) && !(event.cardElement?.isShowTimeChange) && (event.cardElement?.shiftSpaceAfter ?? 0) > 0) {
+                        <i class="link angle double right icon"
+                        (click)="shiftAfter()"></i>
+                      }
+                    </span>
+                  </div>
+                }
+              </div>
+            </div>
+            @if (event.type >= EventType.timeSpanUndefined) {
+              <div class="row">
+                <div class="three wide column">
+                  {{txt['to']}}:
+                </div>
+                @if (days > 1) {
+                  <div class="center aligned eight wide column">
+                    <h2>{{endDisplay}}</h2>
+                    {{days}} {{txt['days']}}
+                  </div>
+                }
+                @if (days <= 1) {
+                  <div class="eleven wide column"></div>
+                }
+                <div class="one wide column">
+                  <button type="button" class="ui small icon button" (click)="dpEnd.toggleCalendar()"
+                    [attr.data-tooltip]="txt['select'] + ' ' + txt['date']" data-position="bottom center">
+                    <i class="calendar alternate outline icon"></i>
+                  </button>
+                  <!-- with type="hidden" display of date input is deactivated - calendarDayDisplay is shown! -->
+                  <!-- ngModelOptions standalone - this input is outside of form!!  -->
+                  <input angular-mydatepicker name="myenddate"
+                    [(ngModel)]="dpEndModel" [options]="dateEndOpts" [locale]="locale" type="hidden" #dpEnd="angular-mydatepicker"
+                    [ngModelOptions]="{standalone: true}"
+                    (inputFieldChanged)="onEndInputFieldChanged($event)" (dateChanged)="onEndDateChanged($event)"
+                    [attr.disabled]="dpEndDisabled?'':null"/>
+                </div>
+                <div class="one wide column">
+                </div>
+                <div class="three wide column">
+                </div>
+              </div>
+            }
+            @if (txt && opts && event.cardElement?.isShowTimeChange) {
+              <div class="row">
+                <div class="column">
+                  <dsy-calendar-day-time-change
+                    [session]="session" [txt]="txt"  [eventtxt]="eventtxt" [opts]="opts" [userOpts]="userOpts"
+                    [options]="options"
+                    [calendarDay]="calendarDay"
+                    [event]="event" [changeType]="changeType"
+                    (timeUpdate)="timeUpdate($event)"
+                    (cancelTimeChangeView)="cancelTimeChangeView($event)">
+                  </dsy-calendar-day-time-change>
+                </div>
+              </div>
+            }
+            @if (event.type < EventType.timeSpanUndefined) {
+              <div class="row">
+                <div class="six wide column"></div>
+                @if (!GlobalFunctions.isMinuteSame(event.eventBegin, event.eventEnd)) {
+                  <div class="four wide center aligned column">
+                    <button class="ui tiny button"
+                      [attr.data-tooltip]="eventtxt['eventDuration']" data-position="bottom center"
+                      type="button"
+                      (click)="setShowTimeChange(3)">
+                      {{event.cardElement?.eventDurationDisplay}}
+                    </button>
+                  </div>
+                }
+                <div class="four wide column"></div>
+                <div class="column">
+                  <!--
+                  <button class="ui tiny circular basic icon button" *ngIf="session.isPlan"
+                    [attr.data-tooltip]="(!(event.doneId > 0) ? txt['not'] + ' ' : '' ) + txt['done']" data-position="top center"
+                    [disabled]="!thisForm.valid"
+                    type="button" (click)="setDone()">
+                    <i class="green check icon" *ngIf="event.doneId > 0"></i>
+                  </button>
+                  -->
+                </div>
+              </div>
+            }
+            <!-- end of time setting button area, start of form    -->
+            <div class="ui divider"></div>
+            <!--  form submit / cancel / delete buttons    -->
+            <ng-container *ngTemplateOutlet="buttons"></ng-container>
+            <div class="row">
+              <div class="sixteen wide column">
+                <div class="ui form" formGroupName="bodyGroup">
+                  <div class="one inline fields">
+                    <label for="summary" class="ui label">{{(event.type < EventType.timeSpanUndefined ? eventtxt['summary'] : eventtxt['description'] )}}:</label>
+                    <input placeholder="summary" id="summary" formControlName="summary">
+                  </div>
+                  @if ( errors['bodyGroup_summary']) {
+                    <div class="row">
+                      <span class="ui negative message">{{ errors['bodyGroup_summary'] }}</span>
+                    </div>
+                  }
+                  <div class="one inline field">
+                    <label for="locationType" class="ui label">{{eventtxt['locationType']}}:</label>
+                    <select class="ui search dropdown" id="locationType" formControlName="locationType">
+                      @for (c of locationTypeChoices; track c) {
+                        <option [value]="c.value">
+                          {{c.value}} - {{c.text}}
+                        </option>
+                      }
+                    </select>
+                  </div>
+                  <div class="one inline field">
+                    <label for="location" class="ui label">{{eventtxt['location']}}:</label>
+                    <input placeholder="location" id="location" formControlName="location">
+                  </div>
+                  @if ( errors['bodyGroup_location']) {
+                    <div class="row">
+                      <span class="ui negative message">{{ errors['bodyGroup_location'] }}</span>
+                    </div>
+                  }
+                  <div class="field">
+                    <label for="description" class="ui label">{{eventtxt['description']}}:</label>
+                    <textarea placeholder="description" id="description" formControlName="description" rows="4"></textarea> 
+                    <!-- 
+                     <div contenteditable="true" style="min-height: 200px; border: 1px solid #ccc; padding: 5px;" id="description" formControlName="description">
+                    </div>
+                     -->
+                  </div>
+                  <!-- in case of time span user can choose category  -->
+                  @if (event.type >= EventType.timeSpanUndefined) {
+                    <div class="one inline field">
+                      <label for="category" class="ui label">{{txt['category']}}:</label>
+                      <select class="ui search dropdown" id="category" formControlName="category" [ngStyle]="style">
+                        @for (c of timeSpanTypeChoices; track c) {
+                          <option [value]="c.value" [ngStyle]="c.style" >
+                            {{c.value}} - {{c.text}}
+                          </option>
+                        }
+                      </select>
+                    </div>
+                  }
+                  <!-- we show issue which corresponds to legacy data or which is set by user  -->
+                  @if (ixSet >= 0) {
+                    <div class="field">
+                      <label class="ui label">
+                        {{txt['issue']}}:
+                      </label>
+                    </div>
+                  }
+                  <div class="fields">
+                    <input [value]="contactChoices[ixSet].text" readonly>
+                    <!-- we show info icons for legacy contactNr or issueId   -->
+                    <div class="field">
+                      @if (eventContainer.event.contactNr > 0 && contactChoices[ixSet].value === eventContainer.event.contactNr) {
+                        <button class="ui mini circular icon button"
+                          [ngStyle]="eventContainer.event.contactNr > 0 ? setContactBgColorStyle((eventContainer.event.eventInfo?.contactColor ?? '')) : {}"
+                          [attr.data-tooltip]="(eventContainer.event.eventInfo?.contactDisplayName  !== ''
+                          ? (eventContainer.event.eventInfo?.contactDisplayName ?? '')
+                          : (session.serviceLevel.contact === 1 ? txt['contact'] : txt['contact']))
+                          + ' - ' + (isContactInfo ? txt['suppress'] : txt['show'])"
+                          data-position="top left"
+                          type="button" (click)="setContactInfo()">
+                          <i class="info icon"></i>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                  <!-- in case of button contactInfo pressed  -->
+                  @if (isContactInfo) {
+                    <div>
+                      <div class="ui segment">
+                        <!-- segment to show an outlined form - the grid container in this segment has also 16 columns per default-->
+                        <div class="ui grid container" >
+                          <div class="row">
+                            <div class="six wide column">
+                              <h5>{{session.serviceLevel.contact === 1 ? txt['contact'] : txt['contact']}} {{contacttxt['contactNr']}}:</h5>
+                            </div>
+                            <div class="eight wide column">
+                              <h5>{{eventContainer.event.eventInfo?.contactDisplayNr}}</h5>
+                            </div>
+                          </div>
+                          <div class="row">
+                            <div class="six wide column">
+                              <h5>{{contacttxt['name']}}:</h5>
+                            </div>
+                            <div class="eight wide column">
+                              <h5>{{eventContainer.event.eventInfo?.contactDisplayName}}</h5>
+                            </div>
+                          </div>
+                          @if (eventContainer.event.eventInfo?.companyName !== '') {
+                            <div class="row">
+                              <div class="six wide column">
+                                <h5>{{contacttxt['companyName']}}:</h5>
+                              </div>
+                              <div class="ten wide column">
+                                <h5>{{eventContainer.event.eventInfo?.companyName}}</h5>
+                              </div>
+                            </div>
+                          }
+                          <div class="row">
+                            <div class="six wide column">
+                              <h5>{{contacttxt['street']}}:</h5>
+                            </div>
+                            <div class="ten wide column">
+                              <h5>{{eventContainer.event.eventInfo?.street}}</h5>
+                            </div>
+                          </div>
+                          <div class="row">
+                            <div class="six wide column">
+                              <h5>{{contacttxt['city']}}:</h5>
+                            </div>
+                            <div class="three wide column">
+                              <h5>{{eventContainer.event.eventInfo?.plz}}</h5>
+                            </div>
+                            <div class="seven wide column">
+                              <h5>{{eventContainer.event.eventInfo?.city}}</h5>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                  <!-- we show issue selection to choose another issue   -->
+                  <div class="field">
+                    <label class="ui label">
+                      {{eventContainer.updateType === UpdateType.update ?  txt['choose_another_issue'] : txt['select_issue']}}:
+                    </label>
+                  </div>
+                  <div class="fields">
+                    <div class="field">
+                      <select class="ui selection dropdown"
+                        (change)="selectAnotherContact($event)">
+                        @for (contact of contactChoices; track contact) {
+                          <option [value]="contact.value"
+                            [selected]="contact.isSelected">
+                            {{contact.text}}
+                          </option>
+                        }
+                      </select>
+                    </div>
+                    <div class="field">
+                      <button class="ui tiny green button"
+                        [attr.data-tooltip]=""
+                        data-position="top left"
+                        data-testid="card-form-set-issue"
+                        type="button" (click)="setAnotherContact()" [disabled]="ixSet === ixSelected">
+                        {{txt['set']}}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="ui divider"></div>
+            <!--  form submit / cancel / delete buttons    -->
+            <ng-container *ngTemplateOutlet="buttons"></ng-container>
+            <ng-template #buttons>
+              @if (event) {
+                <div class="row">
+                  <div class="four wide column">
+                  </div>
+                  <div class="center aligned eight wide column">
+                    <button class="left aligned ui tiny circular red icon button"
+                      [attr.data-tooltip]="txt['cancel']" data-position="top center"
+                      type="button" (click)="cancelUpdates()">
+                      <i class="times icon"></i>
+                    </button>
+                    @if (session.isPlanMaint) {
+                      <button class="left aligned ui tiny circular green icon button"
+                        [attr.data-tooltip]="txt['submit']" data-position="top center"
+                        [disabled]="!thisForm.valid"
+                        data-testid="card-form-submit"
+                        type="submit">
+                        <i class="check icon"></i>
+                      </button>
+                    }
+                    @if (session.isPlanMaint && (event.type === 1 || !(event.doneId > 0))) {
+                      <button class="left aligned ui tiny circular gray icon button"
+                        [attr.data-tooltip]="txt['disable']" data-position="top center"
+                        type="button" (click)="setDelete()">
+                        <i class="trash alternate icon"></i>
+                      </button>
+                    }
+                  </div>
+                  <div class="two wide column"></div>
+                  <div class="two wide column">
+                    @if (event.type === EventType.plan) {
+                      <div class="one wide field">
+                        <label>{{txt['done']}}</label>
+                        <input type="checkbox"
+                          [disabled]="!thisForm.valid"
+                          [checked]="event.doneId > 0"
+                          (change)="setDone()">
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </ng-template>
+          </div> <!-- end of grid container -->
+        </div> <!-- end of segment -->
+      </div> <!-- end of modal -->
+      <!-- hiding background (attention - specific pwl css class !!!!) -->
+      <div class="pwl modal-background"></div>
+    </div>
+    <div class="two wide column">
+    </div>
+  </div>
+</form>

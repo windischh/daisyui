@@ -10,13 +10,13 @@ export interface IEventGridElement {
   timeElement: string;
   timeBegins: boolean;
   timeRowSpan: number;
-  event: Event;
+  event?: Event;
   eventBegins: boolean;
   eventEnds: boolean;
   eventDurationDisplay: string;
   eventRowSpan: number;
-  custIssueNr: string;
-  custIssueName: string;
+  contactDisplayNr: string;
+  contactDisplayName: string;
   tableRowStyle?: {};
   rowElementStyle?: {};
   timeElementStyle?: {};

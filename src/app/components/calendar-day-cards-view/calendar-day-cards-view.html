@@ -1,1 +1,277 @@
-<p>calendar-day-cards-view works!</p>
+<!-- if we await more than 100 records or use complex query we should activate data load dimmer
+<div *ngIf="!events" class="ui active inverted dimmer">
+  <div class="ui large text loader">loading data ...</div>
+</div>
+-->
+@if (isEventsLoaded) {
+  <div class="ui cards">
+    @for (eventCard of eventCards; track eventCard; let i = $index) {
+      <div [ngClass]="session.isPlan ? 'green card' : 'card'">
+        @if (!GlobalFunctions.isMinuteSame(eventCard.eventBegin, eventCard.eventEnd)) {
+          <div class="extra content">
+            <div class="ui grid">
+              <div class="row">
+                <div class="left aligned six wide column">
+                  <div class="column">
+                    <button class="ui tiny button"
+                      [attr.data-tooltip]="eventtxt['eventBegin']" data-position="left center"
+                      [disabled]="isSelecting"
+                      (click)="setShowTimeChange(i, 1)">
+                      {{eventCard.eventBegin|date:'HH:mm'}}
+                    </button>
+                    <span [attr.data-tooltip]="txt['to_before']" data-position="bottom left">
+                      @if (!eventCard.cardElement?.isTemporary && !eventCard.cardElement?.isShowTimeChange && (eventCard.cardElement?.shiftSpaceBefore ?? 0) > 0 && !isCreating && !isSelecting) {
+                        <i class="link angle double left icon"
+                        (click)="shiftBefore(i)"></i>
+                      }
+                    </span>
+                  </div>
+                </div>
+                <div class="center aligned four wide column">
+                  @if (isSelecting && !eventCard.cardElement?.isSummaryUpdated && !eventCard.cardElement?.isShowTimeChange) {
+                    <div class="ui checkbox">
+                      <input type="checkbox"  [checked]="eventCard.isSelected" (change)="selectEvent(i)">
+                      <label></label>
+                    </div>
+                  }
+                </div>
+                <div class="right aligned six wide column">
+                  <div class="column">
+                    <button class="ui tiny button"
+                      [attr.data-tooltip]="eventtxt['eventEnd']" data-position="right center"
+                      [disabled]="isSelecting"
+                      (click)="setShowTimeChange(i, 2)">
+                      {{eventCard.eventEnd|date:'HH:mm'}}
+                    </button>
+                    <span  [attr.data-tooltip]="txt['to_after']" data-position="bottom right" >
+                      @if (!eventCard.cardElement?.isTemporary && !eventCard.cardElement?.isShowTimeChange && (eventCard.cardElement?.shiftSpaceAfter ?? 0) > 0 && !isCreating && !isSelecting) {
+                        <i class="link angle double right icon"
+                        (click)="shiftAfter(i)"></i>
+                      }
+                    </span>
+                  </div>
+                </div>
+              </div>
+              @if (txt && opts && eventCard.cardElement?.isShowTimeChange) {
+                <div class="row">
+                  <div class="column">
+                    <dsy-calendar-day-time-change
+                      [session]="session" [txt]="txt"  [eventtxt]="eventtxt" [opts]="opts" [userOpts]="userOpts" [calendarDay]="session.calendarDay"
+                      [options]="options"
+                      [event]="eventCard" [changeType]="changeType"
+                      (timeUpdate)="timeUpdate($event)"
+                      (cancelTimeChangeView)="cancelTimeChangeView($event)">
+                    </dsy-calendar-day-time-change>
+                  </div>
+                </div>
+              }
+              <div class="row">
+                <div class="four wide column"></div>
+                <div class="center aligned eight wide column">
+                  <button class="ui tiny button"
+                    [attr.data-tooltip]="eventtxt['eventDuration']" data-position="bottom center"
+                    [disabled]="isSelecting"
+                    (click)="setShowTimeChange(i, 3)">
+                    {{eventCard.cardElement?.eventDurationDisplay}}
+                  </button>
+                </div>
+                <div class="column"></div>
+                <div class="two wide column">
+                  @if (session.isPlan && !eventCard.cardElement?.isTemporary && !isAfterToday) {
+                    <button class="ui tiny circular basic icon button"
+                      [attr.data-tooltip]="(!(eventCard.doneId > 0) ? txt['not ']+ ' ' : '' ) + txt['done']" data-position="top center"
+                      type="button" (click)="setDone(i)">
+                      @if (eventCard.doneId > 0) {
+                        <i class="green check icon"></i>
+                      }
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+        <div class="extra content">
+          <div class="row">
+            @if (!GlobalFunctions.isMinuteSame(eventCard.eventBegin, eventCard.eventEnd)) {
+              <div class="center aligned column">
+                <div class="ui small floating dropdown labeled icon button" id="dropdown"
+                  [attr.data-tooltip]="eventtxt['locationType']" data-position="bottom center"
+                  [ngClass]="{ disabled: isSelecting }">
+                  @if (eventCard.locationType === 0) {
+                    <i class="question icon" (click)="showLocationType(i)"></i>
+                  }
+                  @if (eventCard.locationType === 1) {
+                    <i class="wrench icon" (click)="showLocationType(i)"></i>
+                  }
+                  @if (eventCard.locationType === 2) {
+                    <i class="motorcycle icon" (click)="showLocationType(i)"></i>
+                  }
+                  @if (eventCard.locationType === 3) {
+                    <i class="users icon" (click)="showLocationType(i)"></i>
+                  }
+                  @if (eventCard.locationType === 4) {
+                    <i class="laptop icon" (click)="showLocationType(i)"></i>
+                  }
+                  @if (eventCard.locationType === 5) {
+                    <i class="mobile alternate icon" (click)="showLocationType(i)"></i>
+                  }
+                  @if (eventCard.locationType === 6) {
+                    <i class="briefcase icon" (click)="showLocationType(i)"></i>
+                  }
+                  <span (click)="showLocationType(i)">{{txt[locationTypeEnum[eventCard.locationType]]}}</span>
+                  <div class="menu transition" [ngClass]="{ visible: eventCard.cardElement?.isShowLocationTypeDropdown }">
+                    @for (c of eventCard.cardElement?.locationTypeChoices; track c) {
+                      <div class="item" id="selectItem"
+                        (click)="updateLocationType(i, c.value)"
+                        [ngClass]="{ selected: c.isSelected }">
+                        @if (c.value === 0) {
+                          <i class="question icon"></i>
+                        }
+                        @if (c.value === 1) {
+                          <i class="wrench icon"></i>
+                        }
+                        @if (c.value === 2) {
+                          <i class="motorcycle icon"></i>
+                        }
+                        @if (c.value === 3) {
+                          <i class="users icon"></i>
+                        }
+                        @if (c.value === 4) {
+                          <i class="laptop icon"></i>
+                        }
+                        @if (c.value === 5) {
+                          <i class="mobile alternate icon"></i>
+                        }
+                        @if (c.value === 6) {
+                          <i class="briefcase icon"></i>
+                        }
+                        {{c.text}}
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="content">
+          <div class="header">
+            <div class="row">
+              @if (eventCard.cardElement?.isSummaryUpdated) {
+                <div>
+                  <div class="ui input">
+                    <input (keyup.enter)="updateSummary(i, summaryString.value, '1')"
+                      (blur)="storeSummary(i, summaryString.value, '3') "
+                      #summaryString [value]="eventCard.summary" type="text" placeholder="summary ...">
+                      <!-- only enter updates summary     ('1'  is for console log info only )
+                      (keyup.escape)="update(i, summaryString.value, '2')"
+                      (blur)="update(i, summaryString.value, '3'); summaryString.value='' "
+                      -->
+                  </div>
+                </div>
+              }
+              @if (!eventCard.cardElement?.isSummaryUpdated) {
+                <div>
+                  <span (click)="setUpdateSummary(i)">{{eventCard.summary|slice:0:30}}{{eventCard.summary.length > 30 ? '...':''}}</span>
+                </div>
+              }
+            </div>
+            <!--
+            <div class="row">
+              <button class="left aligned ui tiny yellow circular icon button"
+                *ngIf="!isUpdatingDisabled() && !GlobalFunctions.isMinuteSame(eventCard.eventBegin, eventCard.eventEnd)"
+                (click)="setUpdate(i)">
+                <i class="arrow down icon"></i>
+              </button>
+            </div>
+            -->
+          </div>
+          @if (eventCard.cardElement?.isSummaryUpdated) {
+            <div>
+              <button class="ui tiny red circular icon button"
+                type ="button"
+                [attr.data-tooltip]="txt['cancel']" data-position="bottom center"
+                (click)="cancelUpdates(i)">
+                <i class="times icon"></i>
+              </button>
+              <!-- we can not simulate commit in case of events with single input fields and enter, blur
+              <button class="left aligned ui tiny green circular icon button"
+                type ="button" (click)="commitUpdates(i)">
+                <i class="check icon"></i>
+              </button>
+              -->
+              @if (!eventCard.cardElement?.isTemporary
+                && (eventCard.type === 1 || !(eventCard.doneId > 0))) {
+                <button class="ui tiny gray circular icon button"
+                  type ="button"
+                  [attr.data-tooltip]="txt['delete']" data-position="bottom center"
+                  (click)="setDelete(i)">
+                  <i class="trash alternate icon"></i>
+                </button>
+              }
+            </div>
+          }
+          <div class="meta">
+            {{eventCard.location|slice:0:30}}
+          </div>
+          <div class="description">
+            {{eventCard.description}}
+          </div>
+        </div>
+        <div class="extra content">
+          <div class="ui grid">
+            <div class="three column row">
+              <div class="left aligned column">
+                @if (session.isPlanMaint && eventCard.cardElement && eventCard.cardElement.spaceBefore >= userOpts.timeSlize
+                  && !eventCard.cardElement.isSummaryUpdated
+                  && !GlobalFunctions.isMinuteSame(eventCard.eventBegin, eventCard.eventEnd)) {
+                  <button class="left aligned ui tiny teal circular icon button"
+                    [disabled]="isSelecting"
+                    (click)="insertBefore(i)"
+                    [attr.data-tooltip]="txt['insert_before']" data-position="left center">
+                    <i class="plus icon"></i>
+                  </button>
+                }
+              </div>
+              <div class="center aligned column">
+                @if (eventCard.cardElement?.contactDisplayNr && eventCard.cardElement?.contactDisplayNr  !== '') {
+                  <button class="ui label button"
+                    [ngStyle]="eventCard.cardElement?.contactStyle"
+                    [attr.data-tooltip]="eventCard.cardElement?.contactDisplayName" data-position="top center"
+                    [disabled]="isSelecting"
+                    (click)="enableCardFormView(eventCard, i)">
+                    {{eventCard.cardElement?.contactDisplayNr}}
+                  </button>
+                }
+                @if ((!eventCard.cardElement?.contactDisplayNr || eventCard.cardElement?.contactDisplayNr === '')
+                  && !GlobalFunctions.isMinuteSame(eventCard.eventBegin, eventCard.eventEnd)) {
+                  <button class="ui label button"
+                    [disabled]="isSelecting"
+                    [attr.data-tooltip]="txt['detail']" data-position="top center"
+                    (click)="enableCardFormView(eventCard, i)">
+                    ....
+                  </button>
+                }
+              </div>
+              <div class="right aligned column">
+                @if (session.isPlanMaint && ((eventCard.cardElement && eventCard.cardElement.spaceAfter >= userOpts.timeSlize
+                  && !eventCard.cardElement.isEndOnNextDay && !eventCard.cardElement.isSummaryUpdated)
+                  || GlobalFunctions.isMinuteSame(eventCard.eventBegin, eventCard.eventEnd))) {
+                  <button class="right aligned ui tiny teal circular icon button"
+                    [disabled]="isSelecting"
+                    (click)="insertAfter(i)"
+                    [attr.data-tooltip]="txt['insert_after']" data-position="right center">
+                    <i class="plus icon"></i>
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+

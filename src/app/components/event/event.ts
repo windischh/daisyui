@@ -1,5 +1,5 @@
 import { ContactService } from './../../_services/contact.service';
-import { Component, Inject, Input, LOCALE_ID, OnInit, signal, SimpleChange } from '@angular/core';
+import { Component, Inject, LOCALE_ID, OnInit, signal} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { formatDate, NgStyle, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -19,7 +19,6 @@ import { EventSelectOptionFactory } from '../../_db/event-select-option-factory'
 import { EventSortCriteria } from '../../_enums/event-sort-criteria.enum';
 import { App } from '../../_enums/app.enum';
 
-import { IView } from '../../_interfaces/i-view';
 import { IEventListElement } from '../../_interfaces/i-event-list-element';
 import { IEventSelectChoice } from '../../_interfaces/i-event-select-choice';
 
@@ -87,16 +86,16 @@ export class EventComponent implements OnInit {
   dateFromDisplay = '';
   dateToDisplay = '';
 
-  // show dates are usually related to today - can be set to eventDay (day of Calendar view)
-  isRelatedToEventDay = false;
+  // show dates are usually related to today - can be set to calendarDay (day of Calendar view)
+  isRelatedToCalendarDay = false;
 
-  listDayChoices: Array<{value: string, isRelatedToEventDay: boolean, isChecked: boolean}> = [];
+  listDayChoices: Array<{value: string, isRelatedToCalendarDay: boolean, isChecked: boolean}> = [];
 
   timeZoneIdentifier!: string;
   // difference of browser timezone to UTC - is used to set dates in component
   timeZoneUtcOffset!: number;
 
-   // eventContactis the selected contact  depending on session
+   //  the selected contact  depending on session
   sessionContact!: Contact;
 
   // if the actual eventContact is used to filter events
@@ -211,16 +210,16 @@ export class EventComponent implements OnInit {
       // let user choose related day
       this.listDayChoices = [];
       const showToday = formatDate(new Date(), 'd.MM.yyyy', this.locale);
-      const showEventDay = formatDate(session.calendarDay, 'd.MM.yyyy', this.locale);
-      if (showToday !== showEventDay) {
-        this.listDayChoices.push({value: this.auth.txt['today'] + ': ' + showToday, isRelatedToEventDay: false, isChecked: this.isRelatedToEventDay ? false : true});
-        this.listDayChoices.push({value: this.auth.txt['calendar'] + ' ' + this.auth.txt['date'] + ': '  + showEventDay, isRelatedToEventDay: true, isChecked: this.isRelatedToEventDay ? true : false});
+      const showCalendarDay = formatDate(session.calendarDay, 'd.MM.yyyy', this.locale);
+      if (showToday !== showCalendarDay) {
+        this.listDayChoices.push({value: this.auth.txt['today'] + ': ' + showToday, isRelatedToCalendarDay: false, isChecked: this.isRelatedToCalendarDay ? false : true});
+        this.listDayChoices.push({value: this.auth.txt['calendar'] + ' ' + this.auth.txt['date'] + ': '  + showCalendarDay, isRelatedToCalendarDay: true, isChecked: this.isRelatedToCalendarDay ? true : false});
       }
       // with buildEventSelectOptions we assure at least default eventSelectOptions and set session eventSelectOption
       this.calendarService.buildEventSelectOptions(this.name);
       // load choices from  session.eventSelectOptions
-      this.eventSelectChoices = this.calendarService.getEventSelectChoices(this.isRelatedToEventDay, this.name);
-      // set the choosen selectChoice (with actual eventDay => dateFrom, dateTo values) => in this.session.eventSelectOptions
+      this.eventSelectChoices = this.calendarService.getEventSelectChoices(this.isRelatedToCalendarDay, this.name);
+      // set the choosen selectChoice (with actual ealendarDay => dateFrom, dateTo values) => in this.session.eventSelectOptions
       this.setEventSelectOptionSelected();
     }
   }
@@ -460,10 +459,10 @@ export class EventComponent implements OnInit {
         _.isChecked = false;
       }
     });
-    if (this.listDayChoices.filter(_ => _.isRelatedToEventDay)[0].isChecked) {
-      this.isRelatedToEventDay = true;
+    if (this.listDayChoices.filter(_ => _.isRelatedToCalendarDay)[0].isChecked) {
+      this.isRelatedToCalendarDay = true;
     } else {
-      this.isRelatedToEventDay = false;
+      this.isRelatedToCalendarDay = false;
     }
     await this.getEventOptions();
     await this.getEvents();

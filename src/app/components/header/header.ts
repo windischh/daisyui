@@ -16,9 +16,6 @@ import { MessageService } from '../../_services/message.service';
 import { UserService } from '../../_services/user.service';
 import { AuthenticationService } from '../../_services/authentication.service';
 
-
-import { CalendarComponent } from "../calendar/calendar";
-import { DocumentComponent } from "../document/document";
 import { UserComponent } from '../user/user';
 import { MessagesComponent } from '../messages/messages';
 import { MenuCompleteComponent } from '../menu-complete/menu-complete';
@@ -31,7 +28,7 @@ import { App } from '../../_enums/app.enum';
 
 @Component({
   selector: 'dsy-header',
-  imports: [MessagesComponent, MenuCompleteComponent, CalendarComponent, UserComponent, RouterOutlet, NgClass],
+  imports: [MessagesComponent, MenuCompleteComponent,  UserComponent, RouterOutlet, NgClass],
   templateUrl: './header.html',
   styleUrl: './header.css',
 })
@@ -61,8 +58,6 @@ export class HeaderComponent {
   // all components which are sub components with @Input and @Output are managed here ...
   {name: 'user', displayName: '', isSelected: false, isAutoSelected: false, isSelectable: false},
   {name: 'login-form', displayName: '', isSelected: false, isAutoSelected: false, isSelectable: false},
-  // TODO calendar moght become a routed app ....
-  {name: 'calendar', displayName:  '', isSelected: false, isAutoSelected: false, isSelectable: true}
   ];
 
   // a selected (therefore selectable) component which is unselected by another select or autoselect
@@ -346,7 +341,7 @@ export class HeaderComponent {
         item.hasIconLeft = true;
         item.iconClassLeft = 'far fa-calendar-days';
         item.text = 'calendar';
-        item.link = 'calendar';
+        item.link = 'calendarDay';
         this.routerMenu.items.push(item);
       }
 
