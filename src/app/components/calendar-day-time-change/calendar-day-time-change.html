@@ -1,55 +1,52 @@
-
-@if (changeType === 1) {
-  <label for="eventBegin" class="ui label">{{eventtxt['eventBegin']}}:</label>
-}
-@if (changeType === 1) {
-  <select class="ui small dropdown"
-    id="eventBegin" (change)="updateEventBegin($event)">
-    @for (b of event.cardElement?.beginTimeChoices; track b) {
-      <option [value]="b.value"
-        [ngStyle]="b.timeStyle"
-        [selected]="b.isSelected">
-        {{b.text}}
-      </option>
-    }
-  </select>
-}
-@if (changeType === 2) {
-  <label for="eventEnd" class="ui label">{{eventtxt['eventEnd']}}:</label>
-}
-@if (changeType === 2) {
-  <select class="ui small dropdown"
-    id="eventEnd" (change)="updateEventEnd($event)">
-    @for (e of event.cardElement?.endTimeChoices; track e) {
-      <option [value]="e.value"
-        [ngStyle]="e.timeStyle"
-        [selected]="e.isSelected">
-        {{e.text}}
-      </option>
-    }
-  </select>
-}
-@if (changeType === 3) {
-  <label for="duration" class="ui label">{{eventtxt['eventDuration']}}:</label>
-}
-@if (changeType === 3) {
-  <select class="ui small dropdown"
-    id="duration" (change)="updateDuration($event)">
-    @for (d of event.cardElement?.durationChoices; track d) {
-      <option [value]="d.value"
-        [ngStyle]="d.timeStyle"
-        [selected]="d.isSelected">
-        {{d.text}}
-      </option>
-    }
-  </select>
-}
-<button class="right floated ui mini red circular icon button"
-  type="button" (click)="cancel()"
-  [attr.data-tooltip]="(changeType === 1 ? eventtxt['time'] : changeType === 2 ? eventtxt['eventBegin'] : eventtxt['eventDuration']) + ' - ' + txt['cancel']" data-position="bottom center">
-  <i class="times icon"></i>
-</button>
-
-
-
-
+<div class="flex flex-wrap items-center gap-2">
+  @if (changeType === 1) {
+    <label for="eventBegin" class="label">{{eventtxt['eventBegin']}}:</label>
+  }
+  @if (changeType === 1) {
+    <select class="select select-sm select-primary"
+      id="eventBegin" (change)="updateEventBegin($event)">
+      @for (b of event.cardElement?.beginTimeChoices; track b) {
+        <option [value]="b.value"
+          [ngStyle]="b.timeStyle"
+          [selected]="b.isSelected">
+          {{b.text}}
+        </option>
+      }
+    </select>
+  }
+  @if (changeType === 2) {
+    <label for="eventEnd" class="label">{{eventtxt['eventEnd']}}:</label>
+  }
+  @if (changeType === 2) {
+    <select class="select select-sm select-primary"
+      id="eventEnd" (change)="updateEventEnd($event)">
+      @for (e of event.cardElement?.endTimeChoices; track e) {
+        <option [value]="e.value"
+          [ngStyle]="e.timeStyle"
+          [selected]="e.isSelected">
+          {{e.text}}
+        </option>
+      }
+    </select>
+  }
+  @if (changeType === 3) {
+    <label for="duration" class="label">{{eventtxt['eventDuration']}}:</label>
+  }
+  @if (changeType === 3) {
+    <select class="select select-sm select-primary"
+      id="duration" (change)="updateDuration($event)">
+      @for (d of event.cardElement?.durationChoices; track d) {
+        <option [value]="d.value"
+          [ngStyle]="d.timeStyle"
+          [selected]="d.isSelected">
+          {{d.text}}
+        </option>
+      }
+    </select>
+  }
+  <button class="btn btn-xs btn-circle btn-error text-primary-content tooltip tooltip-bottom tooltip-accent ml-auto"
+    type="button" (click)="cancel()"
+    [attr.data-tip]="(changeType === 1 ? eventtxt['time'] : changeType === 2 ? eventtxt['eventBegin'] : eventtxt['eventDuration']) + ' - ' + txt['cancel']">
+    <i class="fas fa-times"></i>
+  </button>
+</div>
