@@ -3,7 +3,9 @@ import { DatePipe,  formatDate, NgStyle, SlicePipe } from '@angular/common';
 
 import { GlobalFunctions } from '../../_globals/global-functions';
 import { StyleFactory } from '../../_globals/style-factory';
-import { DAISY_COLOR_BASE_300, MAX_CONTACT_NR, WHITE_SMOKE } from '../../_globals/constants';
+import { MAX_CONTACT_NR, WHITE_SMOKE } from '../../_globals/constants';
+
+import { DAISY_COLOR_BASE_300 } from '../../_globals/constants-daisy';
 
 import { IEventOptions } from '../../_interfaces/i-event-options';
 import { Event } from '../../_db/event';
