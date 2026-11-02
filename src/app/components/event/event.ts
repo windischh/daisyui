@@ -198,7 +198,8 @@ export class EventComponent implements OnInit {
     const session = this.auth.getSession(this.name);
     if (session) {
       // for sub-components  we load options from option ressources (option.json)
-      this.options = await this.configurationService.getConfigurationOptions(this.name);
+      const options = await this.configurationService.getConfigurationOptions(this.name);
+      this.options = options.filter(_ => _.status < 9);
       // we build  eventContact structures in component
       const eventContactElement = this.calendarService.getEventContact(this.name);
       if (eventContactElement) {

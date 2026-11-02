@@ -190,7 +190,7 @@ export class EventExportComponent {
     this.styleChoices = [];
     const options = await this.configurationService.getConfigurationOptions(this.name);
     const styles = options.
-    filter(_ => _.optionArea === 'eventExport'
+    filter(_ => _.status < 9 && _.optionArea === 'eventExport'
     && _.optionName.substring(_.optionArea.length + 4) === 'opt_style_name')
     .sort((a, b) => Number(a.optionName.substr(a.optionArea.length + 1, 2)) - Number(b.optionName.substr(b.optionArea.length + 1, 2)));
     styles.forEach(_ => {
@@ -212,7 +212,8 @@ export class EventExportComponent {
     const session = this.auth.getSession(this.name);
     if (session) {
       // for styles  we load options from option ressources (option.json)
-      this.options = await this.configurationService.getConfigurationOptions(this.name);
+      const options = await this.configurationService.getConfigurationOptions(this.name);
+      this.options = options.filter(_ => _.status < 9);
       // let user choose related day
       this.exportDayChoices = [];
       const showToday = formatDate(new Date(), 'd.MM.yyyy', this.locale);
@@ -278,7 +279,7 @@ export class EventExportComponent {
       const s = ConfigurationOptionBasicFunctions.getStyleOptionSeq(this.options, area, style,
         enumStringType[k], isStylesHaveDefault);
       const column: number = Number(enumStringType[k]) - 100;
-      if (s && column >= 0 && column < 100) {
+      if (s !== undefined && s !== null && column >= 0 && column < 100) {
         columnStyles[column] = s;
       }
     });
@@ -303,7 +304,7 @@ export class EventExportComponent {
    * getOptions delivers the style options
    *
    * we use it as following:
-   * - each single option exists as property of this component (this.styles) for use in html template
+   * - each single option exists as property of this component (this.configurableStyles) for use in html template
    * - each single option can have a default value in the property definition in this component
    * - each single option is read from option values in auth
    * - if an option has no value, the read call (getStyleOption...) delivers undefined. In this case we let exisiting
@@ -334,14 +335,14 @@ export class EventExportComponent {
     .forEach(k => {
       if (k.startsWith('is')) {
         const s: boolean | null = ConfigurationOptionBasicFunctions.getStyleOptionBoolean(this.options, area, style,
-          enumStringType['opt_eventExport_' + k]);
-        if (s) {
+          enumStringType['eventExport_' + k]);
+        if (s !== undefined && s !== null) {
           this.exportStyles[k] = s;
         }
       } else {
         const s = ConfigurationOptionBasicFunctions.getStyleOptionString(this.options, area, style,
-          enumStringType['opt_eventExport_' + k], isStylesHaveDefault);
-        if (s && k === 'columnDelimiter') {
+          enumStringType['eventExport_' + k], isStylesHaveDefault);
+        if (s !== undefined && s !== null && k === 'columnDelimiter') {
           switch (true) {
             case  (s.indexOf(COMMA) >= 0 || s.indexOf('comma') >= 0 ):
               this.exportStyles[k] = COMMA;
@@ -356,7 +357,7 @@ export class EventExportComponent {
               this.exportStyles[k] = COMMA;
               break;
             }
-        } else if (s && k === 'stringDelimiter') {
+        } else if (s !== undefined && s !== null && k === 'stringDelimiter') {
           switch (true) {
             case  (s.indexOf(QUOTATION_MARK) >= 0 || (s.indexOf('quotation') >= 0 && s.indexOf('double') >= 0 )):
               this.exportStyles[k] = QUOTATION_MARK;
@@ -368,7 +369,7 @@ export class EventExportComponent {
               this.exportStyles[k] = DOUBLE_QUOTATION_MARK;
               break;
             }
-        } else if (s && k === 'rowDelimiter') {
+        } else if (s !== undefined && s !== null && k === 'rowDelimiter') {
           switch (true) {
             case  (s.indexOf('CR') >= 0):
               this.exportStyles[k] = CRLF;
@@ -380,7 +381,7 @@ export class EventExportComponent {
               this.exportStyles[k] = CRLF;
               break;
             }
-        } else if (s) {
+        } else if (s !== undefined && s !== null) {
           this.exportStyles[k] = s;
         }
       }

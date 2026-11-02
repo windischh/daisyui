@@ -358,7 +358,7 @@ export class ConfigurationFormViewComponent implements OnInit {
     this.styleChoices = [];
     this.styleChoices.push({
       value: -1,
-      text: '',
+      text: this.auth.txt['no_style_selected'],
       isSelected: true
     });
     // we assure to have just 1 null choice

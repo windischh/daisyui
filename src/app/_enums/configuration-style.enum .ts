@@ -5,10 +5,9 @@
  *
  */
 export enum ConfigurationStyle {
-  // invoicePrint is in pevent-invoice
   // invoicePrint = 1,
-  // eventCalendar is in pEvent-log
-  eventCalendar = 2,
+  // calendar
+  calendar = 2,
   eventExport = 3
   }
 

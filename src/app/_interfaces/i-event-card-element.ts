@@ -6,6 +6,7 @@ import { INumChoice } from "./i-num-choice";
  */
 export interface IEventCardElement {
   isTemporary: boolean;
+  isSummaryEntered: boolean;
   isSummaryUpdated: boolean;
   spaceBefore: number;
   spaceAfter: number;
@@ -16,10 +17,8 @@ export interface IEventCardElement {
   beginTimeChoices?: Array<INumChoice>;
   endTimeChoices?: Array<INumChoice>;
   durationChoices?: Array<INumChoice>;
-  locationTypeChoices?: Array<INumChoice>;
   isShowTimeChange?: boolean;
   isShowTimeShift?: boolean;
-  isShowLocationTypeDropdown?: boolean;
   contactDisplayNr: string;
   contactDisplayName: string;
   contactStyle?: {};

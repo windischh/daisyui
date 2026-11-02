@@ -1,21 +1,21 @@
 import { Component, OnInit, Input, OnChanges, SimpleChange, Output, EventEmitter, ViewChild, SimpleChanges} from '@angular/core';
-import { DatePipe, DecimalPipe, formatDate, NgStyle, SlicePipe } from '@angular/common';
+import { DatePipe,  formatDate, NgStyle, SlicePipe } from '@angular/common';
 
 import { GlobalFunctions } from '../../_globals/global-functions';
 import { StyleFactory } from '../../_globals/style-factory';
-import { MAX_CONTACT_NR, WHITE_SMOKE } from '../../_globals/constants';
+import { DAISY_COLOR_BASE_300, MAX_CONTACT_NR, WHITE_SMOKE } from '../../_globals/constants';
 
 import { IEventOptions } from '../../_interfaces/i-event-options';
 import { Event } from '../../_db/event';
 import { Session } from '../../_db/session';
 import { Contact } from '../../_db/contact';
 
-class EventExtended extends Event {contactDisplayNr!: string; eventBeginDisplay!: string; timeDisplay!: string; eventDurationDisplay!: string; style!: {}};
+class EventExtended extends Event {contactSortNr!: number; eventDurationDisplay!: string; style!: {}};
 @Component({
   selector: 'dsy-calendar-day-contacts-view',
   templateUrl: './calendar-day-contacts-view.html',
   styleUrl: './calendar-day-contacts-view.css',
-  imports: [NgStyle, SlicePipe, DatePipe, DecimalPipe]
+  imports: [NgStyle, SlicePipe, DatePipe]
 })
 export class CalendarDayContactsViewComponent implements OnInit {
 
@@ -34,7 +34,7 @@ export class CalendarDayContactsViewComponent implements OnInit {
 
   @Input({required: true}) actualEvents!: Array<Event>;
   @Input({required: true}) planEvents!: Array<Event>;
-  @Input({required: true}) eventsChangeCounter!: number;
+  @Input({required: true}) calendarDayChangeCounter!: number;
 
   // contact and issue which are selected for event entry
   @Input({required: true}) sessionContact!: Contact | undefined;
@@ -43,8 +43,10 @@ export class CalendarDayContactsViewComponent implements OnInit {
 
   eventsFiltered!: Array<EventExtended>;
 
+  isContacts = false;
+
   otherDayStyle = {
-    'background-color': WHITE_SMOKE
+    'background-color': DAISY_COLOR_BASE_300
   };
 
   @Output() contactSelected = new EventEmitter<number>();
@@ -56,7 +58,8 @@ export class CalendarDayContactsViewComponent implements OnInit {
 
   ngOnChanges(changes: {[propKey: string]: SimpleChange}) {
     for (const [propKey, propValue] of Object.entries(changes)) {
-      if (propKey === 'session' || propKey === 'actualEvents' || propKey === 'planEvents'  || propKey === 'opts' ||  propKey === 'eventsChangeCounter') {
+      if (propKey === 'session' || propKey === 'actualEvents' || propKey === 'planEvents'  
+        || propKey === 'opts' ||  propKey === 'calendarDayChangeCounter' ||  propKey === 'sessionContact') {
         this.filterEvents();
       }
       // console.log('event-day-orders propkey: ', propKey, 'propvalue: ', JSON.stringify(propValue));
@@ -70,7 +73,7 @@ export class CalendarDayContactsViewComponent implements OnInit {
    *
    */
   private filterEvents() {
-
+    this.eventsFiltered = [];
     if (this.session) {
       const events = this.session.isPlan ? this.planEvents : this.actualEvents;
       if (events?.length > 0) {
@@ -87,40 +90,23 @@ export class CalendarDayContactsViewComponent implements OnInit {
             && ( (this.session.isPlan && _.type === 0)
             || (!this.session.isPlan && _.type === 1) ))
             .map((event)  => {
-              // TODO not more necessary ..
-              return {...event, contactDisplayNr: MAX_CONTACT_NR.toString(),  eventBeginDisplay: '', timeDisplay: '', eventDurationDisplay: '', style: {}};
+              this.isContacts = event.contactNr > 0;
+              return {...event, contactSortNr: event.contactNr > 0 ? event.contactNr  : MAX_CONTACT_NR,  
+                eventDurationDisplay: '', style: {}};
             });
-          
-          for (const event of this.eventsFiltered) {
-            // TODO not needed - we sue date pipe instead
-            event.eventBeginDisplay = formatDate(GlobalFunctions.getStartOfDay(event.eventBegin), 'd.MM.yyyy', this.locale);
-            event.timeDisplay = formatDate(event.eventBegin, 'HH:mm', this.locale);
-            // get contact, issue via eventInfo
-            if (event.contactNr > 0) {
-              event.contactDisplayNr = event.eventInfo?.contactDisplayNr ?? '';
-            }
-          }
         }
       }
       // sort by date, contactNr, issueNr
       if (this.eventsFiltered?.length > 0) {
         this.eventsFiltered.sort((a: EventExtended, b: EventExtended) => {
-          if (a['contactDisplayNr'] > b['contactDisplayNr']) {return 1000; }
-          if (a['contactDisplayNr'] < b['contactDisplayNr']) {return -1000; }
-          if (a['eventBeginDisplay'] > b['eventBeginDisplay'] ) {return 10; }
-          if (a['eventBeginDisplay'] < b['eventBeginDisplay'] ) {return -10; }
-          if (a['timeDisplay'] > b['timeDisplay'] ) {return 1; }
-          if (a['timeDisplay'] < b['timeDisplay'] ) {return -1; }
+          if (a.contactSortNr > b.contactSortNr) {return 1000; }
+          if (a.contactSortNr < b.contactSortNr) {return -1000; }
+          if (a.eventBegin > b.eventBegin ) {return 10; }
+          if (a.eventBegin < b.eventBegin) {return -10; }
           return 0;
         });
         // suppress date if equal date before, also contactNr
         for (let ix = 0; ix < this.eventsFiltered.length; ix++) {
-          if (ix > 0 && this.eventsFiltered[ix]['contactDisplayNr']  === this.eventsFiltered[ix - 1]['contactDisplayNr'] ) {
-              this.eventsFiltered[ix]['contactDisplayNr']  = '';
-          }
-          if (ix > 0 && GlobalFunctions.getYMD(this.eventsFiltered[ix].eventBegin) === GlobalFunctions.getYMD(this.eventsFiltered[ix - 1].eventBegin) ) {
-            this.eventsFiltered[ix]['eventBeginDisplay'] = '';
-          }
           const worked = this.eventsFiltered[ix].eventDuration;
           let eventDurationDisplay =  GlobalFunctions.minutesDisplay(worked);
           this.eventsFiltered[ix].eventDurationDisplay = eventDurationDisplay;
@@ -131,9 +117,7 @@ export class CalendarDayContactsViewComponent implements OnInit {
           }
         }
       }
-    } else {
-      this.eventsFiltered = [];
-    }
+    } 
   }
 
   /** ------------------------  public methods --------------------------------------------------- */
@@ -142,8 +126,8 @@ export class CalendarDayContactsViewComponent implements OnInit {
     return StyleFactory.getBgColorStyle(contactColor, 0);
   }
 
-  public setContact(contactId: number) {
-    this.contactSelected.emit(contactId);
+  public setContact(contactNr: number) {
+    this.contactSelected.emit(contactNr);
   }
 
 }

@@ -1,82 +1,82 @@
 @if (txt) {
-  <div class="ui grid container">
-    <div class="row" [ngStyle]="rowTopNoPaddingStyle">
-      <div class="seven wide column"></div>
-      <div class="column">
+  <div class="container mx-auto">
+    <div class="flex flex-wrap items-center justify-end gap-1" [ngStyle]="rowTopNoPaddingStyle">
+      <div class="w-7/12"></div>
+      <div>
         @if (!session.isPlan) {
-          <button type="button" class="ui mini teal basic icon button"
-            [attr.data-tooltip]="txt['shift_events']  + ' ' + txt['to_another_day'] + ': ' + shiftActualDisplay" data-position="bottom center"
+          <button type="button" class="btn btn-xs btn-outline btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="txt['shift_events']  + ' ' + txt['to_another_day'] + ': ' + shiftActualDisplay"
             (click)="shiftAnotherDay()">
-            <i class="backward icon"></i>
+            <i class="fas fa-backward"></i>
           </button>
         }
         @if (session.isPlan) {
-          <button type="button" class="ui mini green basic icon button"
-            [attr.data-tooltip]="txt['copy_events_to_actual']" data-position="bottom center"
+          <button type="button" class="btn btn-xs btn-outline btn-success text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="txt['copy_events_to_actual']"
             [disabled]="isAfterToday || !isCopyToActual"
             (click)="copyToActual()">
-            <i class="fast backward icon"></i>
+            <i class="fas fa-fast-backward"></i>
           </button>
         }
       </div>
-      <div class="column">
-        <button type="button" class="ui mini teal icon button"
-          [attr.data-tooltip]="txt['shift_events'] + ' ' + txt['to_before']" data-position="bottom center"
+      <div>
+        <button type="button" class="btn btn-xs btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+          [attr.data-tip]="txt['shift_events'] + ' ' + txt['to_before']"
           [disabled]="!(shiftSpaceBefore > 0)"
           (click)="shiftBefore()">
-          <i class="angle double left icon"></i>
+          <i class="fas fa-angle-double-left"></i>
         </button>
       </div>
-      <div class="column">
-        <button type="button" class="ui mini teal icon button"
-          [attr.data-tooltip]="txt['shift_events'] + ' ' + txt['to_earlier']" data-position="bottom center"
+      <div>
+        <button type="button" class="btn btn-xs btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+          [attr.data-tip]="txt['shift_events'] + ' ' + txt['to_earlier']"
           [disabled]="!(directSpaceBefore > 0)"
           (click)="shiftEarlier()">
-          <i class="angle left icon"></i>
+          <i class="fas fa-angle-left"></i>
         </button>
       </div>
-      <div class="column">
-        <button type="button" class="ui mini teal icon button"
-          [attr.data-tooltip]="txt['shift_events'] + ' ' + txt['to_later']" data-position="bottom center"
+      <div>
+        <button type="button" class="btn btn-xs btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+          [attr.data-tip]="txt['shift_events'] + ' ' + txt['to_later']"
           [disabled]="!(directSpaceAfter > 0)"
           (click)="shiftLater()">
-          <i class="angle right icon"></i>
+          <i class="fas fa-angle-right"></i>
         </button>
       </div>
-      <div class="column">
-        <button type="button" class="ui mini teal icon button"
-          [attr.data-tooltip]="txt['shift_events']  + ' ' + txt['to_after']" data-position="bottom center"
+      <div>
+        <button type="button" class="btn btn-xs btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+          [attr.data-tip]="txt['shift_events']  + ' ' + txt['to_after']"
           [disabled]="!(shiftSpaceAfter > 0)"
           (click)="shiftAfter()">
-          <i class="angle double right icon"></i>
+          <i class="fas fa-angle-double-right"></i>
         </button>
       </div>
-      <div class="column">
+      <div>
         @if (session.isPlan) {
-          <button type="button" class="ui mini green basic icon button"
-            [attr.data-tooltip]="txt['copy_events']  + ' -> ' + copyPlanDisplay" data-position="bottom center"
+          <button type="button" class="btn btn-xs btn-outline btn-success text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="txt['copy_events']  + ' -> ' + copyPlanDisplay"
             (click)="copyPlan()">
-            <i class="fast forward icon"></i>
+            <i class="fas fa-fast-forward"></i>
           </button>
         }
       </div>
-      <div class="column">
+      <div>
         @if (session.isPlan && !isBeforeYesterday) {
-          <button type="button" class="ui mini teal basic icon button"
-            [attr.data-tooltip]="txt['shift_events']  + ' -> ' + shiftPlanDisplay" data-position="bottom center"
+          <button type="button" class="btn btn-xs btn-outline btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="txt['shift_events']  + ' -> ' + shiftPlanDisplay"
             [disabled]="!isNoneDone"
             (click)="shiftAnotherDay()">
-            <i class="forward icon"></i>
+            <i class="fas fa-forward"></i>
           </button>
         }
       </div>
-      <div class="column">
+      <div>
         @if (session.isPlan) {
-          <button class="ui tiny circular icon button" [ngClass]="isAllDone || isNoneDone ? 'basic' : ''"
-            [attr.data-tooltip]="txt['set_to'] + ' ' + (isAllDone ? txt['not'] + ' ' : '' ) + txt['done']" data-position="top center"
+          <button class="btn btn-xs btn-circle btn-ghost tooltip tooltip-top tooltip-accent" [ngClass]="isAllDone || isNoneDone ? 'btn-outline' : ''"
+            [attr.data-tip]="txt['set_to'] + ' ' + (isAllDone ? txt['not'] + ' ' : '' ) + txt['done']"
             type="button" (click)="setDone()">
             @if (!isNoneDone) {
-              <i class="green check icon"></i>
+              <i class="fas fa-check text-success"></i>
             }
           </button>
         }
@@ -84,5 +84,3 @@
     </div>
   </div>
 }
-
-

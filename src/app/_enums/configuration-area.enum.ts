@@ -7,7 +7,7 @@ export enum ConfigurationArea {
   // order = 1,
   // invoice = 2,
   events = 3,
-  // userEvents and eventCalendar are in pEvent-log
+  // userEvents and calendar are in pEvent-log
   userEvents = 4,
   calendar = 5,
   // invoicePrint = 6,

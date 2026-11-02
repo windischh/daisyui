@@ -38,8 +38,8 @@ export class CalendarDayTimeChangeComponent implements OnInit {
   @Input({required: true}) eventtxt!: { [key: string]: string };
 
   @Input({required: true}) options!: Array<ConfigurationOption>;
-  // startHour, timeSlize, defaultIntervalSize are model parameters, managed by event-day-component
   @Input({required: true}) opts!: IEventOptions;
+  // startHour, timeSlize, defaultIntervalSize are model parameters, managed by event-day-component
   @Input({required: true}) userOpts!: IUserEventOptions;
 
   // calendarDay can be differnt from opts.calendarDay
@@ -54,7 +54,7 @@ export class CalendarDayTimeChangeComponent implements OnInit {
   @Output() timeUpdate = new EventEmitter<{updateType: UpdateType, event: Event, id: number}>();
   @Output() cancelTimeChangeView = new EventEmitter<{updateType: UpdateType, event: Event, id: number}>();
 
-  styles: {[key: string]: any} = {};
+  configurableStyles: {[key: string]: any} = {};
 
   constructor(
     private logger: LogService,
@@ -80,22 +80,22 @@ export class CalendarDayTimeChangeComponent implements OnInit {
    */
   private loadOptions() {
 
-    this.styles = {
+    this.configurableStyles = {
       timeElementOutsideStyle : {
         'background-color': LIGHT_CORAL
       }
     };
     if (this.userOpts && this.options) {
-      const area = 'eventCalendar';
+      const area = 'calendar';
       const k = 'timeElementOutsideStyle';
       const isStylesHaveDefault = false;
       // getting style options
       // first we load all option values with the default style
       const enumStringType: { [key: string]: any } = OptionGroupCalendar;
       const def = ConfigurationOptionBasicFunctions.getStyleOptionSeq(this.options, area, 0,
-        enumStringType['opt_eventCalendar_' + k], isStylesHaveDefault);
+        enumStringType['calendar_' + k], isStylesHaveDefault);
       if (def !== undefined) {
-        this.styles[k] = def;
+        this.configurableStyles[k] = def;
       }
       // then we take style from opts
       const style = this.userOpts.style;
@@ -103,9 +103,9 @@ export class CalendarDayTimeChangeComponent implements OnInit {
         // default option = 00 is already loaded
       } else {
         const s = ConfigurationOptionBasicFunctions.getStyleOptionSeq(this.options, area, style,
-          enumStringType['opt_eventCalendar_' + k], isStylesHaveDefault);
-        if (s !== undefined) {
-          this.styles[k] = s;
+          enumStringType['calendar_' + k], isStylesHaveDefault);
+        if (s !== undefined && s !== null) {
+          this.configurableStyles[k] = s;
         }
       }
     }
@@ -210,7 +210,7 @@ export class CalendarDayTimeChangeComponent implements OnInit {
       // we set color for time before startHour
       for (const t of timeChoices) {
         const timeStyle =
-          t.value < this.userOpts.startHour * 60  || t.value >= this.userOpts.lastHour * 60 ? this.styles['timeElementOutsideStyle'] : {};
+          t.value < this.userOpts.startHour * 60  || t.value >= this.userOpts.lastHour * 60 ? this.configurableStyles['timeElementOutsideStyle'] : {};
         t.timeStyle = timeStyle;
       }
       return timeChoices;
@@ -285,7 +285,7 @@ export class CalendarDayTimeChangeComponent implements OnInit {
       // we set color for time after endtHour
       for (const t of timeChoices) {
         const timeStyle =
-        t.value < this.userOpts.startHour * 60 || t.value >= this.userOpts.lastHour * 60  ? this.styles['timeElementOutsideStyle'] : {};
+        t.value < this.userOpts.startHour * 60 || t.value >= this.userOpts.lastHour * 60  ? this.configurableStyles['timeElementOutsideStyle'] : {};
         t.timeStyle = timeStyle;
       }
       return timeChoices;
@@ -349,7 +349,7 @@ export class CalendarDayTimeChangeComponent implements OnInit {
        // we set color for time after endtHour
        for (const t of timeChoices) {
         const timeStyle =
-        eventBegin + t.value  >= this.userOpts.lastHour * 60  ? this.styles['timeElementOutsideStyle'] : {};
+        eventBegin + t.value  >= this.userOpts.lastHour * 60  ? this.configurableStyles['timeElementOutsideStyle'] : {};
         t.timeStyle = timeStyle;
       }
       return timeChoices;

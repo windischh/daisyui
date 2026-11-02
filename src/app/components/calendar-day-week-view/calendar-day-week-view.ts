@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, OnChanges, SimpleChange, Output, EventEmitter, HostListener, signal} from '@angular/core';
-import { formatDate, NgStyle, SlicePipe, DatePipe } from '@angular/common';
+import { formatDate, NgStyle, SlicePipe, DatePipe, NgClass } from '@angular/common';
 
 import { StyleFactory } from '../../_globals/style-factory';
 import { GAINSBORO, GREEN, LIGHT_CORAL, LIGHT_GREY, POWDER_BLUE, RED, WHITE_SMOKE, WINDOW_WIDTH_MOBILE, WINDOW_WIDTH_TABLET } from '../../_globals/constants';
@@ -26,7 +26,7 @@ import { IUserEventOptions } from '../../_interfaces/i-user-event-options';
   selector: 'dsy-calendar-day-week-view',
   templateUrl: './calendar-day-week-view.html',
   styleUrl: './calendar-day-week-view.css',
-  imports: [NgStyle, SlicePipe, DatePipe]
+  imports: [NgStyle, SlicePipe, DatePipe, NgClass]
 })
 export class CalendarDayWeekViewComponent implements OnInit {
 
@@ -42,13 +42,11 @@ export class CalendarDayWeekViewComponent implements OnInit {
 
   @Input({required: true}) actualEvents!: Array<Event>;
   @Input({required: true}) planEvents!: Array<Event>;
-  @Input({required: true}) eventsChangeCounter!: number;
-
   @Input({required: true}) timeSpans!: Array<Event>;
-  @Input({required: true}) timeSpanChangeCounter!: number;
-
   // categories are indexed by type-part x in time spans with types 2x
   @Input({required: true}) timeSpanTypeColors!: Array<{text: string, color: string}>;
+
+  @Input({required: true}) calendarDayChangeCounter!: number;
 
   @Input({required: true}) isSelecting!: boolean;
 
@@ -88,8 +86,8 @@ export class CalendarDayWeekViewComponent implements OnInit {
 
   public readySignal = signal(0);
 
-  // styles are set from optionGroupEventCalendar - here we set just the default options:
-  styles = {
+  // styles are set from optionGroupcalendar - here we set just the default options:
+  configurableStyles = {
     // 010
     tableBgStyle : {
       'width': '70%'
@@ -157,7 +155,7 @@ export class CalendarDayWeekViewComponent implements OnInit {
     },
     // 407
     // attn: background-color is set from color scheme of contact
-    custStyle : {
+    contactStyle : {
       'font-size': '50%',
       'font-weight': 'bold'
     },
@@ -166,19 +164,10 @@ export class CalendarDayWeekViewComponent implements OnInit {
     isShowLocation: false,
     isShowDescription: false,
     isShowTimeColumn: false,
-    isShowCustIssueColumn: false
+    isShowContactColumn: false
   };
 
   // component specific overrides of styles
-
-  rowBottomNoPaddingStyle = {
-    'padding-bottom': '0'
-  }
-
-  leftIconStyle =  {
-    'padding-left': '0',
-    'margin-left' : '-10px'
-  }
 
   eventElementStyle!: {};
   eventStyle!: {};
@@ -187,15 +176,40 @@ export class CalendarDayWeekViewComponent implements OnInit {
   locationStyle!: {};
   descriptionStyle!: {};
 
+  timeHeaderStyle = {
+    'border-bottom' :  'thin solid'
+  }
+
   planHeaderBoldStyle = {
     'cursor':  'pointer',
-    'font-weight':  'bold'
+    'font-weight':  'bold',
+    'border-bottom' :  'thin solid'
   }
 
   planHeaderNormalStyle = {
     'cursor':  'pointer',
-    'font-weight':  'normal'
+    'font-weight':  'normal',
+    'border-bottom' :  'thin solid'
   }
+
+  // elStyle for time spans
+  timeSpanElementStyle =  {
+      'background-color': WHITE_SMOKE
+  };
+
+  // this is the basic style - width is recalculated depending on timeSlize
+  eventElementBorderTopSytle = {
+    'border-top-width' :  'thick',
+    'border-top-style' :  'solid',
+    'padding' : '0.1em'
+  }
+
+   eventElementBorderBottomSytle = {
+    'border-bottom-width' :  'thick',
+    'border-bottom-style' :  'solid',
+    'padding' : '0.1em'
+  }
+
 
   expandIconStyle = {
     'cursor':  'pointer',
@@ -222,21 +236,15 @@ export class CalendarDayWeekViewComponent implements OnInit {
       if (propKey === 'opts' || propKey === 'options' || propKey === 'calendarDayChangeCounter') {
         // this.opts = propValue.currentValue;
         if (this.session.calendarDay) {
-          this.loadOptions();
-          isSetEvents = true;
+          this.loadOptions(); 
+        }
+        if (this.actualEvents  && this.planEvents  && this.timeSpans) {
+          this.buildColumns();
+          this.buildWeekGrid();
+          this.readySignal.set(this.readySignal() + 1);
         }
       }
-      if (propKey === 'eventsChangeCounter' || propKey === 'timeSpanChangeCounter') {
-        isSetEvents = true;
-      }
       // console.log('event-day-week propkey: ', propKey, 'propvalue: ', JSON.stringify(propValue));
-    }
-    if (isSetEvents) {
-      if (this.actualEvents  && this.planEvents  && this.timeSpans) {
-        this.buildColumns();
-        this.buildWeekGrid();
-        this.readySignal.set(this.readySignal() + 1);
-      }
     }
   }
 
@@ -258,11 +266,11 @@ export class CalendarDayWeekViewComponent implements OnInit {
 
       // we override some styles
 
-      const {...eventElementStyles} = this.styles.eventElementStyle;
+      const {...eventElementStyles} = this.configurableStyles.eventElementStyle;
       // we override vertical align because we arrange elements in <td> vertical
       // overflow: visible to show tooltip over other table elements
       this.eventElementStyle = {...eventElementStyles,  'cursor': 'pointer', 'vertical-align':  'top', 'overflow': 'visible'};
-      const {...eventStyles} = this.styles.eventStyle;
+      const {...eventStyles} = this.configurableStyles.eventStyle;
       // we override font-weight according to choosen column
       // and margin-left to shift text at the left border of element (in the moment not ative)
       // and we set font-size
@@ -271,16 +279,16 @@ export class CalendarDayWeekViewComponent implements OnInit {
       this.choosenEventStyle = {...eventStyles, 'font-size':  '80%', 'font-weight':  'bold', 'margin-left': '-5px'};
 
       // we adapt location and description styles - but we do not need them in the moment, see below ....
-      const {...locationStyles} = this.styles.locationStyle;
+      const {...locationStyles} = this.configurableStyles.locationStyle;
       this.locationStyle =  {...locationStyles,  'margin-top': '-10px'};
-      const {...descriptionStyles} = this.styles.descriptionStyle;
+      const {...descriptionStyles} = this.configurableStyles.descriptionStyle;
       this.descriptionStyle =  {...descriptionStyles,  'margin-top': '-10px'};
 
       // we show no time column, no description, no location in week-view
       // TODO check duration of eventElement and show description, location if length is enough
-      this.styles.isShowTimeColumn = false;
-      this.styles.isShowLocation = false;
-      this.styles.isShowDescription = false;
+      this.configurableStyles.isShowTimeColumn = false;
+      this.configurableStyles.isShowLocation = false;
+      this.configurableStyles.isShowDescription = false;
     }
   }
 
@@ -288,7 +296,7 @@ export class CalendarDayWeekViewComponent implements OnInit {
    * getOptions delivers the style options
    *
    * we use it as following:
-   * - each single option exists as property of this component (this.styles) for use in html template
+   * - each single option exists as property of this component (this.configurableStyles) for use in html template
    * - each single option can have a default value in the property definition in this component
    * - each single option is read from option values in auth
    * - if an option has no value, the read call (getStyleOption...) delivers undefined. In this case we let exisiting
@@ -303,38 +311,37 @@ export class CalendarDayWeekViewComponent implements OnInit {
    *  optionGroup is  defined for each option when calling this.auth.get...)
    */
   private getOptions(style: number) {
-    // option group names: see enum OptionGroupEventCalendar
+    // option group names: see enum OptionGroupcalendar
     // option group types: see util getStyleOptionType
 
-    const area = 'eventCalendar';
+    const area = 'calendar';
     // no default group 100
     const isStylesHaveDefault = false;
     const enumStringType: { [key: string]: any } = OptionGroupCalendar;
-    const stylesStrinKeys: { [key: string]: any } = this.styles;
-    // set this.styles from eventCalendar options
-    Object.keys(this.styles)
+    const stylesStrinKeys: { [key: string]: any } = this.configurableStyles;
+    // set this.configurableStyles from calendar options
+    Object.keys(this.configurableStyles)
     .forEach(k => {
-      //       if (k.startsWith('is') && this.styles[k] === typeof 'boolean') {
       if (k.startsWith('is') && typeof stylesStrinKeys[k] === 'boolean') {
-        // console.log('type: ',  typeof this.styles[k] );
-        // console.log('opt_group: ',  k, OptionGroupEventCalendar['opt_eventCalendar_' + k]);
+        // console.log('type: ',  typeof this.configurableStyles[k] );
+        // console.log('opt_group: ',  k, OptionGroupcalendar['calendar_' + k]);
         const s = ConfigurationOptionBasicFunctions.getStyleOptionBoolean(this.options, area, style,
-          enumStringType['opt_eventCalendar_' + k]);
-        if (s !== undefined) {
+          enumStringType['calendar_' + k]);
+        if (s !== undefined && s !== null ) {
           stylesStrinKeys[k] = s;
         }
       //   } else  {
       } else if (typeof stylesStrinKeys[k] === 'object') {
-        // console.log('type: ',  typeof this.styles[k] );
-        // console.log('opt_group',  k, OptionGroupEventCalendar['opt_eventCalendar_' + k]);
+        // console.log('type: ',  typeof this.configurableStyless[k] );
+        // console.log('opt_group',  k, OptionGroupcalendar['calendar_' + k]);
         const s = ConfigurationOptionBasicFunctions.getStyleOptionSeq(this.options, area, style,
-          enumStringType['opt_eventCalendar_' + k], isStylesHaveDefault);
-        if (s !== undefined) {
+          enumStringType['calendar_' + k], isStylesHaveDefault);
+        if (s !== undefined && s !== null) {
           stylesStrinKeys[k] = s;
         }
       }
     });
-    // console.log('this.styles:', this.styles);
+    // console.log('this.configurableStyles', this.configurableStyles);
 
   }
 
@@ -506,7 +513,7 @@ export class CalendarDayWeekViewComponent implements OnInit {
       let leftContactStyle = {};
       let rightContactStyle = {};
       // time spans have their own eventElementStyle
-      let eventElementStyle = {};
+      let eventElementStyle: {} = GlobalFunctions.clone(this.timeSpanElementStyle);;
       let summaryDisplay = event.summary;
       const category = this.timeSpanTypeColors[event.type % 10].text;
       const color = this.timeSpanTypeColors[event.type % 10].color;
@@ -522,8 +529,8 @@ export class CalendarDayWeekViewComponent implements OnInit {
       if (event.contactNr && event.contactNr > 0) {
         contactDisplayNr = event.eventInfo?.contactDisplayNr ?? '';
         contactFisplayName = event.eventInfo?.contactDisplayName ?? '';
-        const contactStyle = StyleFactory.getBgColorStyle((event.eventInfo?.contactColor ?? ''), 0, 0, GlobalFunctions.clone(this.styles.custStyle));
-        // leftCustStyle and rightCustStyle define position for custIssueLabel - independent of font size, as far as possible
+        const contactStyle = StyleFactory.getBgColorStyle((event.eventInfo?.contactColor ?? ''), 0, 0, GlobalFunctions.clone(this.configurableStyles.contactStyle));
+        // leftContactStyle and rightContactStyle define position for custIssueLabel - independent of font size, as far as possible
         leftContactStyle = {...contactStyle, 'margin-right' : '5px'};
         rightContactStyle = {...contactStyle, 'margin-left' : '10px'};
         eventElementStyle = StyleFactory.getBgColorStyle((event.eventInfo?.contactColor ?? ''), 90, 0, eventElementStyle);
@@ -539,7 +546,7 @@ export class CalendarDayWeekViewComponent implements OnInit {
       const element: IEventGridElement = {minutes: 0, roundedMinutes: 0, timeElement: '', timeBegins: true, timeRowSpan: 0, event: event,
       eventBegins: true, eventEnds: true, eventDurationDisplay: '', eventRowSpan: 0,
       contactDisplayNr: contactDisplayNr, contactDisplayName: contactFisplayName, category,
-      leftCustStyle: leftContactStyle, rightCustStyle: rightContactStyle, eventElementStyle,
+      leftContactStyle: leftContactStyle, rightContactStyle: rightContactStyle, eventElementStyle,
       summaryDisplay, ixFrom, ixTo
       };
       elements.push(element);
@@ -599,9 +606,9 @@ export class CalendarDayWeekViewComponent implements OnInit {
       let rightContactStyle = {};
       let eventElementStyle: {} = GlobalFunctions.clone(this.eventElementStyle);
       if (event && event?.eventInfo) {
-        // we set color via custStyle - if no contact defined, style is set to light grey via StyleFactory
-        const contactStyle = StyleFactory.getBgColorStyle((event.eventInfo.contactColor ?? ''), 0, 0, GlobalFunctions.clone(this.styles.custStyle));
-        // leftCustStyle and rightCustStyle define position for custIssueLabel - independent of font size, as far as possible
+        // we set color via contactStyle - if no contact defined, style is set to light grey via StyleFactory
+        const contactStyle = StyleFactory.getBgColorStyle((event.eventInfo.contactColor ?? ''), 0, 0, GlobalFunctions.clone(this.configurableStyles.contactStyle));
+        // leftContactStyle and rightContactStyle define position for custIssueLabel - independent of font size, as far as possible
         leftContactStyle = {...contactStyle, 'margin-right' : '5px'};
         rightContactStyle = {...contactStyle, 'margin-left' : '10px'};
         eventElementStyle = StyleFactory.getBgColorStyle((event.eventInfo.contactColor ?? ''), 90, 0, eventElementStyle);
@@ -613,36 +620,31 @@ export class CalendarDayWeekViewComponent implements OnInit {
           ? event.eventInfo.contactDisplayNr
           : event.eventInfo.contactNr.toString();
       }
-      const timeElementStyle = i < (this.userOpts.startHour * 60) || i >= (this.userOpts.lastHour * 60) ? this.styles.timeElementOutsideStyle : this.styles.timeElementStyle;
-      const timeInTimeElementStyle: { [key: string]: any } = GlobalFunctions.clone(this.styles.timeInTimeElementStyle);
+      const timeElementStyle = i < (this.userOpts.startHour * 60) || i >= (this.userOpts.lastHour * 60) ? this.configurableStyles.timeElementOutsideStyle : this.configurableStyles.timeElementStyle;
+      const timeInTimeElementStyle: { [key: string]: any } = GlobalFunctions.clone(this.configurableStyles.timeInTimeElementStyle);
       timeInTimeElementStyle['font-weight'] = i % 60 === 0 ? 'bold' : 'normal';
-      const tableRowStyle: { [key: string]: any }= GlobalFunctions.clone(this.styles.tableRowStyle);
+      const tableRowStyle: { [key: string]: any }= GlobalFunctions.clone(this.configurableStyles.tableRowStyle);
       tableRowStyle['height'] = Math.floor(40/Number(Number(this.userOpts.timeSlize))).toString() + 'px';
-      // semantic ui styles borders with border-top at td elements
-      //   so border top must be enabled (by setting to 'none' at elements which are not multiples of timeSlize)
-      //   and we must reduce padding cause semantic ui very compact table sets it to 0.4em
+      // borderUnit is timeSlize, but max. 3ß
       const borderUnit = Number(this.userOpts.timeSlize) > 30 ? 30 : Number(this.userOpts.timeSlize);
+      
+      const rowElementStyle = i === gridBegin && isEventBeforeStartHour && !this.isShowBeforeStartHour ? {
+           ...this.eventElementBorderTopSytle, 
+          'border-top-color' :  eventColor
+        }
+        : i === gridEnd && isEventAfterLastHour && !this.isShowAfterLastHour ? {
+        ...this.eventElementBorderBottomSytle, 
+          'border-bottom-color' : eventColor
+        }
+        : {
+          ...this.eventElementBorderTopSytle, 
+          'border-top-style' : i % 30 === 0 && Number(this.userOpts.timeSlize) === 60  ? 'dotted' : null,
+          'border-top-width' : i % 60 === 0 ?  'thin' : i % 30 === 0 && Number(this.userOpts.timeSlize) === 60  ? '1px' : null
+        };
       // we round to timeSlize (max. 30min) - if reounded value is not possible, we try the other rounded alternative ...
       let roundedMinutes = Math.round(i / borderUnit) * borderUnit;
       roundedMinutes = roundedMinutes < minutesBefore ? (roundedMinutes + borderUnit > minutesAfter ? i : roundedMinutes + borderUnit)
         : roundedMinutes > minutesAfter ? (roundedMinutes - borderUnit < minutesBefore ? i : roundedMinutes - borderUnit) : roundedMinutes;
-      const rowElementStyle = i === gridBegin && isEventBeforeStartHour && !this.isShowBeforeStartHour ? {
-          'border-top-width' :  'thick',
-          'border-top-style' :  'solid',
-          'border-top-color' :  eventColor,
-          'padding' : '0.1em'
-        }
-        : i === gridEnd && isEventAfterLastHour && !this.isShowAfterLastHour ? {
-          'border-bottom-width' : 'thick',
-          'border-bottom-style' : 'solid',
-          'border-bottom-color' : eventColor,
-          'padding' : '0.1em'
-        }
-        : {
-          'border-top' : i % borderUnit === 0 ? null : 'none',
-          'border-top-width' : i % 60 === 0 ?  '2px' : i % 30 === 0 && Number(this.userOpts.timeSlize) === 60  ? '1px dashed' : null,
-          'padding' : '0.1em'
-        };
       const timeUnit = Number(this.userOpts.timeSlize) === 5 ? 15 : Number(this.userOpts.timeSlize) === 10 ? 30 : Number(this.userOpts.timeSlize);
       let eventBegin = 0;
       let eventEnd = 0;
@@ -675,8 +677,8 @@ export class CalendarDayWeekViewComponent implements OnInit {
         timeElementStyle,
         timeInTimeElementStyle,
         rowElementStyle,
-        leftCustStyle: leftContactStyle,
-        rightCustStyle: rightContactStyle,
+        leftContactStyle: leftContactStyle,
+        rightContactStyle: rightContactStyle,
         eventElementStyle,
         assocTxt
         };

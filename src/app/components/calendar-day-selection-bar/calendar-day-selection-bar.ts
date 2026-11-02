@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, Input, EventEmitter, Output, OnChanges, SimpleChange, HostListener } from '@angular/core';
+import { Component, OnInit, ViewChild, Input, EventEmitter, Output, OnChanges, SimpleChange, HostListener, signal } from '@angular/core';
 import { formatDate, NgStyle, NgClass, SlicePipe } from '@angular/common';
 
 import { GlobalFunctions } from '../../_globals/global-functions';
@@ -109,46 +109,17 @@ export class CalendarDaySelectionBarComponent implements OnInit {
 
   public dateOpts!: IAngularMyDpOptions;
 
+  // calendar day red at holiday ,,,,
   calendarDayStyle = {
   };
 
-  pointerStyle = {
-    'cursor':  'pointer'
-  }
-
+  // color of contact
   contactStyle!: {
   };
-
-  rowTopNoPaddingStyle = {
-    'padding-top': '0'
-  }
-
-  rowBottomNoPaddingStyle = {
-    'padding-bottom': '0'
-  }
-
-  // styles signals if calendarDay lays inside interval: issueFrom - issueTo
-  dateInsideStyle = {
-    // 'background-color': 'White'
-  };
-
-  dateOutsideStyle = {
-    // 'background-color': 'Red'
-    'color': 'Red'
-  };
-
-  dateOtherYearStyle = {
-    'background-color': 'PaleGreen'
-    // 'color': 'Green'
-  };
-
-  showDateFrom = '';
-  showDateTo = '';
-  dateFromStyle = this.dateInsideStyle;
-  dateToStyle = this.dateInsideStyle;
+ 
 
   // we show selection bar after having built all styles
-  isStylesReady = false;
+  isStylesReadySignal = signal(false);
 
   constructor() { }
 
@@ -168,7 +139,7 @@ export class CalendarDaySelectionBarComponent implements OnInit {
         this.locale = propValue.currentValue;
       }
       if (propKey === 'session' || propKey === 'opts' || propKey === 'calendarDayChangeCounter') {
-        this.isStylesReady = false;
+        this.isStylesReadySignal.set(false);
         if (this.session?.calendarDay) {
           const jsDate: Date = this.isSelecting && this.targetCalendarDay ? GlobalFunctions.clone(this.targetCalendarDay) : GlobalFunctions.clone(this.session.calendarDay);
           this.calendarDayDisplay = formatDate( this.session.calendarDay, 'EEE d.MM.yyyy', this.locale);
@@ -302,8 +273,8 @@ export class CalendarDaySelectionBarComponent implements OnInit {
   }
 
   private setContactStyles() {
-    this.contactStyle = StyleFactory.getBgColorStyle(this.sessionContact?.contactColor ?? '', 0, 0, GlobalFunctions.clone(this.pointerStyle));
-    if (this.session?.calendarDay && this.sessionContact) this.isStylesReady = true;
+    this.contactStyle = StyleFactory.getBgColorStyle(this.sessionContact?.contactColor ?? '', 90, 0);
+    if (this.session?.calendarDay && this.sessionContact) this.isStylesReadySignal.set(true);
   }
 
   @HostListener('window:resize', ['$event'])
@@ -415,13 +386,6 @@ export class CalendarDaySelectionBarComponent implements OnInit {
 
   public setSelection() {
     this.selectionSet.emit();
-  }
-
-  public setContactSelection() {
-    // this.autoViewSelected.emit('issue-select-view');
-    if (!this.isSelecting && !this.isCreating && this.viewSelected() !== 'options-view') {
-      this.viewSelection.emit('issue-select-view');
-    }
   }
 
 }

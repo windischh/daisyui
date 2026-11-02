@@ -5,14 +5,13 @@ import { ConfigurationOptionRaw } from './configuration-option-raw';
 export class ConfigurationOptionFactory {
 
   static empty(): ConfigurationOption {
-    return new ConfigurationOption(0, 0, '', '', 0, '', null,  null, null, null, null,
+    return new ConfigurationOption(0, '', '', 0, '', null,  null, null, null, null,
     0, 0, new Date(), '', 0, null, '', 0, 0);
   }
 
   static fromObject(rawOption: ConfigurationOptionRaw): ConfigurationOption {
     return new ConfigurationOption(
       rawOption.optionId,
-      rawOption.userId,
       rawOption.optionName,
       rawOption.optionArea,
       rawOption.optionNr,

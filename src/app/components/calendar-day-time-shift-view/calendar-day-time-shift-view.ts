@@ -46,7 +46,7 @@ export class CalendarDayTimeShiftViewComponent implements OnInit {
 
   // all events of event-day - dependent of opts.isPlan. Selected events have isSelected = true
   @Input({required: true}) events!: Array<Event>;
-  @Input({required: true}) eventsChangeCounter!: number;
+  @Input({required: true}) calendarDayChangeCounter!: number;
 
 
   // independent of opts.isPlan we get actualEvents to check the function copyPlanToEvent
@@ -88,7 +88,7 @@ export class CalendarDayTimeShiftViewComponent implements OnInit {
 
   ngOnChanges(changes: {[propKey: string]: SimpleChange}) {
     for (const [propKey, propValue] of Object.entries(changes)) {
-      if (propKey === 'events' || propKey === 'actualEvents' || propKey === 'targetCalendarDay'  || propKey === 'eventsChangeCounter') {
+      if (propKey === 'events' || propKey === 'actualEvents' || propKey === 'targetCalendarDay'  || propKey === 'calendarDayChangeCounter') {
         if (this.events && this.events.length > 0) {
           this.buildShiftChoices();
         }

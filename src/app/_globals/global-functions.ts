@@ -427,7 +427,7 @@ export class GlobalFunctions {
    static getSpaceBefore(eventBegin: Date, events: Array<Event>, calendarDay: Date, eventId?: number): number {
     if (calendarDay?.getTime() > 0 && eventBegin?.getTime() >= calendarDay.getTime()) {
       let endBefore: Date;
-      let ixBefore : number | undefined;
+      let ixBefore = -2;
       let filtered: Event[] = [];
       if (events?.length > 0) {
         // we build a local of events array, filtered anyway, to sort in ascending order
@@ -445,12 +445,15 @@ export class GlobalFunctions {
         });
       }
       // have we found a record before?
-      if (ixBefore && ixBefore === -1) {
+      if (ixBefore === -1) {
+        // console.log('overlap: ', eventBegin)
         return 0;
-      } else if (ixBefore && ixBefore >= 0) {
-        endBefore = filtered[ixBefore].eventEnd;
-      } else {
+      } else if (ixBefore === -2) {
+        // console.log('no elemnt before: ', eventBegin)
         endBefore = calendarDay;
+      } else {
+        endBefore = filtered[ixBefore].eventEnd;
+        // console.log('endbefore: ', endBefore, eventBegin)
       }
       return GlobalFunctions.getDateInMinutes(eventBegin) - GlobalFunctions.getDateInMinutes(endBefore);
     } else {
@@ -472,7 +475,7 @@ export class GlobalFunctions {
   static getSpaceAfter(eventEnd: Date, events: Array<Event>, calendarDay: Date, eventId?: number): number {
     if (calendarDay?.getTime() > 0 && eventEnd?.getTime() >= calendarDay.getTime()) {
       let beginAfter: Date;
-      let ixAfter : number | undefined;
+      let ixAfter = -2;
       let filtered: Event[] = [];
       if (events?.length > 0) {
         // we build a local of events array, filtered anyway, to sort in descending order
@@ -490,12 +493,12 @@ export class GlobalFunctions {
         });
       }
       // have we found a record after?
-      if (ixAfter && ixAfter === -1) {
+      if (ixAfter === -1) {
         return 0;
-      } else if (ixAfter && ixAfter >= 0) {
-        beginAfter = filtered[ixAfter].eventBegin;
-      } else {
+      } else if (ixAfter === -2) {
         beginAfter = GlobalFunctions.addMinutes(calendarDay, 24 * 60 + MAX_INTERVAL_LENGTH);
+      } else {
+        beginAfter = filtered[ixAfter].eventBegin;
       }
       return  GlobalFunctions.getDateInMinutes(beginAfter) - GlobalFunctions.getDateInMinutes(eventEnd);
     } else {

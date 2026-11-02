@@ -26,6 +26,8 @@ import { ErrorMessage } from '../../_validators/error-message';
 import { IAngularMyDpOptions, IMyDate, IMyDateModel, IMyDateRange, IMyInputFieldChanged, AngularMyDatePickerDirective, AngularMyDatePickerModule } from '@nodro7/angular-mydatepicker';
 import { CalendarDayTimeChangeComponent } from '../calendar-day-time-change/calendar-day-time-change';
 import { INumChoice } from '../../_interfaces/i-num-choice';
+import { LogService } from '../../_services/log.service';
+import { MessageService } from '../../_services/message.service';
 
 
 
@@ -46,15 +48,16 @@ export class CalendarDayCardFormViewComponent implements OnInit {
 
   @Input({required: true}) txt!: { [key: string]: string };
   @Input({required: true}) contacttxt!: { [key: string]: string };
-  @Input({required: true}) issuetxt!: { [key: string]: string };
   @Input({required: true}) eventtxt!: { [key: string]: string };
 
   @Input({required: true}) timeSpans!: Array<Event>;
 
-  @Input({required: true}) options!: Array<ConfigurationOption>;
+  //
+  @Input() options: Array<ConfigurationOption> | undefined;
+  // opts are needed if event is updateable
+  @Input() opts: IEventOptions | undefined;
   // startHour, timeSlize, defaultIntervalSize are model parameters, managed by event-day-component
-  @Input({required: true}) opts!: IEventOptions;
-  @Input({required: true}) userOpts!: IUserEventOptions;
+  @Input() userOpts: IUserEventOptions | undefined;
 
   // contact and issue which are selected for event entry
   @Input({required: true}) sessionContact!: Contact | undefined;
@@ -63,7 +66,6 @@ export class CalendarDayCardFormViewComponent implements OnInit {
   @Input({required: true}) eventContainer!: {updateType: UpdateType, event: Event, d: Date | null};
 
   @Input({required: true}) events!: Array<Event>;
-  @Input({required: true}) eventsChangeCounter!: number;
 
   // if event is to be shifted to another date we use targetEvents and targetCalendarDay
   @Input({required: true}) targetEvents!: Array<Event> | null;
@@ -106,8 +108,6 @@ export class CalendarDayCardFormViewComponent implements OnInit {
   cardFormEvents!: Array<Event>;
 
   contactChoices!: Array<INumChoice>;
-  // ixSet is the contactChoices array index of the element which is actually joined to event
-  ixSet!: number;
   // isSelected is the contactChoices array index of the element which is shown as selected element
   ixSelected!: number;
 
@@ -148,7 +148,10 @@ export class CalendarDayCardFormViewComponent implements OnInit {
   public dateOpts!: IAngularMyDpOptions;
   public dateEndOpts!: IAngularMyDpOptions;
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder,
+        private logger: LogService,
+        private message: MessageService
+  ) {
     // we init the form to avoid errors. Content is set with the various setXxx functions
     this.thisForm = this.fb.group({});
   }
@@ -162,18 +165,46 @@ export class CalendarDayCardFormViewComponent implements OnInit {
       // we assure that only events of this day, previous day, reaching to this day and first event of next day are in allEvents
       this.cardFormEvents = GlobalFunctions.buildEvents(this.events, this.calendarDay, true, true);
     }
+
+    // for testing setShow mode
+    // this.eventContainer.updateType = UpdateType.setShow;
     // console.log('event-container', this.eventContainer);
+
+    let errorMessage = '';
     switch (updateType) {
       case UpdateType.update:
-        this.prepareUpdate(event);
+        if (event && this.session && this.session.isPlanMaint) { 
+          this.prepareUpdate(event)
+        } else {
+          errorMessage = 'internal error - update parameters missing';
+        }
         break;
       case UpdateType.insert:
-        if (d) this.prepareInsert(event, d);
+        if (event && d && this.session && this.session.isPlanMaint) { 
+          this.prepareInsert(event, d);
+        } else {
+          errorMessage = 'internal error - insert parameters missing';
+        }
         break;
+      case UpdateType.setShow:
+        if (event) { 
+          this.prepareShow(event);
+        } else {
+          errorMessage = 'internal error - no event to show';
+        }
+        break;
+      default:
+        errorMessage = 'internal error - wrong update parameter';
     }
-    this.loadErrorMessages();
-    this.initThisForm();
-    this.positionViewport();
+    if (errorMessage !== '') {
+      this.message.info(errorMessage);
+      this.logger.error(this.session, this.name, errorMessage);
+      this.cardFormCancel.emit();
+    } else {
+      this.loadErrorMessages();
+      this.initThisForm();
+      this.positionViewport();
+    }
   }
 
   ngOnChanges(changes: {[propKey: string]: SimpleChange}) {
@@ -294,7 +325,6 @@ export class CalendarDayCardFormViewComponent implements OnInit {
   private setContactChoices() {
     this.contactChoices = [];
     this.ixSelected = -1;
-    this.ixSet = 0;
     const {updateType, event, d} = this.eventContainer;
     // choice value 0 is event is not assigned exists anyway
     this.contactChoices.push({value: 0, 
@@ -303,23 +333,21 @@ export class CalendarDayCardFormViewComponent implements OnInit {
     if (event.contactNr > 0 ) {
       this.contactChoices.push({value: event.contactNr,
         text: event.eventInfo?.contactDisplayName?.substring(0,50) ?? ``, 
-        isSelected: !this.sessionContact || this.sessionContact?.contactNr === 0 || this.sessionContact.contactNr === event.contactNr
+        isSelected: true
       });
-      // ixSet is set to the legacy joined contact
-      this.ixSet = 1;
+      this.ixSelected = 1;
     }
 
     // choice  contact selected in this session - if not already shown as contact
     if (this.sessionContact && this.sessionContact?.contactNr > 0 && this.sessionContact.contactNr !== event.contactNr) {
       this.contactChoices.push({value: this.sessionContact.contactNr,
-        text: this.sessionContact.displayName?.substring(0,30) ?? ``, isSelected: true
+        text: this.sessionContact.displayName?.substring(0,30) ?? ``, 
+        isSelected: false
       });
     } // end check eventIssues length
 
-    if (this.contactChoices[this.contactChoices.length - 1].isSelected) {
-        this.ixSelected = this.contactChoices.length - 1;
-    }
-    if (this.ixSelected < 0 && this.contactChoices.length > 0 && UpdateType.update) {
+    if (this.ixSelected < 0 && this.contactChoices.length > 0) {
+      this.contactChoices[0].isSelected = true;
       this.ixSelected = 0;
     }
   }
@@ -346,7 +374,7 @@ export class CalendarDayCardFormViewComponent implements OnInit {
       this.addDpOptions(event);
     }
     this.event.cardElement = {spaceBefore, spaceAfter,
-       isTemporary: false, isSummaryUpdated: false, eventDurationDisplay, contactDisplayNr: '', contactDisplayName: ''};
+       isTemporary: false, isSummaryEntered: false, isSummaryUpdated: false, eventDurationDisplay, contactDisplayNr: '', contactDisplayName: ''};
     if (event.type < EventType.timeSpanUndefined) {
       this.buildShiftChoices();
     } else {
@@ -368,40 +396,58 @@ export class CalendarDayCardFormViewComponent implements OnInit {
    */
   private prepareInsert(event: Event, d: Date) {
     this.event = event;
-    if (this.event.type < EventType.timeSpanUndefined) {
-      // if we have empty event from grid or temporary inserted event from eventCard
-      if (this.event.eventDuration === undefined || event.eventDuration === null || event.eventDuration === 0) {
-        this.event.type = this.session.isPlan ? EventType.plan : EventType.actual;
-        this.event.eventBegin = d;
-        this.event.eventDuration = this.opts.defaultIntervalLength;
-        this.event.eventEnd = GlobalFunctions.addMinutes(this.event.eventBegin, this.event.eventDuration);
+    if (this.opts) {
+      if (this.event.type < EventType.timeSpanUndefined) {
+        // if we have empty event from grid or temporary inserted event from eventCard
+        if (this.event.eventDuration === undefined || event.eventDuration === null || event.eventDuration === 0) {
+          this.event.type = this.session.isPlan ? EventType.plan : EventType.actual;
+          this.event.eventBegin = d;
+          this.event.eventDuration = this.opts.defaultIntervalLength;
+          this.event.eventEnd = GlobalFunctions.addMinutes(this.event.eventBegin, this.event.eventDuration);
+        }
+        const nextEvent: Event | null = GlobalFunctions.getNextEvent(this.cardFormEvents, this.event.eventBegin);
+        if (nextEvent && GlobalFunctions.isMinuteEarlier(nextEvent.eventBegin, this.event.eventEnd )) {
+          this.event.eventEnd = nextEvent.eventBegin;
+        }
+        this.event.eventDuration = GlobalFunctions.getDateInMinutes(this.event.eventEnd)
+        - GlobalFunctions.getDateInMinutes(this.event.eventBegin);
+        // @deprecated this.event.isUpdated = true;
+        const eventDurationDisplay = GlobalFunctions.minutesDisplay(this.event.eventDuration);
+        const spaceBefore = GlobalFunctions.getSpaceBefore(this.event.eventBegin, this.cardFormEvents,  this.calendarDay);
+        const spaceAfter = GlobalFunctions.getSpaceAfter(this.event.eventEnd, this.cardFormEvents,  this.calendarDay);
+        this.event.cardElement = {isTemporary: false, isSummaryEntered: false, isSummaryUpdated: false, spaceBefore, spaceAfter, eventDurationDisplay,
+          contactDisplayNr: '', contactDisplayName: ''};
+      } else {
+        this.event.eventBegin = GlobalFunctions.getStartOfDay(d);
+        // duration in time span is built dynamically - event.eventDuration is set to 0
+        this.event.eventDuration = 0;
+        // end is set to begin of next day
+        this.event.eventEnd = GlobalFunctions.addDays(this.event.eventBegin, 1);
+        this.beginDisplay = formatDate(this.event.eventBegin, 'EEE d.MM.yyyy', this.locale);
+        this.days = 1;
+        const eventDurationDisplay = GlobalFunctions.minutesDisplay(GlobalFunctions.getDateInMinutes(this.event.eventEnd) - GlobalFunctions.getDateInMinutes(this.event.eventBegin));
+        this.event.cardElement = {isTemporary: false, isSummaryEntered: false, isSummaryUpdated: false, spaceBefore: 0, spaceAfter: 0, eventDurationDisplay,
+          contactDisplayNr: '', contactDisplayName: ''};
+        this.addDpOptions(event);
       }
-      const nextEvent: Event | null = GlobalFunctions.getNextEvent(this.cardFormEvents, this.event.eventBegin);
-      if (nextEvent && GlobalFunctions.isMinuteEarlier(nextEvent.eventBegin, this.event.eventEnd )) {
-        this.event.eventEnd = nextEvent.eventBegin;
-      }
-      this.event.eventDuration = GlobalFunctions.getDateInMinutes(this.event.eventEnd)
-      - GlobalFunctions.getDateInMinutes(this.event.eventBegin);
-      // @deprecated this.event.isUpdated = true;
-      const eventDurationDisplay = GlobalFunctions.minutesDisplay(this.event.eventDuration);
-      const spaceBefore = GlobalFunctions.getSpaceBefore(this.event.eventBegin, this.cardFormEvents,  this.calendarDay);
-      const spaceAfter = GlobalFunctions.getSpaceAfter(this.event.eventEnd, this.cardFormEvents,  this.calendarDay);
-      this.event.cardElement = {isTemporary: false, isSummaryUpdated: false, spaceBefore, spaceAfter, eventDurationDisplay,
-        contactDisplayNr: '', contactDisplayName: ''};
-    } else {
-      this.event.eventBegin = GlobalFunctions.getStartOfDay(d);
-      // duration in time span is built dynamically - event.eventDuration is set to 0
-      this.event.eventDuration = 0;
-      // end is set to begin of next day
-      this.event.eventEnd = GlobalFunctions.addDays(this.event.eventBegin, 1);
-      this.beginDisplay = formatDate(this.event.eventBegin, 'EEE d.MM.yyyy', this.locale);
-      this.days = 1;
-      const eventDurationDisplay = GlobalFunctions.minutesDisplay(GlobalFunctions.getDateInMinutes(this.event.eventEnd) - GlobalFunctions.getDateInMinutes(this.event.eventBegin));
-      this.event.cardElement = {isTemporary: false, isSummaryUpdated: false, spaceBefore: 0, spaceAfter: 0, eventDurationDisplay,
-        contactDisplayNr: '', contactDisplayName: ''};
-      this.addDpOptions(event);
     }
   }
+
+    /**
+   * prepareShow 
+   * @param event (from eventContainer) 
+   *   special handling if event.type >= EventType.timeSpanUndefined (time span, without begin time and end time)
+   */
+   private prepareShow(event: Event) {
+    this.event = event;
+    let spaceBefore = 0;
+    let spaceAfter = 0;
+    const eventDurationDisplay = GlobalFunctions.minutesDisplay(this.event.eventDuration);
+    this.event.cardElement = {spaceBefore, spaceAfter,
+       isTemporary: false, isSummaryEntered: false, isSummaryUpdated: false, eventDurationDisplay, contactDisplayNr: '', contactDisplayName: ''};
+    this.dpDisabled = true;
+  }
+
 
   // only used at real events to have choices when shifting this events
   private buildShiftChoices() {
@@ -447,20 +493,27 @@ export class CalendarDayCardFormViewComponent implements OnInit {
           Validators.maxLength(255)
           ]
         ],
-        locationType: [this.event?.locationType],
+        locationType: [{
+          value: this.event?.locationType, 
+          disabled: this.eventContainer.updateType === UpdateType.setShow
+        }],
         description: [this.eventContainer.updateType === UpdateType.insert ? '' : this.event.description],
         location: [this.eventContainer.updateType === UpdateType.insert ? '' : this.event.location, [
           Validators.maxLength(255)
           ]
         ],
-        category: [this.event?.type >= EventType.timeSpanUndefined ? (this.event.type % 10).toString() : '']
+        issueNr: [this.event?.issueNr],
+        category: [{
+          value: this.event?.type >= EventType.timeSpanUndefined ? (this.event.type % 10).toString() : '', 
+          disabled: this.eventContainer.updateType === UpdateType.setShow
+        }]
       })
     });
     this.onChangesEventType();
     this.thisForm.statusChanges.subscribe(() => this.updateErrorMessages());
   }
 
-private onChangesEventType() {
+  private onChangesEventType() {
     this.thisForm.get('bodyGroup.category')?.valueChanges
     .subscribe(category => {
       const ix = this.timeSpanTypeChoices.findIndex(_ => _.value === category);
@@ -491,18 +544,20 @@ private onChangesEventType() {
    * @returns eventually corrected end time
    */
   private getNewEnd(begin: Date, end: Date, eventId: number): Date {
-    let nextEvent: Event | null = GlobalFunctions.getNextEvent(this.cardFormEvents, begin);
-    // if we get this processed event as next event we search for real next event
-    if (nextEvent && eventId === nextEvent.eventId) {
-      nextEvent = GlobalFunctions.getNextEvent(this.cardFormEvents, GlobalFunctions.addMinutes(nextEvent.eventBegin, 1));
-    }
-    // if overlapping, eventEnd is set to begin of next event, duration is shortened
-    if (nextEvent && GlobalFunctions.isMinuteEarlier(nextEvent.eventBegin, end )) {
-      end = nextEvent.eventBegin;
-    }
-    // duration must not exceed this.opts.maxIntervalLength
-    if (GlobalFunctions.isMinuteEarlier(GlobalFunctions.addMinutes(begin, this.opts.maxIntervalLength), end)) {
-      end = GlobalFunctions.addMinutes(begin, this.opts.maxIntervalLength);
+    if (this.opts) {
+      let nextEvent: Event | null = GlobalFunctions.getNextEvent(this.cardFormEvents, begin);
+      // if we get this processed event as next event we search for real next event
+      if (nextEvent && eventId === nextEvent.eventId) {
+        nextEvent = GlobalFunctions.getNextEvent(this.cardFormEvents, GlobalFunctions.addMinutes(nextEvent.eventBegin, 1));
+      }
+      // if overlapping, eventEnd is set to begin of next event, duration is shortened
+      if (nextEvent && GlobalFunctions.isMinuteEarlier(nextEvent.eventBegin, end )) {
+        end = nextEvent.eventBegin;
+      }
+      // duration must not exceed this.opts.maxIntervalLength
+      if (GlobalFunctions.isMinuteEarlier(GlobalFunctions.addMinutes(begin, this.opts.maxIntervalLength), end)) {
+        end = GlobalFunctions.addMinutes(begin, this.opts.maxIntervalLength);
+      }
     }
     return end;
   }
@@ -631,7 +686,7 @@ private onChangesEventType() {
 
   public setShowTimeChange(type: number) {
     this.changeType = type;
-    if (this.event.cardElement) {
+    if (this.event.cardElement && this.eventContainer.updateType !== UpdateType.setShow) {
       this.event.cardElement.isShowTimeChange = true;
     }
   }
@@ -663,8 +718,6 @@ private onChangesEventType() {
   public setContactInfo() {
     this.isContactInfo = !this.isContactInfo;
   }
-
-
 
   // if type of angular-mydatepicker is hidden, this function is obsolete
   public onInputFieldChanged(event: IMyInputFieldChanged): void {
@@ -718,62 +771,69 @@ private onChangesEventType() {
     }
   }
 
-  public selectAnotherContact(event: any) {
+  public selectContact(event: any) {
     if (event.target.value && Number(event.target.value) >= 0) {
       this.ixSelected = this.contactChoices.findIndex(_ => _.value === Number(event.target.value));
+      // ixSelected 0 refers to "not assigned"
+      if (this.ixSelected > 0) {
+        if (this.eventContainer.event.contactNr > 0 && this.eventContainer.event.contactNr === this.contactChoices[this.ixSelected].value ) {
+          this.event.eventInfo = this.eventContainer.event.eventInfo
+        } else if (this.session.contactNr > 0 && this.contactChoices[this.ixSelected].value === this.session.contactNr) {
+          const contact = this.sessionContact;
+          if (contact && this.event) {
+            if (!this.event.eventInfo) {
+              this.event.eventInfo = {contactNr: 0};
+            }
+            this.event.eventInfo.contactNr = contact.contactNr;
+            this.event.eventInfo.contactDisplayNr = contact.displayNr;
+            this.event.eventInfo.contactDisplayName = contact.displayName;
+            this.event.eventInfo.companyName = contact.companyName;
+            this.event.eventInfo.street = contact.contactStreet ?? contact.street;
+            this.event.eventInfo.city = contact.contactCity ?? contact.city;
+            this.event.eventInfo.plz = contact.contactPlz ?? contact.plz;
+            this.event.eventInfo.contactColor = contact.contactColor;
+          }
+        }
+      }
     }
   }
 
-  public setAnotherContact() {
-    this.ixSet = this.ixSelected >= 0 ? this.ixSelected : this.ixSet;
-  }
 
-
+  // we allow submit only in update and insert mode ....
   public submitForm() {
-    this.event.summary = this.thisForm.value.bodyGroup.summary;
-    this.event.locationType = Number(this.thisForm.value.bodyGroup.locationType);
-    this.event.description = this.thisForm.value.bodyGroup.description;
-    this.event.location = this.thisForm.value.bodyGroup.location;
-    this.event.contactNr = this.contactChoices[this.ixSet].value
-    if (this.event.type < EventType.timeSpanUndefined) {
-      // when updating real events (type < EventType.timeSpanUndefined) it might be that there are associated events where contact, issue should also be updated
-      if (this.eventContainer.updateType !== UpdateType.insert
-        && this.event.contactNr !== this.eventContainer.event.contactNr) {
-        this.eventUpdateAssoc.emit({updateType: this.eventContainer.updateType, event: this.event});
+    if (this.eventContainer.updateType === UpdateType.insert || this.eventContainer.updateType === UpdateType.update) {
+      this.event.summary = this.thisForm.value.bodyGroup.summary;
+      this.event.locationType = Number(this.thisForm.value.bodyGroup.locationType);
+      this.event.description = this.thisForm.value.bodyGroup.description;
+      this.event.location = this.thisForm.value.bodyGroup.location;
+      this.event.issueNr = Number(this.thisForm.value.bodyGroup.issueNr);
+      this.event.contactNr = this.contactChoices[this.ixSelected].value;
+      if (this.event.type < EventType.timeSpanUndefined) {
+        // when updating real events (type < EventType.timeSpanUndefined) it might be that there are associated events where contact, issue should also be updated
+        if (this.eventContainer.updateType !== UpdateType.insert
+          && this.event.contactNr !== this.eventContainer.event.contactNr) {
+          this.eventUpdateAssoc.emit({updateType: this.eventContainer.updateType, event: this.event});
+        } else {
+          this.eventUpdate.emit({updateType: this.eventContainer.updateType, event: this.event});
+        }
       } else {
-        this.eventUpdate.emit({updateType: this.eventContainer.updateType, event: this.event});
+        let category = Number(this.thisForm.value.bodyGroup.category);
+        if (category === 0 && this.timeSpanTypeChoices.length > 0) {
+          category = Number(this.timeSpanTypeChoices[0].value);
+        }
+        this.event.type = EventType.timeSpanUndefined + category;
+        const ix = this.timeSpanTypeChoices.findIndex(_ => _.value === this.thisForm.value.bodyGroup.category);
+        if (ix >= 0) {
+          this.style = this.timeSpanTypeChoices[ix].style ?? {};
+        } else {
+          this.style = {};
+        }
+        this.timeSpanUpdate.emit({updateType: this.eventContainer.updateType, event: this.event});
       }
-    } else {
-      let category = Number(this.thisForm.value.bodyGroup.category);
-      if (category === 0 && this.timeSpanTypeChoices.length > 0) {
-        category = Number(this.timeSpanTypeChoices[0].value);
-      }
-      this.event.type = EventType.timeSpanUndefined + category;
-      const ix = this.timeSpanTypeChoices.findIndex(_ => _.value === this.thisForm.value.bodyGroup.category);
-      if (ix >= 0) {
-        this.style = this.timeSpanTypeChoices[ix].style ?? {};
-      } else {
-        this.style = {};
-      }
-      this.timeSpanUpdate.emit({updateType: this.eventContainer.updateType, event: this.event});
     }
-
   }
 
   public setDone(): void {
-    /*
-    if (this.event.doneId > 0 && confirm(this.txt['reset'] + ' ' + this.txt['done'] + '?')) {
-      this.event.doneId = 0;
-      this.submitForm();
-    } else if (!(this.event.doneId > 0)) {
-      if (this.isAfterToday) {
-        alert(this.txt['set_to'] + ' ' + this.txt['done'] + ' ' + this.txt['not_allowed']);
-      } else if (confirm(this.txt['set_to'] + ' ' + this.txt['done'] + '?')) {
-        this.event.doneId = this.event.eventId;
-        this.submitForm();
-      }
-    }
-    */
     if (this.event.doneId > 0) {
       this.event.doneId = 0;
     }  else if (!(this.event.doneId > 0)) {
@@ -799,7 +859,6 @@ private onChangesEventType() {
         }
       }
     }
-
   }
 
   public cancelUpdates(): void {
@@ -837,6 +896,3 @@ private onChangesEventType() {
   }
 
 }
-
-
-

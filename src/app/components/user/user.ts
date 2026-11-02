@@ -49,6 +49,7 @@ export class UserComponent {
 
   @Output() userSelect = new EventEmitter<number>();
   @Output() userUpdated = new EventEmitter<number>();
+  @Output() adminMode = new EventEmitter();
   @Output() userClose = new EventEmitter();
 
   // user for maintenance or show form - if null, and isMaint is true, user-form switches to isNew mode
@@ -161,6 +162,11 @@ constructor(@Inject(LOCALE_ID) public locale: string,
 
  /** --------------------------  public methods -------------------------------------------- */
 
+  public setAdminMode() {
+    this.adminMode.emit();
+  }
+
+ 
   public return() {
     this.userClose.emit();
   }

@@ -47,7 +47,7 @@ public name = 'StatusComponent';
         {text: 'admin', value: 'admin', isSelected: this.session.app === App.admin},
         // no change to server mode
         // {text: 'server - user', value: 'server', isSelected: true},
-        {text: 'local -user', value: 'local', isSelected: this.session.app === App.local}
+        {text: 'local-user', value: 'local', isSelected: this.session.app === App.local}
       ];
       this.languageChoices = Object.keys(Language)
       .filter((k: any) => typeof Language[k] === 'number' && Number(Language[k]) > 0)

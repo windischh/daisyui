@@ -49,7 +49,7 @@
         <!-- user info -->
         <li>
           @if (app === App.admin) {
-            <a class="item">
+            <a class="item" (click)="setUserMode()">
               <div class="text-xs tooltip tooltip-left tooltip-accent" [attr.data-tip]="auth.txt['admin_mode']">
                 {{auth.txt['user']}}: {{userName}}
               </div>
@@ -134,7 +134,8 @@
       @if (c['user']?.isAutoSelected) {
         <dsy-user [userId]="userId"
           [isMaint]="true" [isCreate]="isCreateUser" [userComponentUsage]="c['user']?.usage ?? ''"
-          (userClose)="closeUserComponent()" (userUpdated)="updateUser($event)"
+          (userClose)="closeUserComponent()" (adminMode)="setUserAdminMode()"
+          (userUpdated)="updateUser($event)"
           (userSelect)="selectUser($event)" >
         </dsy-user>
       }

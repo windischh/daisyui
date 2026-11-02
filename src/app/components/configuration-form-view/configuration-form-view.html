@@ -57,7 +57,7 @@
               @for (s of styleChoices; track s) {
                 <option [value]="s.value"
                   [selected]="s.isSelected">
-                  {{s.value}} - {{s.text}}
+                  {{s.value >= 0 ? s.value+' - ' : ''}}{{s.text}}
                 </option>
               }
             </select>

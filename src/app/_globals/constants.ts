@@ -32,12 +32,39 @@ const VERDANA_FONT = 'Verdana, Geneva, sans-serif';
 const COLOR_SELECTED = 'Green';
 const COLOR_UNSELECTED = 'Gray';
 
+/*
+TLWND_COLOR_ is defined here for tailwindCSS precompiler reason
+all color variables defined here can be used in configuration data
+in the form: var(--color-red-300)
+
+ATTN: constants - as TLWND_COLOR_RED_300 - can NOT be used as attributes in configuration data ...
+could  be used in source code, in style definitions in form of var(TLWND_COLOR_RED_300)
+but we will 
+*/
+
+const TLWND_COLOR_BLUE_100 = 'var(--color-blue-100)';
+const TLWND_COLOR_BLUE_200 = 'var(--color-blue-200)';
+const TLWND_COLOR_BLUE_300 = 'var(--color-blue-300)';
+const TLWND_COLOR_RED_100 = 'var(--color-red-100)';
+const TLWND_COLOR_RED_200 = 'var(--color-red-200)';
+const TLWND_COLOR_RED_300 = 'var(--color-red-300)';
+
+/*
+DAISY_COLOR_ is defined here for tailwindCSS precompiler reason
+*/
+
+const DAISY_COLOR_BASE_100 = 'var(--color-base-100)';
+const DAISY_COLOR_BASE_200 = 'var(--color-base-200)';
+const DAISY_COLOR_BASE_300 = 'var(--color-base-300)';
+
 
 const CLICK = 'click';
 const KEYUP = 'keyup';
 const BLUR = 'blur';
 
+/* grösser MOBILE entspricht md: in tailwindCSS */
 const WINDOW_WIDTH_MOBILE = 768;
+/* grösser TABLET entspricht - ungefähr -  lg:: in tailwindCSS - das setzt bei  1024px an ... */
 const WINDOW_WIDTH_TABLET = 992;
 
 /**
@@ -333,7 +360,7 @@ const TXT_BASE: string[] = [
   'to_email',
   'select_all_for_insert',
   'enter_a_number',
-  'eventCalendar',
+  'calendar',
   'userEvents',
   'store',
   'permanent',
@@ -741,6 +768,15 @@ export {
   VERDANA_FONT,
   COLOR_SELECTED,
   COLOR_UNSELECTED,
+  TLWND_COLOR_BLUE_100,
+  TLWND_COLOR_BLUE_200,
+  TLWND_COLOR_BLUE_300,
+  TLWND_COLOR_RED_100,
+  TLWND_COLOR_RED_200,
+  TLWND_COLOR_RED_300,
+  DAISY_COLOR_BASE_100,
+  DAISY_COLOR_BASE_200,
+  DAISY_COLOR_BASE_300,
   CLICK,
   KEYUP,
   BLUR,

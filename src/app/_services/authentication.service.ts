@@ -379,7 +379,7 @@ export class AuthenticationService {
   /**
    * getUserData()
    *  get user data from local storage
-   * @param userId id of user - if userId is 0, then we get data from session user
+   * @param userId id of user - if userId is 0, then we get data from session user - except for configuration data 
    * @param item name of local storage item
    * @param comp name of calling component
    * @returns userData element which is stored in local storage for the session user with item name (at least a empty user data element)
@@ -387,17 +387,25 @@ export class AuthenticationService {
   public getUserData(userId: number, item: string, comp: string): UserData {
     // first we get all elements as userData
     let userData: Array<UserData> = [];
+    let userDataElement = UserDataFactory.empty();
     const userDataString = localStorage.getItem(item);
     if (userDataString && userDataString !== '') {
       const userDataRaw: Array<UserDataRaw> = JSON.parse(userDataString);
       if (userDataRaw?.length > 0) {
         userData = userDataRaw.map(_ => UserDataFactory.fromObject(_));
       }
+      // in case of configuration we have no users ...
+      if (item ==='configurationOptions') {
+        if (userData.length > 0) {
+          userDataElement = userData[0];
+        }
+        return userDataElement;
+      }
     }
-    let userDataElement = UserDataFactory.empty();
     let userToken = 0;
-    // now we select element for user
-    if (userId > 0) {
+    let isConfiguration = false;
+     if (userId > 0 ) {
+      // now we select element for user
       const user = this.getUser(userId, comp);
       userToken = user?.userToken ?? 0;
     } else {
@@ -407,7 +415,7 @@ export class AuthenticationService {
         userToken = session.userToken;
       }
     }
-    if (userId > 0)  {
+     if (userId > 0)  {
       userDataElement.userId = userId;
       userDataElement.userToken = userToken;
       if (userData?.length > 0) {
@@ -435,7 +443,7 @@ export class AuthenticationService {
    /**
    * setUserData()
    *  set user data in local storage
-   * @param userId id of user - if userId is 0, then we set data  of session user
+   * @param userId id of user - if userId is , then we set data  of session user - except gor configuration dara
    * @param item name of local storage item
    * @param userDataElement  element of userdata - we expect it has userId of session
    * @param comp name of calling component
@@ -443,6 +451,16 @@ export class AuthenticationService {
    */
   public setUserData(userId: number, item: string, userDataElement: UserData, comp: string): boolean {
     let userToken = 0;
+    // configurtion is valid for all uesers...
+    if (item === 'configurationOptions') {
+      let userData: Array<UserData> = [];
+      userData.push(userDataElement);
+      userData[0].userId = 0;
+      userData[0].lastModified = new Date();
+      userData[0].userToken = userToken;
+      localStorage.setItem(item, JSON.stringify(userData));
+      return true;
+    }
     if (userId > 0) {
       const user = this.getUser(userId, comp);
       userToken = user?.userToken ?? 0;
@@ -892,6 +910,7 @@ export class AuthenticationService {
   }
 
   /**
+   * @deprecated
    * setUserOption()
    *  sets a certain user option
    * @param userEventOptions options as basis for update

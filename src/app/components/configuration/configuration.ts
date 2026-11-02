@@ -216,7 +216,7 @@ export class ConfigurationComponent implements OnInit {
       isAreaMaint = area.optionArea === ConfigurationArea[5] || area.optionArea === ConfigurationArea[7] || area.optionArea === ConfigurationArea[10]
       ? true
       : isAreaMaint;
-      // invoicePrint (and maybe other) areas with styles are defined by configurationStyleEnum
+      // calendar (and maybe other - eventExport) areas with styles are defined by configurationStyleEnum
       if (Object.keys(this.configurationStyleEnum).filter(_ => _ === area.optionArea).length === 1 ) {
         const stylesCount = await this.configurationService.getStylesCount(area.optionArea, this.name);
         const styles = Object.entries(stylesCount).length;

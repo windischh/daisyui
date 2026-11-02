@@ -237,8 +237,9 @@ private buildAuthorizations(userId: number): Array<IAuthorization> {
       if (!user.userEventOptions) {
         // options are read from configuration file ...
         const options = await this.configurationService.getConfigurationOptions(this.name);
-        // user event options are initialized with options of actual session user!!
-        user.userEventOptions = ConfigurationOptionHandlingFunctions.initializeUserEventOptions(options);
+        const activeOptions = options.filter(_ => _.status < 9);
+        // user event options are initialized with actual  options
+        user.userEventOptions = ConfigurationOptionHandlingFunctions.initializeUserEventOptions(activeOptions);
       }
       users.push(user);
       this.auth.setUsers(users, comp);
@@ -494,7 +495,7 @@ private buildAuthorizations(userId: number): Array<IAuthorization> {
    * @param comp name of calling component
    * @returns timeSpans  (only active timeSpans are returned)
    */
-   public async getRecurringTimeSpanRange(userId: number, fromDate: Date, toDate: Date, comp: string): Promise<Array<Event>> {
+   public getRecurringTimeSpanRange(userId: number, fromDate: Date, toDate: Date, comp: string): Array<Event> {
     let timeSpans: Array<Event>;
     timeSpans = this.getRecurringTimeSpans(userId, comp);
     let isRebuild = false;

@@ -46,8 +46,7 @@ export class CalendarDayGridViewComponent implements OnInit {
   @Input({required: true}) actualEvents!: Array<Event>;
   @Input({required: true}) planEvents!: Array<Event>;
   @Input({required: true}) linkedUserEvents!: Array<Event>;
-  @Input({required: true}) eventsChangeCounter!: number;
-  @Input({required: true}) timeSpanChangeCounter!: number;
+  @Input({required: true}) calendarDayChangeCounter!: number;
 
   @Input({required: true}) isSelecting!: boolean;
 
@@ -87,8 +86,8 @@ export class CalendarDayGridViewComponent implements OnInit {
   isShowBeforeStartHour = false;
   isShowAfterLastHour = false;
 
-  // styles are set from optionGroupEventCalendar - here we set just the default options:
-  styles = {
+  // configurableStyles are set from optionGroupcalendar - here we set just the default options:
+  configurableStyles = {
     // 010
     tableBgStyle:  {
       'width': '70%'
@@ -156,7 +155,7 @@ export class CalendarDayGridViewComponent implements OnInit {
     },
     // 407
     // attn: background-color is set from color scheme of contact
-    custStyle : {
+    contactStyle : {
       'font-size': '50%',
       'font-weight': 'bold'
     },
@@ -165,19 +164,10 @@ export class CalendarDayGridViewComponent implements OnInit {
     isShowLocation: false,
     isShowDescription: false,
     isShowTimeColumn: false,
-    isShowCustIssueColumn: false
+    isShowContactColumn: false
   };
 
   // component specific overrides of styles
-
-  rowBottomNoPaddingStyle = {
-    'padding-bottom': '0'
-  }
-
-  leftIconStyle =  {
-    'padding-left': '0',
-    'margin-left' : '-10px'
-  }
 
   eventElementStyle!: { [key: string]: any };
   actualEventStyle!: { [key: string]: any };
@@ -186,14 +176,45 @@ export class CalendarDayGridViewComponent implements OnInit {
   locationStyle!: { [key: string]: any };
   descriptionStyle!: { [key: string]: any };
 
+  // this styles are not configurable by configurationOptions
+
+  timeHeaderStyle = {
+    'border-bottom' :  'thin solid'
+  }
+
   planHeaderBoldStyle = {
     'cursor':  'pointer',
-    'font-weight':  'bold'
+    'font-weight':  'bold',
+    'border-bottom' :  'thin solid'
   }
 
   planHeaderNormalStyle = {
     'cursor':  'pointer',
-    'font-weight':  'normal'
+    'font-weight':  'normal',
+    'border-bottom' :  'thin solid'
+  }
+
+  // elStyle for time spans
+  timeSpanElementStyle =  {
+      'background-color': WHITE_SMOKE
+  };
+
+  // this is the basic style - width is recalculated depending on timeSlize
+  eventElementBorderTopSytle = {
+    'border-top-width' :  'thick',
+    'border-top-style' :  'solid',
+    'padding' : '0.1em'
+  }
+
+  eventElementBorderBottomSytle = {
+    'border-bottom-width' :  'thick',
+    'border-bottom-style' :  'solid',
+    'padding' : '0.1em'
+  }
+
+  leftIconStyle =  {
+    'padding-left': '0',
+    'margin-left' : '-10px'
   }
 
   expandIconStyle = {
@@ -219,24 +240,16 @@ export class CalendarDayGridViewComponent implements OnInit {
   ngOnChanges(changes: {[propKey: string]: SimpleChange}) {
     let isSetEvents = false;
     for (const [propKey, propValue] of Object.entries(changes)) {
-      if (propKey === 'opts' || propKey === 'options' || propKey === 'eventsChangeCounter') {
+      if (propKey === 'opts' || propKey === 'options' || propKey === 'calendarDayChangeCounter') {
         // this.opts = propValue.currentValue;
         if (this.session.calendarDay && this.userOpts) {
           this.loadOptions();
-          isSetEvents = true;
-        }
-      }
-      if (propKey === 'timeSpanChangeCounter') {
-        if (this.session.calendarDay && this.userOpts) {
-          isSetEvents = true;
+          if (this.actualEvents  && this.planEvents  && this.timeSpans) {
+             this.buildGrids();
+          }
         }
       }
       // console.log('event-day-grid propkey: ', propKey, 'propvalue: ', JSON.stringify(propValue));
-    }
-    if (isSetEvents) {
-      if (this.actualEvents  && this.planEvents  && this.timeSpans) {
-        this.buildGrids();
-      }
     }
   }
 
@@ -258,21 +271,21 @@ export class CalendarDayGridViewComponent implements OnInit {
 
       // we override some styles
 
-      const {...eventElementStyles} = this.styles.eventElementStyle;
+      const {...eventElementStyles} = this.configurableStyles.eventElementStyle;
       // we override cursor behaviour
       this.eventElementStyle = {...eventElementStyles, 'cursor':  'pointer'};
 
-      const {...eventStyles} = this.styles.eventStyle;
+      const {...eventStyles} = this.configurableStyles.eventStyle;
       // we override font-weight according to isPlan selected or not
       // and margin-left to shift text at the left border of element (in the moment not ative)
       // this.actualEventStyle = this.session.isPlan? {...eventStyles, 'font-weight':  'normal', 'margin-left' : '-6px'} : {...eventStyles, 'font-weight':  'bold', 'margin-left' : '-6px'};
       this.actualEventStyle = this.session.isPlan? {...eventStyles, 'font-weight':  'normal'} : {...eventStyles, 'font-weight':  'bold'};
       this.planEventStyle = this.session.isPlan? {...eventStyles, 'font-weight':  'bold'} : {...eventStyles, 'font-weight':  'normal'};
 
-      const {...locationStyles} = this.styles.locationStyle;
+      const {...locationStyles} = this.configurableStyles.locationStyle;
       this.locationStyle =  {...locationStyles,  'margin-top': '-10px'};
 
-      const {...descriptionStyles} = this.styles.descriptionStyle;
+      const {...descriptionStyles} = this.configurableStyles.descriptionStyle;
       this.descriptionStyle =  {...descriptionStyles,  'margin-top': '-10px'};
     }
   }
@@ -281,7 +294,7 @@ export class CalendarDayGridViewComponent implements OnInit {
    * getOptions delivers the style options
    *
    * we use it as following:
-   * - each single option exists as property of this component (this.styles) for use in html template
+   * - each single option exists as property of this component (this.configurableStyles) for use in html template
    * - each single option can have a default value in the property definition in this component
    * - each single option is read from option values in auth
    * - if an option has no value, the read call (getStyleOption...) delivers undefined. In this case we let exisiting
@@ -296,28 +309,31 @@ export class CalendarDayGridViewComponent implements OnInit {
    *  optionGroup is  defined for each option when calling this.auth.get...)
    */
   private getOptions(style: number) {
-    // option group names: see enum OptionGroupEventCalendar
+    // option group names: see enum OptionGroupcalendar
     // option group types: see util getStyleOptionType
 
-    const area = 'eventCalendar';
+    const area = 'calendar';
     // no default group 100
     const isStylesHaveDefault = false;
     const enumStringType: { [key: string]: any } = OptionGroupCalendar;
-    const stylesStrinKeys: { [key: string]: any } = this.styles;
-    // set this.styles from eventCalendar options
-    Object.keys(this.styles)
+     // with stypeStringKeys we modify elements of this.configurableAtyles ...
+    const stylesStrinKeys: { [key: string]: any } = this.configurableStyles;
+    // set this.configurableStyles from calendar options
+    Object.keys(this.configurableStyles)
     .forEach((k: any) => {
       if (k.startsWith('is') && typeof stylesStrinKeys[k] === 'boolean') {
         const s = ConfigurationOptionBasicFunctions.getStyleOptionBoolean(this.options, area, style,
-          enumStringType['opt_eventCalendar_' + k]);
-        if (s !== undefined) {
+          enumStringType['calendar_' + k]);
+        if (s !== undefined && s !== null) {
           stylesStrinKeys[k] = s;
         }
       } else if (typeof stylesStrinKeys[k] === 'object') {
         const s = ConfigurationOptionBasicFunctions.getStyleOptionSeq(this.options, area, style,
-          enumStringType['opt_eventCalendar_' + k], isStylesHaveDefault);
-        if (s !== undefined) {
+          enumStringType['calendar_' + k], isStylesHaveDefault);
+        // console.log('option seq found: ', k);
+        if (s !== undefined && s !== null) {
           stylesStrinKeys[k] = s;
+          // console.log('set to: ', stylesStrinKeys[k]);
         }
       }
     });
@@ -325,13 +341,9 @@ export class CalendarDayGridViewComponent implements OnInit {
 
   private buildGrids() {
     this.timeSpanGrid = [];
-    // elStyle for time spans
-    let elStyle: {};
-    elStyle = {
-      'background-color': WHITE_SMOKE
-    };
-    const recGrid = this.buildTimeSpanGrid(this.timeSpans.filter(_ => _.type <= 22),  this.session.calendarDay, elStyle);
-    const spanGrid = this.buildTimeSpanGrid(this.timeSpans.filter(_ => _.type > 22),  this.session.calendarDay, elStyle);
+
+    const recGrid = this.buildTimeSpanGrid(this.timeSpans.filter(_ => _.type <= 22),  this.session.calendarDay, this.timeSpanElementStyle);
+    const spanGrid = this.buildTimeSpanGrid(this.timeSpans.filter(_ => _.type > 22),  this.session.calendarDay, this.timeSpanElementStyle);
     
     for (let i = 0; i < Math.max(recGrid.length, spanGrid.length); i++) {
       const recurring = i < recGrid.length ? recGrid[i] : null;
@@ -363,21 +375,21 @@ export class CalendarDayGridViewComponent implements OnInit {
       && GlobalFunctions.getDateInMinutes(_.eventEnd) > GlobalFunctions.getDateInMinutes(calendarDay)  ) {
         let contactDisplayNr = '';
         let contactDisplayName = '';
-        let leftCustStyle = {};
-        let rightCustStyle = {};
+        let leftContactStyle = {};
+        let rightContactStyle = {};
         let eventElementStyle: {} = GlobalFunctions.clone(elStyle);
         const category = this.timeSpanTypeColors[_.type % 10].text;
         const color = this.timeSpanTypeColors[_.type % 10].color;
         if ( _.contactNr && _.contactNr > 0) {
           contactDisplayNr = _.eventInfo?.contactDisplayNr ?? '';
           contactDisplayName = _.eventInfo?.contactDisplayName ?? '';
-          let custStyle = {};
+          let contactStyle = {};
           let eventElementStyle = {};
           if (_.eventInfo?.contactColor) {
-            custStyle = StyleFactory.getBgColorStyle(_.eventInfo.contactColor, 0, 0, GlobalFunctions.clone(this.styles.custStyle));
+            contactStyle = StyleFactory.getBgColorStyle(_.eventInfo.contactColor, 0, 0, GlobalFunctions.clone(this.configurableStyles.contactStyle));
             // leftOrderStyle and rightOrderStyle define position for custOrderLabel - independent of font size, as far as possible
-            leftCustStyle = {...custStyle, 'margin-right' : '5px'};
-            rightCustStyle = {...custStyle, 'margin-left' : '10px'};
+            leftContactStyle = {...contactStyle, 'margin-right' : '5px'};
+            rightContactStyle = {...contactStyle, 'margin-left' : '10px'};
             eventElementStyle = StyleFactory.getBgColorStyle(_.eventInfo.contactColor, 90, 0, eventElementStyle);
           }
          } else if (color !== '') {
@@ -387,7 +399,7 @@ export class CalendarDayGridViewComponent implements OnInit {
         const element: IEventGridElement = {minutes: 0, roundedMinutes: 0, timeElement: '', timeBegins: true, timeRowSpan: 0, event: _,
         eventBegins: true, eventEnds: true, eventDurationDisplay: '', eventRowSpan: 0,
         contactDisplayNr, contactDisplayName, category,
-        leftCustStyle, rightCustStyle, eventElementStyle
+        leftContactStyle, rightContactStyle, eventElementStyle
         };
         grid.push(element);
       }
@@ -447,11 +459,11 @@ export class CalendarDayGridViewComponent implements OnInit {
       let eventElementStyle: {} = GlobalFunctions.clone(elStyle);
       if (event && event?.eventInfo) {
         if (event.eventInfo.contactColor) {
-          // we set color via custStyle - if no contact defined, style is set to light grey via StyleFactory
-          const custStyle = StyleFactory.getBgColorStyle(event.eventInfo.contactColor, 0, 0, GlobalFunctions.clone(this.styles.custStyle));
-          // leftCustStyle and rightCustStyle define position for custIssueLabel - independent of font size, as far as possible
-          leftContactStyle = {...custStyle, 'margin-right' : '5px'};
-          rightContactStyle = {...custStyle, 'margin-left' : '10px'};
+          // we set color via contactStyle - if no contact defined, style is set to light grey via StyleFactory
+          const contactStyle = StyleFactory.getBgColorStyle(event.eventInfo.contactColor, 0, 0, GlobalFunctions.clone(this.configurableStyles.contactStyle));
+          // leftCtyle and rightCtStyle define position for custIssueLabel - independent of font size, as far as possible
+          leftContactStyle = {...contactStyle, 'margin-right' : '5px'};
+          rightContactStyle = {...contactStyle, 'margin-left' : '10px'};
           eventElementStyle = StyleFactory.getBgColorStyle(event.eventInfo.contactColor, 90, 0, eventElementStyle);
         }
         contactDisplayName = event.eventInfo.contactDisplayName && event.eventInfo.contactDisplayName !== ''
@@ -463,36 +475,30 @@ export class CalendarDayGridViewComponent implements OnInit {
             ? this.txt['contact'] + ': ' + event.eventInfo.contactNr.toString()
             : '';       
       }
-      const timeElementStyle = i < (this.userOpts.startHour * 60) || i >= (this.userOpts.lastHour * 60) ? this.styles.timeElementOutsideStyle : this.styles.timeElementStyle;
-      const timeInTimeElementStyle:  { [key: string]: any } = GlobalFunctions.clone(this.styles.timeInTimeElementStyle);
-      timeInTimeElementStyle['font-weight'] = i % 60 === 0 ? 'bold' : 'normal';
-      const tableRowStyle:  { [key: string]: any } = GlobalFunctions.clone(this.styles.tableRowStyle);
-      tableRowStyle['height'] = Math.floor(40/Number(Number(this.userOpts.timeSlize))).toString() + 'px';
-      // semantic ui styles borders with border-top at td elements
-      //   so border top must be enabled (by setting to 'none' at elements which are not multiples of timeSlize)
-      //   and we must reduce padding cause semantic ui very compact table sets it to 0.4em
+      const timeElementStyle = i < (this.userOpts.startHour * 60) || i >= (this.userOpts.lastHour * 60) ? this.configurableStyles.timeElementOutsideStyle : this.configurableStyles.timeElementStyle;
+      const timeInTimeElementStyle:  { [key: string]: any } = GlobalFunctions.clone(this.configurableStyles.timeInTimeElementStyle);
+      if (timeInTimeElementStyle && timeInTimeElementStyle['font-weight']) timeInTimeElementStyle['font-weight']  = (i % 60 === 0 ? 'bold' : 'normal');
+      const tableRowStyle:  { [key: string]: any } = GlobalFunctions.clone(this.configurableStyles.tableRowStyle);
+      if (tableRowStyle && tableRowStyle['height']) tableRowStyle['height']  = Math.floor(40/Number(Number(this.userOpts.timeSlize))).toString() + 'px';
+      // borderUnit is timeSlize, but max. 3ß
       const borderUnit = Number(this.userOpts.timeSlize) > 30 ? 30 : Number(this.userOpts.timeSlize);
+      const rowElementStyle = i === gridBegin && isEventBeforeStartHour && !this.isShowBeforeStartHour ? {
+          ...this.eventElementBorderTopSytle, 
+          'border-top-color' :  eventColor
+        }
+        : i === gridEnd && isEventAfterLastHour && !this.isShowAfterLastHour ? {
+          ...this.eventElementBorderBottomSytle, 
+          'border-bottom-color' : eventColor
+        }
+        : {
+          ...this.eventElementBorderTopSytle, 
+          'border-top-style' : i % 30 === 0 && Number(this.userOpts.timeSlize) === 60  ? 'dotted' : null,
+          'border-top-width' : i % 60 === 0 ?  'thin' : i % 30 === 0 && Number(this.userOpts.timeSlize) === 60  ? '1px' : null
+        };
       // we round to timeSlize (max. 30min) - if reounded value is not possible, we try the other rounded alternative ...
       let roundedMinutes = Math.round(i / borderUnit) * borderUnit;
       roundedMinutes = roundedMinutes < minutesBefore ? (roundedMinutes + borderUnit > minutesAfter ? i : roundedMinutes + borderUnit)
         : roundedMinutes > minutesAfter ? (roundedMinutes - borderUnit < minutesBefore ? i : roundedMinutes - borderUnit) : roundedMinutes;
-      const rowElementStyle = i === gridBegin && isEventBeforeStartHour && !this.isShowBeforeStartHour ? {
-          'border-top-width' :  'thick',
-          'border-top-style' :  'solid',
-          'border-top-color' :  eventColor,
-          'padding' : '0.1em'
-        }
-        : i === gridEnd && isEventAfterLastHour && !this.isShowAfterLastHour ? {
-          'border-bottom-width' : 'thick',
-          'border-bottom-style' : 'solid',
-          'border-bottom-color' : eventColor,
-          'padding' : '0.1em'
-        }
-        : {
-          'border-top' : i % borderUnit === 0 ? null : 'none',
-          'border-top-width' : i % 60 === 0 ?  '2px' : i % 30 === 0 && Number(this.userOpts.timeSlize) === 60  ? '1px dashed' : null,
-          'padding' : '0.1em'
-        };
       const timeUnit =  Number(this.userOpts.timeSlize) === 5 ? 15 : Number(this.userOpts.timeSlize) === 10 ? 30 : Number(this.userOpts.timeSlize);
       let eventBegin = 0;
       let eventEnd = 0;
@@ -525,8 +531,8 @@ export class CalendarDayGridViewComponent implements OnInit {
         timeElementStyle,
         timeInTimeElementStyle,
         rowElementStyle,
-        leftCustStyle: leftContactStyle,
-        rightCustStyle: rightContactStyle,
+        leftContactStyle,
+        rightContactStyle,
         eventElementStyle,
         assocTxt
         };
@@ -553,7 +559,7 @@ export class CalendarDayGridViewComponent implements OnInit {
         pointerStyle = {...style, 'cursor':  'pointer'};
       } else {
         // in case of mobile size we planned to have have only 1 row - we place time in rows without event ...
-        // pointerStyle = {...style, ...this.styles.timeInTimeElementStyle, 'cursor':  'pointer'};
+        // pointerStyle = {...style, ...this.configurableStyles .timeInTimeElementStyle, 'cursor':  'pointer'};
         // not realized, we stay with
         pointerStyle = {...style, 'cursor':  'pointer'};
       }

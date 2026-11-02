@@ -21,8 +21,8 @@ export interface IEventGridElement {
   rowElementStyle?: {};
   timeElementStyle?: {};
   timeInTimeElementStyle?: {};
-  leftCustStyle?: {};
-  rightCustStyle?: {};
+  leftContactStyle?: {};
+  rightContactStyle?: {};
   eventElementStyle?: {};
   assocTxt?: string;
   category?: string;

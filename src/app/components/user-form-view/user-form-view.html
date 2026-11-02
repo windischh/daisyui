@@ -14,16 +14,16 @@
       }
     </div>
     <div class="flex-1 flex justify-end">
-       @if (user?.userName !== '') {
+      @if (user?.userName !== '') {
         <button class="btn btn-outline btn-info tooltip tooltip-bottom tooltip-primary"
           [attr.data-tip]="txt['level_up']" data-testid="user-form-return"
           (click)="return()">
           <i class="fas fa-arrow-up mr-2"></i>return
         </button>
       }
-    </div>
-  </div>
-</div>
+    </div> <!-- end of 3rd flex of header line-->
+  </div> <!-- end  of header line-->
+</div> <!-- end  of container -->
 <div class="divider"></div>
 
 

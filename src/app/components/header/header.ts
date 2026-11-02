@@ -373,7 +373,7 @@ export class HeaderComponent {
         item.subMenu = subMenu;
         this.routerMenu.items.push(item);
 
-        // configuration can be set for every user and also admin.
+        // configuration can be set by admin.
         // if not set, fixed options from assets are relevant ...
 
         item = MenuItemFactory.empty();
@@ -454,15 +454,6 @@ export class HeaderComponent {
         item.subMenu = subMenu;
         this.routerMenu.items.push(item);
 
-        // configuration can be set for every user ....
-        // if not set, fixed options from assets are relevant ...
-
-        item = MenuItemFactory.empty();
-        item.hasIconLeft = true;
-        item.iconClassLeft = 'fas fa-cog'
-        item.text = 'configuration';
-        item.link = 'configuration';
-        this.routerMenu.items.push(item);
       }
 
     }
@@ -599,6 +590,12 @@ export class HeaderComponent {
     this.showUser('first');
   }
 
+  public setUserMode() {
+    if (confirm(this.auth.txt['admin_mode_close'] + '?') === true) {
+      this.router.navigate(['../local'], { relativeTo: this.route.parent });
+    }
+  }
+
   /**
    * showRouterMenu()
    *  shows complete router menus - if menu has items ...
@@ -697,7 +694,11 @@ export class HeaderComponent {
     }
   }
 
-  public async closeUserComponent() {
+  public setUserAdminMode() {
+    this.router.navigate(['../admin'], { relativeTo: this.route.parent });
+  }
+
+  public closeUserComponent() {
     const session = this.auth.getSession(this.name);
     this.userId = session?.userId ?? 0;
     this.userName = session?.userName ?? '';

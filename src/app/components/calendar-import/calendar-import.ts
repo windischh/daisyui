@@ -204,7 +204,8 @@ public name = 'CalendarImportComponent';
 
   private async loadTimeSpanTypeChoices() {
     this.timeSpanTypeChoices = [];
-    this.options = await this.configurationService.getConfigurationOptions(this.name);
+    const options = await this.configurationService.getConfigurationOptions(this.name);
+    this.options = options.filter(_ => _.status < 9);
     this.timeSpanTypeColors = [];
     this.timeSpanTypeChoices = [];
     for (let i = 0; i <= 9; i++) {

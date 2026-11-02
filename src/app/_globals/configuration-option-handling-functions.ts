@@ -23,7 +23,7 @@ export class ConfigurationOptionHandlingFunctions {
   /******************************* eventOptions handling  *****************/
 
   /**
-   * function to update user-specific eventOptions with options
+   * function to update eventOptions with options
    *
    * @param eventOptions - eventOptions
    * @param options - option data from option file
@@ -31,29 +31,20 @@ export class ConfigurationOptionHandlingFunctions {
    */
   static updateEventOptions(eventOptions: IEventOptions, options: Array<ConfigurationOption>, serviceLevel: IServiceLevel): IEventOptions {
     //  we actualize all eventOptions from auth options!!
+    // show events for xx days back
+    eventOptions[OptionNameEvents[1]] = ConfigurationOptionBasicFunctions.getOptionInt(options, 'opt_events_' + OptionNameEvents[1])
+      ?? 90;
+    // show events for xx days forward
+    eventOptions[OptionNameEvents[2]] = ConfigurationOptionBasicFunctions.getOptionInt(options, 'opt_events_' + OptionNameEvents[2])
+      ?? 90;
     // defaultIntervalLength
     eventOptions[OptionNameEvents[3]] = ConfigurationOptionBasicFunctions.getOptionInt(options, 'opt_events_' + OptionNameEvents[3])
       ?? 30;
     // maxIntervalLength
     eventOptions[OptionNameEvents[4]] = ConfigurationOptionBasicFunctions.getOptionInt(options, 'opt_events_' + OptionNameEvents[4])
       ?? MAX_INTERVAL_LENGTH;
-    // isContactBooking
-    eventOptions[OptionNameEvents[5]] = ConfigurationOptionBasicFunctions.getOptionBoolean(options, 'opt_events_' + OptionNameEvents[5])
-      && serviceLevel.contact > 0 ? true : false;
-    // isBookingOffIssueTimes
-    eventOptions[OptionNameEvents[6]] = ConfigurationOptionBasicFunctions.getOptionBoolean(options, 'opt_events_' + OptionNameEvents[6])
-      ?? false;
-    // isChangeIssueTimes
-    eventOptions[OptionNameEvents[7]] = ConfigurationOptionBasicFunctions.getOptionBoolean(options, 'opt_events_' + OptionNameEvents[7])
-      ?? false;
-    // isGenerateChildIssues
-    eventOptions[OptionNameEvents[8]] = ConfigurationOptionBasicFunctions.getOptionBoolean(options, 'opt_events_' + OptionNameEvents[8])
-      ?? false;
     // isBookingOverMidnight
-    eventOptions[OptionNameEvents[9]] = ConfigurationOptionBasicFunctions.getOptionBoolean(options, 'opt_events_' + OptionNameEvents[9])
-      ?? false;
-    // isChooseAllContactIssues
-    eventOptions[OptionNameEvents[10]] = ConfigurationOptionBasicFunctions.getOptionBoolean(options, 'opt_events_' + OptionNameEvents[10])
+    eventOptions[OptionNameEvents[5]] = ConfigurationOptionBasicFunctions.getOptionBoolean(options, 'opt_events_' + OptionNameEvents[9])
       ?? false;
     return eventOptions;
   }
@@ -61,29 +52,22 @@ export class ConfigurationOptionHandlingFunctions {
   /**
    * function to initialize  eventOptions
    *
-   * @param session - session data
    * @param options - option data from option file - include also user options which are used as basis for
    *   initialization
    * @returns eventOptions
    */
-  static initializeEventOptions(session: Session, options: Array<ConfigurationOption>): IEventOptions {
+  static initializeEventOptions(options: Array<ConfigurationOption>): IEventOptions {
     return {
       /**  event options      */
+      showFrom : ConfigurationOptionBasicFunctions.getOptionInt(options,  'opt_events_' + OptionNameEvents[1])
+        ?? 90,
+      showTo : ConfigurationOptionBasicFunctions.getOptionInt(options,  'opt_events_' + OptionNameEvents[2])
+        ?? 90,
       defaultIntervalLength : ConfigurationOptionBasicFunctions.getOptionInt(options,  'opt_events_' + OptionNameEvents[3])
         ?? 30,
       maxIntervalLength : ConfigurationOptionBasicFunctions.getOptionInt(options, 'opt_events_' + OptionNameEvents[4])
         ?? MAX_INTERVAL_LENGTH,
-      isContactBooking : ConfigurationOptionBasicFunctions.getOptionBoolean(options, 'opt_events_' + OptionNameEvents[5])
-        && session.serviceLevel.contact > 0 ? true : false,
-      isBookingOffIssueTimes : ConfigurationOptionBasicFunctions.getOptionBoolean(options, 'opt_events_' + OptionNameEvents[6])
-        ?? false,
-      isChangeIssueTimes : ConfigurationOptionBasicFunctions.getOptionBoolean(options, 'opt_events_' + OptionNameEvents[7])
-        ?? false,
-      isGenerateChildIssues : ConfigurationOptionBasicFunctions.getOptionBoolean(options, 'opt_events_' + OptionNameEvents[8])
-        ?? false,
-      isBookingOverMidnight : ConfigurationOptionBasicFunctions.getOptionBoolean(options, 'opt_events_' + OptionNameEvents[9])
-        ?? false,
-      isChooseAllContactIssues : ConfigurationOptionBasicFunctions.getOptionBoolean(options, 'opt_events_' + OptionNameEvents[10])
+      isBookingOverMidnight : ConfigurationOptionBasicFunctions.getOptionBoolean(options, 'opt_events_' + OptionNameEvents[5])
         ?? false
     };
 

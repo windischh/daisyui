@@ -6,8 +6,8 @@
         <!-- we do not reset filter when leaving the filter entry ...
         (blur)="setFilter(filterTerm.value); filterTerm.value='' " -->
         <div class="join w-full">
-          <input (keyup.enter)="setFilter(filterTerm.value)" #filterTerm
-            type="text" placeholder="{{txt['filter'] }}... " data-testid="contact-filter" class="input input-sm join-item">
+          <input class="input input-sm join-item" (keyup.enter)="setFilter(filterTerm.value)" #filterTerm
+            type="text" placeholder="{{txt['filter'] }}... " data-testid="contact-filter">
             @if (contactFilter === '') {
               <button class="btn btn-sm btn-success text-primary-content join-item tooltip tooltip-bottom tooltip-accent" type="button" (click)="setFilter(filterTerm.value)"
                 [attr.data-tip]="txt['set']  + ' ' + txt['filter'] "
@@ -16,7 +16,7 @@
               </button>
             }
             @if (contactFilter !== '') {
-              <button class="btn btn-sm btn-error text-primary-content join-item tooltip tooltip-bottom tooltip-accent" type="button" (click)="filterTerm.value=''; setFilter(filterTerm.value)"
+              <button class="btn btn-sm btn-error btn-outline text-primary-content join-item tooltip tooltip-bottom tooltip-accent" type="button" (click)="filterTerm.value=''; setFilter(filterTerm.value)"
                 [attr.data-tip]="txt['reset']  + ' ' + txt['filter'] ">
                 <i class="fas fa-times"></i>
               </button>
@@ -159,7 +159,8 @@
               }
               @if (contact.contactNr === session.contactNr) {
                 <button class="btn btn-sm btn-success tooltip tooltip-bottom tooltip-accent"
-                  [attr.data-tip]="txt['contact_is_selected']">
+                  [attr.data-tip]="txt['contact_is_selected']"
+                   (click)="selectContact(i)">
                 </button>
               }
             </td>

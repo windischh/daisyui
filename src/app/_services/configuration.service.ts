@@ -4,7 +4,6 @@ import { ConfigurationOption } from '../_db/configuration-option';
 import { ConfigurationOptionFactory } from '../_db/configuration-option-factory';
 import { ConfigurationOptionRaw } from '../_db/configuration-option-raw';
 
-import { IAuthorization } from '../_interfaces/i-authorization';
 import { IConfigurationArea } from '../_interfaces/i-configuration-area';
 
 import { LogService } from './log.service';
@@ -55,16 +54,14 @@ export class ConfigurationService {
   /**
    * getLocalConfigurationOptions()
    *  get configurationOptions (from local storage)
-   * @param userId id of user for which we load data (if 0, it is session usr ...)
    * @param comp name of calling component
    * @returns configurationOptions which are stored in local storage for the session user
    */
-    private getLocalConfigurationOptions(userId: number, comp: string): Array<ConfigurationOption> {
+    private getLocalConfigurationOptions( comp: string): Array<ConfigurationOption> {
     let configurationOptions: Array<ConfigurationOption> = [];
-    const session = this.auth.getSession(comp);
-    const localUserId = userId && userId > 0 ? userId : (session?.userId ?? 0);
-    // we get all elements
-    const userData = this.auth.getUserData(localUserId, 'configurationOptions', comp);;
+    // we get all elements - options are stored with userId 0
+    const optionUserId = 0;
+    const userData = this.auth.getUserData(optionUserId, 'configurationOptions', comp);;
     if (userData && userData.configurationOptions) {
       return userData.configurationOptions;
     } else {
@@ -75,19 +72,17 @@ export class ConfigurationService {
   /**
    * setLocalConfigurationOptions()
    *  st configurationOptions (in  local storage)
-   * @param userId id of user for which we load data (if 0, it is session usr ...)
    * @param configurationOptions to be set
    * @param comp name of calling component
    * @returns configurationOptions which are stored in local storage for the session user
    */
-    private setLocalConfigurationOptions(userId: number, configurationOptions: Array<ConfigurationOption>, comp: string): boolean {
-    const session = this.auth.getSession(comp);
-    const localUserId = userId && userId > 0 ? userId : (session?.userId ?? 0);
-    // we get all elements
-    const userData = this.auth.getUserData(localUserId, 'configurationOptions', comp);
+    private setLocalConfigurationOptions(configurationOptions: Array<ConfigurationOption>, comp: string): boolean {
+    // we get all elements - options are stored with userId 0
+    const optionUserId = 0;
+    const userData = this.auth.getUserData(optionUserId, 'configurationOptions', comp);
     // configuration options are set - even if there were no entries before ...
     userData.configurationOptions = configurationOptions;
-    return this.auth.setUserData(localUserId, 'configurationOptions', userData, comp);
+    return this.auth.setUserData(optionUserId, 'configurationOptions', userData, comp);
   }
 
   
@@ -128,9 +123,7 @@ export class ConfigurationService {
     let allConfigurationOptions: Array<ConfigurationOption> = [];
     const session = this.auth.getSession(comp);
     // configuration optins from local store
-    if (session && session.userId) {
-      allConfigurationOptions = this.getLocalConfigurationOptions(session.userId, comp);
-    }
+    allConfigurationOptions = this.getLocalConfigurationOptions( comp);
     const fixedConfigurationOptions = await this.getFixedConfigurationOptions(comp);
     for (const configurationOption of fixedConfigurationOptions) {
       const ix = allConfigurationOptions?.findIndex(_ => _.optionName === configurationOption.optionName && _.status < 9);
@@ -152,7 +145,7 @@ export class ConfigurationService {
    */
   public async searchConfigurationOptions(searchTerm: string, comp: string): Promise<Array<ConfigurationOption>> {
     const configurationOptions = await this.getConfigurationOptions(comp);
-    return configurationOptions.filter(_ =>  _.optionName?.startsWith(searchTerm));
+    return configurationOptions.filter(_ =>  _.optionName?.startsWith(searchTerm) && _.status < 9);
   }
 
 
@@ -188,7 +181,7 @@ export class ConfigurationService {
     let filteredConfigurationOptions: Array<ConfigurationOption> = [];
     const configurationOptions = await this.getConfigurationOptions(comp);
     if (configurationOptions?.length > 0) {
-      filteredConfigurationOptions = configurationOptions.filter(_ => _.optionName === optionName);
+      filteredConfigurationOptions = configurationOptions.filter(_ => _.optionName === optionName && _.status < 9);
     }
     return filteredConfigurationOptions;
   }
@@ -285,8 +278,8 @@ export class ConfigurationService {
     let isSetOk = false;
     let optionId = 0;
     const session = this.auth.getSession(comp);
-    if (session && session.userId) {
-      const configurationOptions = this.getLocalConfigurationOptions(session.userId, comp);
+    if (session) {
+      const configurationOptions = this.getLocalConfigurationOptions(comp);
       let ix = -1;
       if (configurationOptions?.length > 0) {
         ix = configurationOptions.findIndex(_ => _.optionId === configurationOption.optionId);
@@ -307,7 +300,6 @@ export class ConfigurationService {
           let newConfig = ConfigurationOptionFactory.empty();
           newConfig = this.setConfigurationOptionContent(configurationOption, newConfig);
           newConfig.optionId = lastConfigurationOptionId;
-          newConfig.userId = session.userId;
           newConfig.created = new Date();
           newConfig.createdBy = session.userName;
           newConfig.releaseCreated = session.releaseUpdated;
@@ -315,7 +307,7 @@ export class ConfigurationService {
           optionId = newConfig.optionId;
           configurationOptions.push(newConfig);
         }
-        isSetOk = this.setLocalConfigurationOptions(session.userId, configurationOptions, comp);
+        isSetOk = this.setLocalConfigurationOptions(configurationOptions, comp);
       }
       if (isSetOk) {
         return optionId;
@@ -378,7 +370,7 @@ export class ConfigurationService {
     let isUpdateOk = true;
     let area = '';
     const session = this.auth.getSession(comp);
-    if (session && session.userId) {
+    if (session) {
       const configurationOptions = await this.getConfigurationOptions(comp);
       for (let i = 0; i < optionIdSorted.length; i++) {
         let ix = -1;

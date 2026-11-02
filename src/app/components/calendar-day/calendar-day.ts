@@ -66,7 +66,6 @@ export class CalendarDayComponent implements OnInit {
   // db texts
   public eventtxt: { [key: string]: string } = {};
   public contacttxt: { [key: string]: string } = {};
-  public issuetxt: { [key: string]: string } = {};
 
   // timeSpans contain event elements of type "time span"  - for performance reason we build it for one week
   public timeSpans!:  Array<Event>;
@@ -97,11 +96,6 @@ export class CalendarDayComponent implements OnInit {
   // actualized events of a linked user
   linkedUserEvents!:  Array<Event>;
 
-  // eventsChangeCounter: eventsChangeCounter as flag for the views if events has been reloaded or single event is updated, inserted
-  eventsChangeCounter = 0;
-  weekEventsChangeCounter = 0;
-  timeSpanChangeCounter = 0;
-
   // is set true if events of calendarDay are loaded first time
   isDayLoadedSignal = signal(0);
   // is set true if week-view is activated - week event arrays are filled
@@ -112,7 +106,7 @@ export class CalendarDayComponent implements OnInit {
   // sessionContact  from session 
   sessionContact: Contact | undefined;
 
-  // is increased if relevant options for woork-day-selection-bar are changed
+  // is increased if relevant options for calendar-day-views are changed
   calendarDayChangeCounter = 0;
 
   timeZoneIdentifier!: string;
@@ -145,9 +139,9 @@ export class CalendarDayComponent implements OnInit {
   views: Array<IView> = [
   {name: 'card-form-view', displayName: '', isSelected: false, isAutoSelected: false, isSelectable: false},
   {name: 'time-shift-view', displayName: '', isSelected: false, isAutoSelected: false, isSelectable: false},
+  {name: 'cards-view', displayName: '', isSelected: true, isAutoSelected: false, isSelectable: true},
+  {name: 'grid-view', displayName: '', isSelected: false, isAutoSelected: false, isSelectable: true},
   {name: 'week-view', displayName: '', isSelected: false, isAutoSelected: false, isSelectable: true},
-  {name: 'grid-view', displayName: '', isSelected: true, isAutoSelected: false, isSelectable: true},
-  {name: 'cards-view', displayName: '', isSelected: false, isAutoSelected: false, isSelectable: true},
   {name: 'contacts-view', displayName: '', isSelected: false, isAutoSelected: false, isSelectable: true},
   {name: 'options-view', displayName: '', isSelected: false, isAutoSelected: false, isSelectable: true}
   ];
@@ -157,10 +151,6 @@ export class CalendarDayComponent implements OnInit {
 
   // to use GlobalFunctions in template
   GlobalFunctions: any;
-
-  highlightStyle = {
-    'background-color': POWDER_BLUE
-  };
 
   constructor(@Inject(LOCALE_ID) public locale: string,
     private route: ActivatedRoute,
@@ -189,16 +179,16 @@ export class CalendarDayComponent implements OnInit {
       this.refreshSignal.set(0);
       this.loadViewTexts();
       this.loadDbTexts();
-      await this.getContacts();
+      this.getContacts();
       await this.getEventOptions();
-      await this.getEvents();
-      await this.actualizeWeekEvents();
-      await this.actualizeTimeSpans();
+      this.getEvents();
+      this.actualizeWeekEvents();
+      this.actualizeTimeSpans();
       const session = this.auth.getSession(this.name);
       if (session) {
         // session is set to have it available in all sub-views
         this.sessionForViews = session;
-        this.eventsChangeCounter += 1;
+        this.calendarDayChangeCounter += 1;
         this.refreshSignal.set(1);
       } else {
         // session could not be activated - duration exhausted
@@ -242,8 +232,8 @@ export class CalendarDayComponent implements OnInit {
     alert(message);
   }
 
-  private async getContacts() {
-    this.contacts = await this.contactService.getContacts(this.name);
+  private getContacts() {
+    this.contacts = this.contactService.getContacts(this.name);
   }
 
   /**
@@ -260,7 +250,8 @@ export class CalendarDayComponent implements OnInit {
     }
 
     // for timeSpans (and for sub-components) we need texts from general options - we load them from option rsessources (option.json)
-    this.options = await this.configurationService.getConfigurationOptions(this.name);
+    const options = await this.configurationService.getConfigurationOptions(this.name);
+    this.options = options.filter(_ => _.status < 9);
     this.timeSpanTypeColors = [];
     this.timeSpanTypeChoices = [];
     for (let i = 0; i <= 9; i++) {
@@ -291,10 +282,11 @@ export class CalendarDayComponent implements OnInit {
     }
     const session = this.auth.getSession(this.name);
     if (session) {
-      this.opts = ConfigurationOptionHandlingFunctions.initializeEventOptions(session, this.options);
+      this.opts = ConfigurationOptionHandlingFunctions.initializeEventOptions(this.options);
       const user = this.auth.getUser(session.userId, this.name);
       if (user) {
         if (!user.userEventOptions) {
+          // should not occur - at user create we store actual options as userEventOptions ..
           // user event options are initialized with options of actual session user!!
           user.userEventOptions = ConfigurationOptionHandlingFunctions.initializeUserEventOptions(this.options);
           this.auth.setUserOptions(user.userEventOptions, session.userId, this.name);
@@ -310,18 +302,18 @@ export class CalendarDayComponent implements OnInit {
    *  for calendarDay, isPlan of opts = session.eventOptions
    * getEvents is called at init, at every change of opts = session.eventOptions and at every change of a event
    */
-  private async getEvents() {
+  private getEvents() {
     const session = this.auth.getSession(this.name);
     if (session) {
       this.allEvents = this.calendarService.getEvents(this.name);
-      this.actualEvents = await this.getEventsForDate(this.allEvents, false, session.calendarDay, false);
-      this.planEvents = await this.getEventsForDate(this.allEvents, true, session.calendarDay, false);
+      this.actualEvents = this.getEventsForDate(this.allEvents, false, session.calendarDay, false);
+      this.planEvents = this.getEventsForDate(this.allEvents, true, session.calendarDay, false);
       this.setAssocData();
       this.countSelected = 0;
       this.isSelecting = false;
       this.isCreating = false;
       this.events = GlobalFunctions.clone(session.isPlan ? this.planEvents : this.actualEvents);
-      this.eventsChangeCounter += 1;
+      this.calendarDayChangeCounter += 1;
       this.isDayLoadedSignal.set(1);
     }
   }
@@ -331,12 +323,12 @@ export class CalendarDayComponent implements OnInit {
    *
    * if week-view or contacts-view is selected
    */
-  private async actualizeWeekEvents() {
+  private actualizeWeekEvents() {
     const session = this.auth.getSession(this.name);
     if (session && (this.v['week-view'].isSelected === true || this.v['contacts-view'].isSelected === true || this.isWeekLoadedSignal )) {
-      this.weekActualEvents = await this.getEventsForDate(this.allEvents, false, session.calendarDay, true);
-      this.weekPlanEvents = await this.getEventsForDate(this.allEvents, true, session.calendarDay, true);
-      this.weekEventsChangeCounter += 1;
+      this.weekActualEvents = this.getEventsForDate(this.allEvents, false, session.calendarDay, true);
+      this.weekPlanEvents = this.getEventsForDate(this.allEvents, true, session.calendarDay, true);
+      this.calendarDayChangeCounter += 1;
       this.isWeekLoadedSignal.set(1);
     }
   }
@@ -356,7 +348,7 @@ export class CalendarDayComponent implements OnInit {
    *
    *
    */
-  private async actualizeTimeSpans() {
+  private actualizeTimeSpans() {
     const session = this.auth.getSession(this.name);
     if (session && (this.v['grid-view'].isSelected === true || this.v['week-view'].isSelected === true || this.isTimeSpanLoadedSignal)) {
       // begin date is first day of week, we add one day to include all possible timeZones
@@ -367,7 +359,7 @@ export class CalendarDayComponent implements OnInit {
       const diffToWeekEnd = 8 - weekDay;
       const endDate = GlobalFunctions.addDays(session.calendarDay, diffToWeekEnd);
       // recurring timeSpans come from local user data
-      const recTimeSpans = await this.userService.getRecurringTimeSpanRange(0, beginDate, endDate, this.name);
+      const recTimeSpans = this.userService.getRecurringTimeSpanRange(0, beginDate, endDate, this.name);
       const timeSpans = this.allEvents.filter(_ => GlobalFunctions.getDateInMinutes(_.eventEnd) >= GlobalFunctions.getDateInMinutes(beginDate)
         && GlobalFunctions.getDateInMinutes(_.eventBegin) <= GlobalFunctions.getDateInMinutes(endDate)
         && _.type >= EventType.timeSpanUndefined
@@ -377,15 +369,15 @@ export class CalendarDayComponent implements OnInit {
         // build eventInfos if contact
         if ((!span.eventInfo && (span.contactNr > 0))
           || (span.eventInfo?.contactNr !== span.contactNr)) {
-            span = await this.calendarService.buildEventInfo(span, this.name);
+            span = this.calendarService.buildEventInfo(span, this.name);
         }
       }
-      // const timeSpans = await this.eventService.getTimeSpanRange(0, beginDate, endDate, this.name);
+      // const timeSpans = this.eventService.getTimeSpanRange(0, beginDate, endDate, this.name);
       this.timeSpans = [];
       this.timeSpans = this.timeSpans.concat(recTimeSpans);
       this.timeSpans = this.timeSpans.concat(timeSpans);
       this.timeSpans.sort((a, b) => a.eventBegin.getTime() - b.eventBegin.getTime());
-      this.timeSpanChangeCounter += 1;
+      this.calendarDayChangeCounter += 1;
       this.isTimeSpanLoadedSignal.set(1);
     }
   }
@@ -436,7 +428,7 @@ export class CalendarDayComponent implements OnInit {
    * @param isWeek - if true, we return events for week of calendarDay - otherwise for calendarDay
    * @returns event array
    */
-  private async getEventsForDate(events: Array<Event>, isPlan: boolean, calendarDay: Date, isWeek: boolean): Promise<Array<Event>> {
+  private getEventsForDate(events: Array<Event>, isPlan: boolean, calendarDay: Date, isWeek: boolean): Array<Event> {
     const type = isPlan? 0 : 1;
     const weekDay = GlobalFunctions.getWeekDay(calendarDay, 0, this.locale);
     const previous = isWeek ? weekDay + 1 : 1;
@@ -477,15 +469,15 @@ export class CalendarDayComponent implements OnInit {
         // (eventInfos are rebuilt if event is updated!)
         if ((!event.eventInfo && event.contactNr > 0)
           || (!(event.eventInfo?.contactNr && event.eventInfo?.contactNr > 0) && event.contactNr > 0)) {
-            event = await this.calendarService.buildEventInfo(event, this.name);
+            event = this.calendarService.buildEventInfo(event, this.name);
         }
       }
     }
     return (selectedEvents);
   }
 
-  // we await updated event data, with unchanged eventId and unchanged type
-  private async eventUpdate(event: Event): Promise<boolean> {
+  // we updat event data, with unchanged eventId and unchanged type
+  private eventUpdate(event: Event): boolean {
     const session = this.auth.getSession(this.name);
     const operation = 'event update';
     let message = 'error - undefined';
@@ -494,7 +486,7 @@ export class CalendarDayComponent implements OnInit {
       if (formerEvent && formerEvent.type === event.type) {
         const targetCalendarDay: Date = GlobalFunctions.getStartOfDay(event.eventBegin);
         const isPlan = event.type === EventType.plan;
-        const targetEvents = await this.getEventsForDate(this.allEvents, isPlan, targetCalendarDay, false);
+        const targetEvents = this.getEventsForDate(this.allEvents, isPlan, targetCalendarDay, false);
         let isUpdatePossible = false;
         isUpdatePossible = targetEvents.length === 0 || (targetEvents.length > 0 && targetEvents.filter(_ =>
           (_.eventBegin < event.eventEnd && _.eventEnd > event.eventBegin && _.eventId !== event.eventId)).length === 0);
@@ -507,7 +499,7 @@ export class CalendarDayComponent implements OnInit {
         // setting event fields from event
         updEvent = this.setEventContent(event, updEvent);
         if (event.contactNr > 0) {
-          updEvent = await this.setEventContactIssueContent (event, updEvent);
+          updEvent = this.setEventContactIssueContent (event, updEvent);
         }
         updEvent.eventId = event.eventId;
         updEvent.userId = event.userId;
@@ -515,7 +507,7 @@ export class CalendarDayComponent implements OnInit {
         updEvent.type = event.type;
         updEvent.status = event.status;
         // console.log('updEvent:', JSON.stringify(updEvent));
-        const updateId = await this.calendarService.setEvent(updEvent, this.name);
+        const updateId = this.calendarService.setEvent(updEvent, this.name);
         if (updateId > 0) {
           // we actualize this.allEvents immediately .... - not necessary, is done in calling procedure
           return true;
@@ -523,7 +515,7 @@ export class CalendarDayComponent implements OnInit {
           message = 'error - no confirmation for updated event';
           this.dbFailure(operation, message);
         } else if (updateId === -1) {
-          message = 'etag error - file was updated by another user';
+          message = 'internal error';
           this.dbFailure(operation, message);
         }
       } else {
@@ -534,15 +526,15 @@ export class CalendarDayComponent implements OnInit {
     return false;
   }
 
-  // we await inserted event with id 0 and with type for plan/actual
-  private async eventInsert(event: Event): Promise<boolean> {
+  // we nsert event with id 0 and with type for plan/actual
+  private eventInsert(event: Event): boolean {
     const session = this.auth.getSession(this.name);
     const operation = 'event insert';
     let message = 'error - undefined';
     if (session && session.isPlanMaint && event.eventId === 0) {
       const targetCalendarDay: Date = GlobalFunctions.getStartOfDay(event.eventBegin);
       const isPlan = event.type === EventType.plan;
-      const targetEvents = await this.getEventsForDate(this.allEvents, isPlan, targetCalendarDay, false);
+      const targetEvents = this.getEventsForDate(this.allEvents, isPlan, targetCalendarDay, false);
       let isInsertPossible = false;
       isInsertPossible = targetEvents.length === 0 || (targetEvents.length > 0 && targetEvents.filter(_ =>
         (_.eventBegin < event.eventEnd && _.eventEnd > event.eventBegin)).length === 0);
@@ -560,7 +552,7 @@ export class CalendarDayComponent implements OnInit {
         message = 'error - no confirmation for updated event';
         this.dbFailure(operation, message);
       } else if (insertId === -1) {
-        message = 'etag error - file was updated by another user';
+        message = 'internal error';
         this.dbFailure(operation, message);
       }
     }
@@ -577,7 +569,7 @@ export class CalendarDayComponent implements OnInit {
     if (session) {
       if (this.isSelecting || this.v['card-form-view'].isAutoSelected) {
         // we are in selection mode and user searches target date ...
-        this.targetEvents = await this.getEventsForDate(this.allEvents, session.isPlan, calendarDay, false);
+        this.targetEvents = this.getEventsForDate(this.allEvents, session.isPlan, calendarDay, false);
         this.targetCalendarDay = calendarDay;
       } else {
         // we change to days after today - only plan is possible
@@ -602,16 +594,16 @@ export class CalendarDayComponent implements OnInit {
           const oldCalendarDay = session.calendarDay;
           session.calendarDay = calendarDay;
           if (this.auth.setSessionCalendarDay(session, this.name)) {
-            this.actualEvents = await this.getEventsForDate(this.allEvents, false, session.calendarDay, false);
-            this.planEvents = await this.getEventsForDate(this.allEvents, true, session.calendarDay, false);
+            this.actualEvents = this.getEventsForDate(this.allEvents, false, session.calendarDay, false);
+            this.planEvents = this.getEventsForDate(this.allEvents, true, session.calendarDay, false);
             this.setAssocData();
             this.events = GlobalFunctions.clone(session.isPlan ? this.planEvents : this.actualEvents);
-            this.eventsChangeCounter += 1;
+            this.calendarDayChangeCounter += 1;
             this.sessionForViews = session;
             // if we change to another week
             if (GlobalFunctions.getYW(calendarDay) !== GlobalFunctions.getYW(oldCalendarDay)) {
-              await this.actualizeWeekEvents();
-              await this.actualizeTimeSpans();
+              this.actualizeWeekEvents();
+              this.actualizeTimeSpans();
             }
             if (this.actualEvents.length > 0) {
               this.userService.setUserCalendarDay(session.userId, calendarDay, this.name);
@@ -634,7 +626,7 @@ export class CalendarDayComponent implements OnInit {
 
   // set selected view (if it is a selectable view - can bet set by user, isSelected is set)
   // if not selectable, we assume another part of application has set the view and set isAutoselected
-  public async selectView(event: string) {
+  public selectView(event: string) {
     this.views.forEach(_ => {
       if (_.name === event) {
         if (_.isSelectable) {
@@ -656,8 +648,8 @@ export class CalendarDayComponent implements OnInit {
       }
     });
     // actualizeWeekEvents checks if week-view ...
-    if (!this.isWeekLoadedSignal) { await this.actualizeWeekEvents(); }
-    if (!this.isTimeSpanLoadedSignal) { await this.actualizeTimeSpans(); }
+    if (!this.isWeekLoadedSignal) { this.actualizeWeekEvents(); }
+    if (!this.isTimeSpanLoadedSignal) { this.actualizeTimeSpans(); }
   }
 
   // set selection of events
@@ -672,8 +664,8 @@ export class CalendarDayComponent implements OnInit {
         this.actualEvents.forEach(_ => _.isSelected = false);
       }
       this.events = GlobalFunctions.clone(session?.isPlan ? this.planEvents : this.actualEvents);
-      this.eventsChangeCounter += 1;
-      this.weekEventsChangeCounter += 1;
+      this.calendarDayChangeCounter += 1;
+      this.calendarDayChangeCounter += 1;
       this.countSelected = 0;
       this.v['time-shift-view'].isAutoSelected = false;
     } else {
@@ -701,12 +693,12 @@ export class CalendarDayComponent implements OnInit {
     }
     if (session && isSessionUpdated) {
       // we  must renew daily events
-      this.actualEvents = await this.getEventsForDate(this.allEvents, false, session.calendarDay, false);
-      this.planEvents = await this.getEventsForDate(this.allEvents, true, session.calendarDay, false);
+      this.actualEvents = this.getEventsForDate(this.allEvents, false, session.calendarDay, false);
+      this.planEvents = this.getEventsForDate(this.allEvents, true, session.calendarDay, false);
       this.setAssocData();
       this.events = GlobalFunctions.clone(session.isPlan ? this.planEvents : this.actualEvents);
       this.sessionForViews = session;
-      this.eventsChangeCounter += 1;
+      this.calendarDayChangeCounter += 1;
     }
   }
 
@@ -739,12 +731,12 @@ export class CalendarDayComponent implements OnInit {
       }
       if (isSessionUpdated) {
         // we  must renew daily events
-        this.actualEvents = await this.getEventsForDate(this.allEvents, false, session.calendarDay, false);
-        this.planEvents = await this.getEventsForDate(this.allEvents, true, session.calendarDay, false);
+        this.actualEvents = this.getEventsForDate(this.allEvents, false, session.calendarDay, false);
+        this.planEvents = this.getEventsForDate(this.allEvents, true, session.calendarDay, false);
         this.setAssocData();
         this.events = GlobalFunctions.clone(session.isPlan ? this.planEvents : this.actualEvents);
         this.sessionForViews = session;
-        this.eventsChangeCounter += 1;
+        this.calendarDayChangeCounter += 1;
         if (isCalendarDayUpdated && this.actualEvents.length > 0) {
           this.userService.setUserCalendarDay(session.userId, calendarDay, this.name);
         }
@@ -785,14 +777,13 @@ export class CalendarDayComponent implements OnInit {
       this.v['time-shift-view'].isAutoSelected = false;
     }
     this.events = GlobalFunctions.clone(session?.isPlan ? this.planEvents : this.actualEvents);
-    this.eventsChangeCounter += 1;
+    this.calendarDayChangeCounter += 1;
   }
 
   /**
    * enables card-form with update types insert or update
    * @param eventContainer.updateType: insert or update
-   * // TODO enhance possible type: setShow (=show content without updating) - if we have the use cases for it
-   *  where a user is allowed to view but not to update ... and correct the 2 other possible types to setInsert, setUpdate
+   * we also have setShow (= show content without updating) - this could be triggered if user is in view mode ..
    * @param eventContainer.event: in case of update the existing event to be updated,
    *   in case of insert event is empty except event.type which indicates 0 for event, 20 for time space
    * @param eventContainer.d: calendarDay and time of inserted event
@@ -800,23 +791,29 @@ export class CalendarDayComponent implements OnInit {
   public async enableCardFormView(eventContainer: {updateType: UpdateType, event: Event, d: Date | null}) {
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
     const session = this.auth.getSession(this.name);
-    // event with type >= 20 are time spans ....
-    if (session && eventContainer.updateType === UpdateType.update && eventContainer.event.type < EventType.timeSpanUndefined ) {
-      // in week view we allow enabling a event entry on another day as calendarDay
-      const isPlan = eventContainer.event.type === EventType.plan;
-      const dayOfEvent: Date = GlobalFunctions.getStartOfDay(eventContainer.event.eventBegin);
-      if (GlobalFunctions.getDateInMinutes(session.calendarDay) !== GlobalFunctions.getDateInMinutes(dayOfEvent)
-      || session.isPlan !== isPlan) {
-        this.selectCalendarDayAndPlan({date: dayOfEvent, isPlan});
+    if (session) {
+      // event with type >= 20 are time spans ....
+      if (session.isPlanMaint && eventContainer.updateType === UpdateType.update && eventContainer.event.type < EventType.timeSpanUndefined ) {
+        // in week view we allow enabling a event entry on another day as calendarDay
+        const isPlan = eventContainer.event.type === EventType.plan;
+        const dayOfEvent: Date = GlobalFunctions.getStartOfDay(eventContainer.event.eventBegin);
+        if (GlobalFunctions.getDateInMinutes(session.calendarDay) !== GlobalFunctions.getDateInMinutes(dayOfEvent)
+        || session.isPlan !== isPlan) {
+          await this.selectCalendarDayAndPlan({date: dayOfEvent, isPlan});
+        }
       }
+      this.eventContainer = eventContainer;
+      if (!session.isPlanMaint) {
+        this.eventContainer.updateType = UpdateType.setShow;
+      }
+      this.targetCalendarDay = null;
+      this.targetEvents = null;
+      this.v['card-form-view'].isAutoSelected = true;
+      this.refreshSignal.set(this.refreshSignal() + 1);
+    } else {
+      alert('internal error - session missing');
     }
-
-    // TODO build eventContainer
-    this.eventContainer = eventContainer;
-    this.targetCalendarDay = null;
-    this.targetEvents = null;
-    this.v['card-form-view'].isAutoSelected = true;
-  }
+  } 
 
   public setCreating(isCreating: boolean) {
     this.isCreating = isCreating;
@@ -843,23 +840,23 @@ export class CalendarDayComponent implements OnInit {
         operation = 'update event';
         message = 'update not possible - internal structure error';
         if (event && session?.isPlanMaint) {
-          const isUpdated = await this.eventUpdate(event);
+          const isUpdated = this.eventUpdate(event);
           targetCalendarDay = GlobalFunctions.getStartOfDay(event.eventBegin);
           if (isUpdated) {
             if (GlobalFunctions.isMinuteSame(session.calendarDay, targetCalendarDay)) {
-              await this.getEvents();
-              this.eventsChangeCounter += 1;
+              this.getEvents();
+              this.calendarDayChangeCounter += 1;
               this.setAssocData();
-              await this.actualizeWeekEvents();
+              this.actualizeWeekEvents();
             } else {
-              await this.getEvents();
-              await this.actualizeWeekEvents();
+              this.getEvents();
+              this.actualizeWeekEvents();
               if (event.type === EventType.actual) {
                 this.userService.setUserCalendarDay(session.userId, targetCalendarDay, this.name);
               }
             }
           } else {
-            await this.getEvents();
+            this.getEvents();
           }
         } else {
           message = 'not allowed due to user rights';
@@ -874,7 +871,7 @@ export class CalendarDayComponent implements OnInit {
           this.refreshSignal.set(0);
           for (const _ of events) {
             if (_.eventId > 0) {
-              const isUpdated =  await this.eventUpdate(_);
+              const isUpdated =  this.eventUpdate(_);
               if (!isUpdated) {
                 this.dbFailure(operation, message);
               }
@@ -883,10 +880,10 @@ export class CalendarDayComponent implements OnInit {
               this.dbFailure(operation, message);
             }
           }
-          await this.getEvents();
-          this.eventsChangeCounter += 1;
+          this.getEvents();
+          this.calendarDayChangeCounter += 1;
           this.setAssocData();
-          await this.actualizeWeekEvents();
+          this.actualizeWeekEvents();
           this.refreshSignal.set(1);
         } else {
           message = 'not allowed due to user rights';
@@ -905,22 +902,22 @@ export class CalendarDayComponent implements OnInit {
           }
           // setting type according to session
           newEvent.type = session.isPlan ? 0 : 1;
-          const isInserted = await this.eventInsert(newEvent);
+          const isInserted = this.eventInsert(newEvent);
           targetCalendarDay = GlobalFunctions.getStartOfDay(newEvent.eventBegin);
           if (isInserted) {
             if (GlobalFunctions.isMinuteSame(session.calendarDay, targetCalendarDay)) {
-              await this.getEvents();
-              this.eventsChangeCounter += 1;
-              await this.actualizeWeekEvents();
+              this.getEvents();
+              this.calendarDayChangeCounter += 1;
+              this.actualizeWeekEvents();
             } else {
-              await this.getEvents();
-              await this.actualizeWeekEvents();
+              this.getEvents();
+              this.actualizeWeekEvents();
             }
             if (newEvent.type === EventType.actual) {
               this.userService.setUserCalendarDay(session.userId, targetCalendarDay, this.name);
             }
           } else {
-            await this.getEvents();
+            this.getEvents();
           }
         } else {
           message = 'not allowed due to user rights';
@@ -947,19 +944,19 @@ export class CalendarDayComponent implements OnInit {
             // setting event fields from event
             newEvent = this.setEventContent(_, newEvent);
             if (_.contactNr > 0) {
-              newEvent = await this.setEventContactIssueContent (_, newEvent);
+              newEvent = this.setEventContactIssueContent (_, newEvent);
             }
             newEvent.type = targetType;
-            const isInserted = await this.eventInsert(newEvent);
+            const isInserted = this.eventInsert(newEvent);
             if (!isInserted)  {
               isAllInserted = false;
             }
           }
           // isAllInserted set true if all inserts are ok
           if (isAllInserted) {
-            await this.getEvents();
+            this.getEvents();
             this.setAssocData();
-            this.eventsChangeCounter += 1;
+            this.calendarDayChangeCounter += 1;
             this.actualizeWeekEvents();
             if (targetType === EventType.actual && targetCalendarDay) {
               this.userService.setUserCalendarDay(session.userId, targetCalendarDay, this.name);
@@ -967,8 +964,8 @@ export class CalendarDayComponent implements OnInit {
           } else {
             this.dbFailure(operation, message);
             // we must actualize - some inserts could have happened ...
-            await this.getEvents();
-            await this.actualizeWeekEvents();
+            this.getEvents();
+            this.actualizeWeekEvents();
           }
           this.refreshSignal.set(1);
         } else {
@@ -980,12 +977,12 @@ export class CalendarDayComponent implements OnInit {
         operation = 'delete (disable) event';
         message = 'error - element for disabling was not found';
         if (event && session?.isPlanMaint) {
-          const isDisabled = await this.calendarService.setEventDisabled(event.eventId, this.name);
+          const isDisabled = this.calendarService.setEventDisabled(event.eventId, this.name);
           if (isDisabled) {
-            await this.getEvents();
-            this.eventsChangeCounter += 1;
+            this.getEvents();
+            this.calendarDayChangeCounter += 1;
             // after getEvents to get the corrected time
-            await this.actualizeWeekEvents();
+            this.actualizeWeekEvents();
           } else {
             this.dbFailure(operation, message);
           }
@@ -1000,9 +997,9 @@ export class CalendarDayComponent implements OnInit {
   }
 
   // updating event and also associated events
-  public async updateEventAssoc(eventContainer: {updateType: UpdateType, event: Event}) {
+  public updateEventAssoc(eventContainer: {updateType: UpdateType, event: Event}) {
     // first we update event
-    await this.updateEvent(eventContainer);
+    this.updateEvent(eventContainer);
     const {updateType, event} = eventContainer;
     // update assoc events with contactNr, issue ids if they have changed
     // after alerting user
@@ -1015,7 +1012,7 @@ export class CalendarDayComponent implements OnInit {
             if (event.contactNr > 0 || event.issueNr > 0) {
               _ = this.setEventContactIssueContent (event, _);
             }
-            await this.updateEvent({updateType, event: _ });
+            this.updateEvent({updateType, event: _ });
           } else {
             break;
           }
@@ -1030,14 +1027,14 @@ export class CalendarDayComponent implements OnInit {
           if (event.contactNr > 0 || event.issueNr > 0) {
             this.planEvents[ix] = this.setEventContactIssueContent (event, this.planEvents[ix]);
           }
-          await this.updateEvent({updateType, event: this.planEvents[ix]});
+          this.updateEvent({updateType, event: this.planEvents[ix]});
           // update other actual events
           for (let _ of this.actualEvents) {
             if (_.planId > 0 && _.planId === this.planEvents[ix].eventId && _.eventId !== event.eventId) {
               if (event.contactNr > 0 || event.issueNr > 0) {
                 _ = this.setEventContactIssueContent (event, _);
               }
-              await this.updateEvent({updateType, event: _});
+              this.updateEvent({updateType, event: _});
             }
           }
         }
@@ -1075,9 +1072,9 @@ export class CalendarDayComponent implements OnInit {
           updEvent.contactNr = event.contactNr;
           const updateId = this.calendarService.setEvent(updEvent, this.name);
           if (updateId > 0) {
-            await this.getEvents();
-            this.timeSpanChangeCounter += 1;
-            await this.actualizeTimeSpans();
+            this.getEvents();
+            this.calendarDayChangeCounter += 1;
+            this.actualizeTimeSpans();
           } else if (updateId === 0 ) {
             const operation = 'timeSpan update';
             const message = 'error - no confirmation for updated timeSpan';
@@ -1100,9 +1097,9 @@ export class CalendarDayComponent implements OnInit {
           newEvent.type = event.type;
           const insertId = this.calendarService.setEvent(newEvent, this.name);
           if (insertId > 0) {
-            await this.getEvents();
-            this.timeSpanChangeCounter += 1;
-            await this.actualizeTimeSpans();
+            this.getEvents();
+            this.calendarDayChangeCounter += 1;
+            this.actualizeTimeSpans();
           } else if (insertId === 0) {
             const operation = 'insert timeSpan';
             const message = 'error - no confirmation for inserted timeSpans';
@@ -1114,11 +1111,11 @@ export class CalendarDayComponent implements OnInit {
         break;
       case UpdateType.delete:
         if (session?.isPlanMaint) {
-          const isDisabled = await this.calendarService.setEventDisabled(event.eventId, this.name);
+          const isDisabled = this.calendarService.setEventDisabled(event.eventId, this.name);
           if (isDisabled) {
-            await this.getEvents();
-            this.timeSpanChangeCounter += 1;
-            await this.actualizeTimeSpans();
+            this.getEvents();
+            this.actualizeTimeSpans();
+            this.calendarDayChangeCounter += 1;
           } else {
             const operation = 'delete (disable) timeSpan';
             const message = 'error - element for disabling was not found';
@@ -1141,12 +1138,18 @@ export class CalendarDayComponent implements OnInit {
 
   /** --------------------  calendar-day-contacts-view ------------------------- */
 
+  // we select contactNr
+  public async selectContact(event: number) {
+    this.auth.setSessionContactNr(event, this.name);
+    await this.sessionActivate()
+  }
 
 
   /** -------------------- calendar-day-options-view ------------------------- */
 
 
   /**
+   * @deprecated
    * updating opts in session.eventOptions - user options 1 to 7
    * @param event eventOptions - basis for updates
    */
@@ -1174,7 +1177,6 @@ export class CalendarDayComponent implements OnInit {
             // actualize opts in component - not longer necessary
             // this.getEventOptions();
           }
-
         }
       }
     }
@@ -1182,23 +1184,15 @@ export class CalendarDayComponent implements OnInit {
 
   /**
    * userEventOptions  shall be stored permanently as user eventOptions
+   * @param event eventOptions - basis for updates
    */
-  public async storeOpts() {
-    if (!this.auth.isSessionActive()) { await this.sessionActivate() };
-    const session = this.auth.getSession(this.name);
-    /* // TODO not longer used ...
-    // we store the user options which could be modified at options-view
-    const userEventOptions: typeof OptionNameUserEvents  = OptionNameUserEvents;
-    // we take only the numeric values of the enum
-    const userOptionKeys = Object.keys(userEventOptions).filter(_ => Number(_) >= 0);
-    for (let i = 0; i < userOptionKeys.length; i++) {
-      // option name from enum
-      const enumStringType: { [key: string]: any } = userOptionKeys;
-      const optionName =  userEventOptions[enumStringType[i]];
-      this.auth.setUserOption(session.eventOptions, session.userId, optionName, this.name);
+  public async storeOpts(event: IUserEventOptions) {
+    if (event) {
+      this.userOpts = event;
+      if (!this.auth.isSessionActive()) { await this.sessionActivate() };
+      const session = this.auth.getSession(this.name);
+      if (session) this.auth.setUserOptions(this.userOpts, session.userId, this.name);
     }
-    */
-    if (session) this.auth.setUserOptions(this.userOpts, session.userId, this.name);
   }
 
 

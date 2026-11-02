@@ -239,7 +239,8 @@ export class CalendarExportComponent implements OnInit {
       }
       const timeSpanTypes: Array<IChoice> = [];
       // for timeSpans (and for sub-components) we need texts from general options - we load them from option rsessources (option.json)
-      const options = await this.configurationService.getConfigurationOptions(this.name);
+      let options = await this.configurationService.getConfigurationOptions(this.name);
+      options = options.filter(_ => _.status < 9);
       for (let i = 1; i <= 9; i++) {
         const cat = i === 1 ? 'holiday' : i === 2 ? 'birthday' : i.toString();
         const category = ConfigurationOptionBasicFunctions.getOptionString(options, 'opt_span_' + cat) ?? '';

@@ -238,8 +238,13 @@ private loadDbTexts(): void {
   public selectContact(i: number) {
     let contact = this.contacts[i];
     let session = this.auth.getSession(this.name);
-    if (session && contact && contact.contactId > 0) {
-      this.auth.setSessionContactNr(contact.contactNr, this.name)
+    if (session && contact && contact.contactNr > 0) {
+      if (session.contactNr === contact.contactNr ) {
+        // this contact was the session contact - we reset session contact
+        this.auth.setSessionContactNr(0, this.name);
+      } else {
+        this.auth.setSessionContactNr(contact.contactNr, this.name)
+      }
     }
     session = this.auth.getSession(this.name);
     if (session) {

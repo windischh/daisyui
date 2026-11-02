@@ -35,8 +35,7 @@ export class CalendarDayOptionsViewComponent implements OnInit {
 
   hourChoices: HourObject[] = [];
 
-  @Output() optsUpdate = new EventEmitter<IUserEventOptions>();
-  @Output() optsStore = new EventEmitter();
+  @Output() optsStore = new EventEmitter<IUserEventOptions>();
 
   documentWidth = document.documentElement.clientWidth;
   tableScrollStyle = {'width': this.documentWidth, 'overflow-x': 'scroll'};
@@ -87,7 +86,7 @@ export class CalendarDayOptionsViewComponent implements OnInit {
 
   private getStyles() {
     this.styleChoices = [];
-    this.options.filter(_ => _.optionArea === 'eventCalendar'
+    this.options.filter(_ => _.optionArea === 'calendar'
       && _.optionName.substr(_.optionArea.length + 4) === 'opt_style_name'
     ).forEach(_ => {
       const styleString  = _.optionName.substr(_.optionArea.length + 1, 2);
@@ -106,7 +105,7 @@ export class CalendarDayOptionsViewComponent implements OnInit {
   /** --------------------------  public methods -------------------------------------------- */
 
   public storeOptions() {
-    this.optsStore.emit();
+    this.optsStore.emit(this.userOpts);
     // console.log('we persist now: ', JSON.stringify(this.opts));
   }
 
@@ -114,7 +113,7 @@ export class CalendarDayOptionsViewComponent implements OnInit {
     // console.log('setPersist ', JSON.stringify(event));
     if (event.target.value) {
       // we must clone opts to get a new object reference for this.opts in model
-      const userOpts: IUserEventOptions = GlobalFunctions.clone(this.userOpts);
+      // const userOpts: IUserEventOptions = GlobalFunctions.clone(this.userOpts);
       this.persistChoices.forEach(_ => {
         if (_.value === event.target.value && event.target.checked) {
           _.isChecked = true;
@@ -122,78 +121,88 @@ export class CalendarDayOptionsViewComponent implements OnInit {
           _.isChecked = false;
         }
       });
-      userOpts.isImmediatePersist =  this.persistChoices.filter(_ => _.value === 'true')[0].isChecked;
-      this.optsUpdate.emit(userOpts);
+      this.userOpts.isImmediatePersist =  this.persistChoices.filter(_ => _.value === 'true')[0].isChecked;
+      if (this.userOpts.isImmediatePersist) {
+        this.optsStore.emit(this.userOpts);
+      }
     }
   }
 
   public selectStyle(event: any) {
     if (event.target.value) {
       // we must clone opts to get a new object reference for this.opts in model
-      const userOpts: IUserEventOptions = GlobalFunctions.clone(this.userOpts);
+      // const userOpts: IUserEventOptions = GlobalFunctions.clone(this.userOpts);
       this.styleChoices.forEach(_ => {
         if (_.value === Number(event.target.value)) {
           _.isSelected = true;
-          userOpts.style = _.value;
+          this.userOpts.style = _.value;
         } else {
           _.isSelected = false;
         }
       });
-      this.optsUpdate.emit(userOpts);
+      if (this.userOpts.isImmediatePersist) {
+        this.optsStore.emit(this.userOpts);
+      }
     }
   }
 
   public setTimeSlize(event: any) {
     // we must clone opts to get a new object reference for this.opts in model
-    const userOpts: IUserEventOptions = GlobalFunctions.clone(this.userOpts);
+    // const userOpts: IUserEventOptions = GlobalFunctions.clone(this.userOpts);
     this.timeSlizeChoices.forEach(_ => {
       if (_.value === Number(event.target.value) && event.target.checked) {
-        userOpts.timeSlize = _.value;
-        this.optsUpdate.emit(userOpts);
+        this.userOpts.timeSlize = _.value;
         _.isChecked = true;
       } else {
         _.isChecked = false;
       }
     });
+    if (this.userOpts.isImmediatePersist) {
+      this.optsStore.emit(this.userOpts);
+    }
   }
 
   public setStartHour(event: any) {
     if (event.target.value) {
       // we must clone opts to get a new object reference for this.opts in model
-      const userOpts: IUserEventOptions = GlobalFunctions.clone(this.userOpts);
+      // const userOpts: IUserEventOptions = GlobalFunctions.clone(this.userOpts);
       this.startHourChoices.forEach(_ => {
         if (_.value === event.target.value && event.target.checked) {
           _.isChecked = true;
-          userOpts.startHour = Number(_.value);
+          this.userOpts.startHour = Number(_.value);
         } else {
           _.isChecked = false;
         }
       });
-      if (userOpts.lastHour <= userOpts.startHour) {
-        userOpts.lastHour = userOpts.startHour + 1;
-        this.initLastHourChoices(userOpts.lastHour);
+      if (this.userOpts.lastHour <= this.userOpts.startHour) {
+        this.userOpts.lastHour = this.userOpts.startHour + 1;
+        this.initLastHourChoices(this.userOpts.lastHour);
       }
-      this.optsUpdate.emit(userOpts);
+      if (this.userOpts.isImmediatePersist) {
+        this.optsStore.emit(this.userOpts);
+      }
     }
   }
 
   public setLastHour(event: any) {
     if (event.target.value) {
       // we must clone opts to get a new object reference for this.opts in model
-      const userOpts: IUserEventOptions = GlobalFunctions.clone(this.userOpts);
+      // const userOpts: IUserEventOptions = GlobalFunctions.clone(this.userOpts);
       this.lastHourChoices.forEach(_ => {
         if (_.value === event.target.value && event.target.checked) {
           _.isChecked = true;
-          userOpts.lastHour = Number(_.value);
+          this.userOpts.lastHour = Number(_.value);
         } else {
           _.isChecked = false;
         }
       });
-      if (userOpts.lastHour <= userOpts.startHour) {
-        userOpts.startHour = userOpts.lastHour - 1;
-        this.initStartHourChoices(userOpts.startHour);
+      if (this.userOpts.lastHour <= this.userOpts.startHour) {
+        this.userOpts.startHour = this.userOpts.lastHour - 1;
+        this.initStartHourChoices(this.userOpts.startHour);
       }
-      this.optsUpdate.emit(userOpts);
+      if (this.userOpts.isImmediatePersist) {
+        this.optsStore.emit(this.userOpts);
+      }
     }
   }
 

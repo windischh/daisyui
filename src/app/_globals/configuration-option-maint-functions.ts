@@ -114,7 +114,7 @@ export class ConfigurationOptionMaintFunctions {
   // we return type string if we do not know area or optionGroup
   static getStyleOptionType(area: string, optionGroup: number): number {
     switch (area) {
-      case 'eventCalendar':
+      case 'calendar':
         // we cover optionGroups from 100 to 400
         if (optionGroup >= 100 && optionGroup < 500 ) {
           return OptionType.stringSequence;
@@ -247,8 +247,8 @@ export class ConfigurationOptionMaintFunctions {
     const choices: Array<{value: number, text: string, isSelected: boolean}> = [];
     switch (name) {
       case 'opt_userEvents_style':
-        // get styles from eventCalendar
-        options.filter(_ => _.optionArea === 'eventCalendar'
+        // get styles from calendar
+        options.filter(_ => _.optionArea === 'calendar'
           && _.optionName.substr(_.optionArea.length + 4) === 'opt_style_name'
         ).forEach(_ => {
           const styleString  = _.optionName.substr(_.optionArea.length + 1, 2);
@@ -288,28 +288,28 @@ export class ConfigurationOptionMaintFunctions {
   // this are all stringValuesChoices for style-strucred options
   static getStyleStringChoices(area: string, optionGroup: number, optionName: string):
    Array<{value: number, text: string}> {
-    if (area === 'eventCalendar' && optionGroup === 9400 ) {
+    if (area === 'calendar' && optionGroup === 9400 ) {
       return [
         {value: 0, text: 'Testchoice1'},
         {value: 1, text: 'Testchoice2'}
       ];
-    } else if (area === 'eventCalendar' && optionGroup === 9500 ) {
+    } else if (area === 'calendar' && optionGroup === 9500 ) {
       return [
         {value: 0, text: 'Testchoice1'},
         {value: 1, text: 'Testchoice2'}
       ];
-    } else if (area === 'eventCalendar' && optionGroup === 9600 && optionName === 'Testname1') {
+    } else if (area === 'calendar' && optionGroup === 9600 && optionName === 'Testname1') {
       return [
         {value: 0, text: 'Testchoice1_1'},
         {value: 1, text: 'Testchoice1_2'}
       ];
-    } else if (area === 'eventCalendar' && optionGroup === 9600 && optionName === 'Testname2') {
+    } else if (area === 'calendar' && optionGroup === 9600 && optionName === 'Testname2') {
       return [
         {value: 0, text: 'Testchoice2_1'},
         {value: 1, text: 'Testchoice2_2'},
         {value: 2, text: 'Testchoice2_3'}
       ];
-    } else if (area === 'eventCalendar' && optionGroup === 9700 ) {
+    } else if (area === 'calendar' && optionGroup === 9700 ) {
       return [
         {value: 0, text: 'Testchoice1'},
         {value: 1, text: 'Testchoice2'}
@@ -340,17 +340,17 @@ export class ConfigurationOptionMaintFunctions {
 
   // this are all stringValuesChoices for style-structured options
   static getStyleStringNameChoices(area: string, optionGroup: number, auth: AuthenticationService): Array<{value: number, text: string}> {
-    if  (area === 'eventCalendar' && optionGroup === 9300 ) {
+    if  (area === 'calendar' && optionGroup === 9300 ) {
       return [
         {value: 0, text: 'Testname1'},
         {value: 1, text: 'Testname2'}
       ];
-    } else if (area === 'eventCalendar' && optionGroup === 9600 ) {
+    } else if (area === 'calendar' && optionGroup === 9600 ) {
       return [
         {value: 0, text: 'Testname1'},
         {value: 1, text: 'Testname2'}
       ];
-    } else if (area === 'eventCalendar' && optionGroup === 9700 ) {
+    } else if (area === 'calendar' && optionGroup === 9700 ) {
       return [
         {value: 0, text: 'Testname1'},
         {value: 1, text: 'Testname2'}

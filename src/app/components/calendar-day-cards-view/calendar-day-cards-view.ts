@@ -16,6 +16,8 @@ import { INumChoice } from '../../_interfaces/i-num-choice';
 import { IUserEventOptions } from '../../_interfaces/i-user-event-options';
 import { IEventOptions } from '../../_interfaces/i-event-options';
 import { CalendarDayTimeChangeComponent } from '../calendar-day-time-change/calendar-day-time-change';
+import { LogService } from '../../_services/log.service';
+import { MessageService } from '../../_services/message.service';
 
 
 @Component({
@@ -36,11 +38,25 @@ export class CalendarDayCardsViewComponent implements OnInit {
   @Input({required: true}) txt!: { [key: string]: string };
   @Input({required: true}) eventtxt!: { [key: string]: string };
 
-  @Input({required: true}) options!: Array<ConfigurationOption>;
-  // startHour, timeSlize, defaultIntervalSize are model parameters, managed by event-day-component
-  @Input({required: true}) opts!: IEventOptions;
-  @Input({required: true}) userOpts!: IUserEventOptions;
+  @Input() options: Array<ConfigurationOption> | undefined;
+  @Input() opts: IEventOptions | undefined;
+   // startHour, timeSlize, defaultIntervalSize are model parameters, managed by event-day-component
+  @Input() userOpts: IUserEventOptions | undefined;
 
+  @Input({required: true}) events!: Array<Event>;
+  @Input({required: true}) calendarDayChangeCounter!: number;
+
+  @Input() isCreating: boolean = false;
+  @Input() isSelecting: boolean = false;
+  @Input({required: true}) isViewMode!: boolean;
+
+  @Output() eventSelect = new EventEmitter<{isSelect: boolean, id: number}>();
+  // this view updates only event summary, begin, end
+  @Output() eventUpdate = new EventEmitter<{updateType: UpdateType, event: Event}>();
+  @Output() eventCreate = new EventEmitter<boolean>();
+  @Output() cardFormViewEnabled = new EventEmitter<{updateType: UpdateType, event: Event, d: Date | null}>();
+
+  
   // day of event - 00:00 in browser timezone
   // can be selected by user
   // calendarDay is in opts @Input({required: true}) calendarDay: Date;
@@ -49,17 +65,8 @@ export class CalendarDayCardsViewComponent implements OnInit {
 
   isAfterToday = false;
 
-  @Input({required: true}) events!: Array<Event>;
-  @Input({required: true}) eventsChangeCounter!: number;
-
-  @Input({required: true}) isCreating!: boolean;
-  @Input({required: true}) isSelecting!: boolean;
-
-  @Output() eventSelect = new EventEmitter<{isSelect: boolean, id: number}>();
-  // this view updates only event summary, begin, end
-  @Output() eventUpdate = new EventEmitter<{updateType: UpdateType, event: Event}>();
-  @Output() eventCreate = new EventEmitter<boolean>();
-  @Output() cardFormViewEnabled = new EventEmitter<{updateType: UpdateType, event: Event, d: Date | null}>();
+  // new Date() cannot be used in html template ...
+  today = new Date();
 
   // eventCards are enhanced events (time-picker attributes are set via mapping) and have same cardinality and sort-order as events
   eventCards!: Array<Event>;
@@ -73,9 +80,9 @@ export class CalendarDayCardsViewComponent implements OnInit {
 
   isEventsLoaded = false;
 
-
-
-  constructor() { }
+  constructor(private logger: LogService,
+          private message: MessageService
+  ) { }
 
   ngOnInit() {
 
@@ -90,7 +97,7 @@ export class CalendarDayCardsViewComponent implements OnInit {
           this.getEventParameters();
         }
       }
-      if (propKey === 'events' || propKey === 'eventsChangeCounter') {
+      if (propKey === 'events' || propKey === 'calendarDayChangeCounter') {
         isSetEvents = true;
       }
       // console.log('event-day-cards propkey: ', propKey, 'propvalue: ', JSON.stringify(propValue));
@@ -119,25 +126,16 @@ export class CalendarDayCardsViewComponent implements OnInit {
     this.isAfterToday = GlobalFunctions.getDateInMinutes(this.session.calendarDay) >= GlobalFunctions.getDateInMinutes(tomorrow);
   }
 
-  private buildLocationTypeChoices(): Array<INumChoice>  {
-    const enumStringType: { [key: string]: any } = this.locationTypeEnum;
-    const locationTypeChoices: Array<INumChoice> = Object.keys(this.locationTypeEnum)
-    .filter((k: any) => typeof this.locationTypeEnum[k] === 'number')
-    .map((_: string) => {
-      return {value: Number(enumStringType[_]), text: this.txt[_]};
-    });
-    return locationTypeChoices;
-  }
-
-
   private addDayStartCard() {
-    const dayStartDummy = EventFactory.empty();
-    dayStartDummy.eventBegin = GlobalFunctions.addMinutes(this.session.calendarDay, this.userOpts.startHour * 60);
-    dayStartDummy.eventEnd = dayStartDummy.eventBegin;
-    dayStartDummy.summary = (this.session?.isPlan ? this.txt['no_plan_entry'] : this.txt['no_entry'] );
-    const eventsDummy: Array<Event> = [];
-    eventsDummy.push(dayStartDummy);
-    this.buildEventCards(eventsDummy);
+    if (this.userOpts) {
+      const dayStartDummy = EventFactory.empty();
+      dayStartDummy.eventBegin = GlobalFunctions.addMinutes(this.session.calendarDay, this.userOpts.startHour * 60);
+      dayStartDummy.eventEnd = dayStartDummy.eventBegin;
+      dayStartDummy.summary = (this.session?.isPlan ? this.txt['no_plan_entry'] : this.txt['no_entry'] );
+      const eventsDummy: Array<Event> = [];
+      eventsDummy.push(dayStartDummy);
+      this.buildEventCards(eventsDummy);
+    }
   }
 
 
@@ -159,7 +157,7 @@ export class CalendarDayCardsViewComponent implements OnInit {
         contactStyle = card.eventInfo?.contactColor ? StyleFactory.getBgColorStyle(card.eventInfo.contactColor, 0) : {};
       }
       // event might be updated in another view, but all eventCards ar set to update = false;
-      card.cardElement = {spaceBefore: 0, spaceAfter: 0, isTemporary: false, isSummaryUpdated: false,
+      card.cardElement = {spaceBefore: 0, spaceAfter: 0, isTemporary: false, isSummaryEntered: false, isSummaryUpdated: false,
         eventDurationDisplay, contactDisplayNr, contactDisplayName, contactStyle};
       // console.log('map models for ', JSON.stringify(event));
       return card;
@@ -188,33 +186,33 @@ export class CalendarDayCardsViewComponent implements OnInit {
 
         if (!GlobalFunctions.isMinuteSame(card.eventBegin, card.eventEnd)) {
           card.cardElement.isEndOnNextDay = card.eventEnd.getTime() >= GlobalFunctions.addDays(this.session.calendarDay, 1).getTime();
-          card.cardElement.locationTypeChoices = this.buildLocationTypeChoices();
-          const ix = card.cardElement.locationTypeChoices.findIndex(_ => _.value === card.locationType);
-          if (ix >= 0) {
-            card.cardElement.locationTypeChoices[ix].isSelected = true;
-          }
         }
       }
     });
 
   }
 
-  // recognize clicks outside of locationType dropdown
-  @HostListener('window:click', ['$event.target'])
-  onClick(target: any) {
-    if ((target && (target.id === 'selectItem' || target.id === 'dropdownButton'))
-      || ((target?.parentElement) && (target.parentElement?.id ===  'dropdown'  || target.parentElement?.id ===  'dropdownButton'  ))) {
-      // console.log(`click id is`, target.id);
-      // console.log(`parent id is`, target.parentElement.id);
-    } else {
-      // console.log(`You clicked on`, target);
-      if (this.eventCards) {
-        this.eventCards.forEach(_ => {
-          if (_.cardElement) _.cardElement.isShowLocationTypeDropdown = false;
-        });
+  /** --------------------------  supporting functions for public methods -------------------------------------------- */
+
+  private getNewEnd(begin: Date, end: Date): Date {
+    if (this.opts) {
+      let nextEvent: Event | null = GlobalFunctions.getNextEvent(this.events, begin);
+      // if we get this processed event as next event we search for real next event
+      if (nextEvent && GlobalFunctions.isMinuteSame(nextEvent.eventBegin, begin)) {
+        nextEvent = GlobalFunctions.getNextEvent(this.events, GlobalFunctions.addMinutes(begin, 1));
+      }
+      // if overlapping, eventEnd is set to begin of next event, duration is shortened
+      if (nextEvent && GlobalFunctions.isMinuteEarlier(nextEvent.eventBegin, end )) {
+        end = nextEvent.eventBegin;
+      }
+      // duration must not exceed this.opts.maxIntervalLength
+      if (GlobalFunctions.isMinuteEarlier(GlobalFunctions.addMinutes(begin, this.opts.maxIntervalLength), end)) {
+        end = GlobalFunctions.addMinutes(begin, this.opts.maxIntervalLength);
       }
     }
+    return end;
   }
+
 
   /** ------------------------  public methods --------------------------------------------------- */
 
@@ -248,7 +246,7 @@ export class CalendarDayCardsViewComponent implements OnInit {
    * @param index of event - we use eventBegim of event where insert symbol was clicked as eventEnd for new event
    */
   public insertBefore(i: number): void {
-    if (this.eventCards.filter(_ => _.cardElement?.isSummaryUpdated || _.cardElement?.isShowTimeChange).length === 0
+    if (this.opts && this.eventCards.filter(_ => _.cardElement?.isSummaryUpdated || _.cardElement?.isShowTimeChange).length === 0
     && (!this.session.isPlan || GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date())) <= GlobalFunctions.getDateInMinutes(this.session.calendarDay))) {
       const newEvent = EventFactory.empty();
       newEvent.type = this.session.isPlan ? 0 : 1;
@@ -270,7 +268,7 @@ export class CalendarDayCardsViewComponent implements OnInit {
         newEvent.eventDuration = GlobalFunctions.getDateInMinutes(newEvent.eventEnd)
         - GlobalFunctions.getDateInMinutes(newEvent.eventBegin);
         const eventDurationDisplay = GlobalFunctions.minutesDisplay(newEvent.eventDuration);
-        newEvent.cardElement = {isTemporary: true, isSummaryUpdated: true, spaceBefore: 0, spaceAfter: 0,
+        newEvent.cardElement = {isTemporary: true, isSummaryEntered: false, isSummaryUpdated: true, spaceBefore: 0, spaceAfter: 0,
           eventDurationDisplay, contactDisplayNr: '', contactDisplayName: ''};
         this.eventCards = this.eventCards.filter(_ =>_.eventBegin < _.eventEnd);
         this.eventCards.push(newEvent);
@@ -288,7 +286,7 @@ export class CalendarDayCardsViewComponent implements OnInit {
    * @param i - index of event - we use eventEnd of event where insert symbol was clicked as eventStart for new event
    */
   public insertAfter(i: number): void {
-    if (this.eventCards.filter(_ => _.cardElement?.isSummaryUpdated || _.cardElement?.isShowTimeChange).length === 0
+    if (this.opts && this.eventCards.filter(_ => _.cardElement?.isSummaryUpdated || _.cardElement?.isShowTimeChange).length === 0
     && (!this.session.isPlan || GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date())) <= GlobalFunctions.getDateInMinutes(this.session.calendarDay))) {
       const newEvent = EventFactory.empty();
       newEvent.type = this.session.isPlan ? 0 : 1;
@@ -310,7 +308,7 @@ export class CalendarDayCardsViewComponent implements OnInit {
       newEvent.eventDuration = GlobalFunctions.getDateInMinutes(newEvent.eventEnd)
       - GlobalFunctions.getDateInMinutes(newEvent.eventBegin);
       const eventDurationDisplay = GlobalFunctions.minutesDisplay(newEvent.eventDuration);
-      newEvent.cardElement = {isTemporary: true, isSummaryUpdated: true, spaceBefore: 0, spaceAfter: 0, eventDurationDisplay,
+      newEvent.cardElement = {isTemporary: true, isSummaryEntered: false, isSummaryUpdated: true, spaceBefore: 0, spaceAfter: 0, eventDurationDisplay,
         contactDisplayNr: '', contactDisplayName: ''};
       this.eventCards = this.eventCards.filter(_ =>_.eventBegin < _.eventEnd);
       this.eventCards.push(newEvent);
@@ -364,51 +362,25 @@ export class CalendarDayCardsViewComponent implements OnInit {
     }
   }
 
-
-  public showLocationType(i: any) {
-    if (this.eventCards[i].cardElement?.isShowLocationTypeDropdown) {
-      this.eventCards[i].cardElement.isShowLocationTypeDropdown = false;
-    } else if (this.eventCards.filter(_ => _.cardElement?.isSummaryUpdated || _.cardElement?.isShowTimeChange).length === 0 || this.eventCards[i].cardElement?.isTemporary) {
-      if (this.eventCards[i].cardElement) this.eventCards[i].cardElement.isShowLocationTypeDropdown = true;
-    }
-  }
-
-  public updateLocationType(i: number, value: number): void {
-    // console.log('i:', i)
-    // console.log('value:', value)
-    // console.log('value type:', typeof value)
-    this.eventCards[i].cardElement?.locationTypeChoices?.forEach(_ => {
-      if (_.value  === value) {
-        _.isSelected = true;
-          this.eventCards[i].locationType = value;
-          if (!this.eventCards[i].cardElement?.isTemporary) {
-            this.eventUpdate.emit({updateType: UpdateType.update, event: this.eventCards[i]});
-          }
-      } else {
-        _.isSelected = false;
-      }
-    });
-    if (this.eventCards[i].cardElement) this.eventCards[i].cardElement.isShowLocationTypeDropdown = false;
-  }
-
   // we use update to set the update flag - if event is updated by another view, we do not allow updating
   // if another event is just beeing update or time-updated, no update of this event is possible
   public setUpdateSummary(i: number): void {
     // no update for dayStartCard and no update if events are updated by another view
     if (!GlobalFunctions.isMinuteSame(this.eventCards[i].eventBegin, this.eventCards[i].eventEnd)
-    && !this.isSelecting
-    // @deprecated && this.events.filter(_ => _.isUpdated && _.eventId === this.eventCards[i].eventId).length === 0
+      && !this.isViewMode
+      // @deprecated && this.events.filter(_ => _.isUpdated && _.eventId === this.eventCards[i].eventId).length === 0
       && this.eventCards.filter(_ => _.cardElement?.isSummaryUpdated || _.cardElement?.isShowTimeChange).length === 0)  {
       if (this.eventCards[i].cardElement) this.eventCards[i].cardElement.isSummaryUpdated = true;
       // this.eventSetUpdate.emit(this.eventCards[i].eventId);
     }
   }
 
-  public storeSummary(i: number, summary: string, info: string): void {
-    if (summary && summary.length > 0 && this.eventCards[i].cardElement?.isSummaryUpdated) {
-      this.eventCards[i].summary = summary;
+  public setSummaryEntered(i: number, summaryString: string) {
+    if (this.eventCards[i].cardElement) {
+      this.eventCards[i].cardElement.isSummaryEntered = summaryString !== '' ? true : false;
     }
   }
+
 
   /**
    * update sets text fields in event and sends eventUpdate
@@ -417,10 +389,11 @@ export class CalendarDayCardsViewComponent implements OnInit {
    * @param i index of eventCards
    * @param summary text for this event
    */
-  public updateSummary(i: number, summary: string, info: string): void {
+  public updateSummary(i: number, summary: string): void {
     // console.log('setSummaryEmit', info);
     if (summary && summary.length > 0 && this.eventCards[i].cardElement?.isSummaryUpdated) {
       this.eventCards[i].summary = summary;
+      this.eventCards[i].cardElement.isSummaryEntered = false;
       // this.eventCards[i].cardElements.isSummaryUpdated = false;
       if (this.eventCards[i].cardElement.isTemporary) {
         // this.eventCards[i].cardElements.isTemporary = false;
@@ -449,7 +422,10 @@ export class CalendarDayCardsViewComponent implements OnInit {
           this.addDayStartCard();
         }
       } else {
-        if (this.eventCards[i].cardElement) this.eventCards[i].cardElement.isSummaryUpdated = false;
+        if (this.eventCards[i].cardElement) {
+          this.eventCards[i].cardElement.isSummaryUpdated = false;
+          this.eventCards[i].cardElement.isSummaryEntered = false;
+        }
         this.eventCards[i].summary = this.events.find(_ => _.eventId === this.eventCards[i].eventId)?.summary ?? '';
           // console.log('cancelUpdatesEmit');
           // this.eventUpdate.emit({type: UpdateType.cancelUpdate, event: this.eventCards[i], id: this.eventCards[i].eventId});
@@ -459,7 +435,7 @@ export class CalendarDayCardsViewComponent implements OnInit {
   }
 
   public setDone(i: number): void {
-    if (!this.isCreating && !this.isSelecting) {
+    if (!this.isCreating && !this.isViewMode) {
       if(this.eventCards[i].doneId > 0 && confirm(this.txt['reset'] + ' ' + this.txt['done'] + '?')) {
         this.eventCards[i].doneId = 0;
         this.eventUpdate.emit({updateType: UpdateType.update, event: this.eventCards[i]});
@@ -490,41 +466,35 @@ export class CalendarDayCardsViewComponent implements OnInit {
 
 
   public enableCardFormView(eventCard: Event, i: number) {
-    if (eventCard.eventId === this.eventCards[i].eventId
-      && this.eventCards.filter(_ => (_.cardElement?.isSummaryUpdated && _.eventId !== eventCard.eventId)
-      || _.cardElement?.isShowTimeChange).length === 0) {
-      // we transfer eventually updated summary, location type to card-form-view
-      // eventCards itself are set back to original value
+    let errorMessage = '';
+    if (eventCard.eventId === this.eventCards[i].eventId) {
       const event: Event = GlobalFunctions.clone(this.eventCards[i]);
-      if (event.cardElement?.isTemporary) {
-        this.cardFormViewEnabled.emit({updateType: UpdateType.insert, event, d: null});
+      if (this.isViewMode) {
+        this.cardFormViewEnabled.emit({updateType: UpdateType.setShow, event, d: null});
+      } else if (this.eventCards.filter(_ => (_.cardElement?.isSummaryUpdated && _.eventId !== eventCard.eventId)
+        || _.cardElement?.isShowTimeChange).length === 0) {
+        // we transfer eventually updated summary, location type to card-form-view
+        // eventCards itself are set back to original value
+        if (event.cardElement?.isTemporary) {
+          this.cardFormViewEnabled.emit({updateType: UpdateType.insert, event, d: null});
+        } else {
+          this.cardFormViewEnabled.emit({updateType: UpdateType.update, event, d: null});
+        }
+        this.cancelUpdates(i);
       } else {
-        this.cardFormViewEnabled.emit({updateType: UpdateType.update, event, d: null});
+        errorMessage = 'internal error - update mode not possible';
       }
-      this.cancelUpdates(i);
+    } else {
+      errorMessage = 'internal error - eventId not correct';
+    }
+    if (errorMessage !== '') {
+      this.message.info(errorMessage);
+      this.logger.error(this.session, this.name, errorMessage);
     }
   }
 
 
-  /** --------------------------  supporting functions for public methods -------------------------------------------- */
-
-  private getNewEnd(begin: Date, end: Date): Date {
-    let nextEvent: Event | null = GlobalFunctions.getNextEvent(this.events, begin);
-    // if we get this processed event as next event we search for real next event
-    if (nextEvent && GlobalFunctions.isMinuteSame(nextEvent.eventBegin, begin)) {
-      nextEvent = GlobalFunctions.getNextEvent(this.events, GlobalFunctions.addMinutes(begin, 1));
-    }
-    // if overlapping, eventEnd is set to begin of next event, duration is shortened
-    if (nextEvent && GlobalFunctions.isMinuteEarlier(nextEvent.eventBegin, end )) {
-      end = nextEvent.eventBegin;
-    }
-    // duration must not exceed this.opts.maxIntervalLength
-    if (GlobalFunctions.isMinuteEarlier(GlobalFunctions.addMinutes(begin, this.opts.maxIntervalLength), end)) {
-      end = GlobalFunctions.addMinutes(begin, this.opts.maxIntervalLength);
-    }
-    return end;
-  }
-
+  
 }
 
 

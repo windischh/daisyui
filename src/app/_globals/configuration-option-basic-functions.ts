@@ -30,7 +30,7 @@ export class ConfigurationOptionBasicFunctions {
    * @returns true if option exsits
    */
   static getOptionExists(options: ConfigurationOption[], optionName: string): boolean {
-    if (options) {
+    if (options && optionName) {
       const option = options.filter(_ => _.optionName.startsWith(optionName))[0];
       if (option) {
         return true;
@@ -49,7 +49,7 @@ export class ConfigurationOptionBasicFunctions {
    * @returns optionId
    */
   static getOptionId(options: ConfigurationOption[], optionName: string): number | null{
-    if (options) {
+    if (options && optionName) {
       const option = options.filter(_ => _.optionName.startsWith(optionName))[0];
       if (option) {
         return option.optionId;
@@ -70,7 +70,7 @@ export class ConfigurationOptionBasicFunctions {
    * @returns string value
    */
   static getOptionString(options: ConfigurationOption[], optionName: string): string | null {
-    if (options) {
+    if (options && optionName) {
       const stringOption = options.filter(_ => _.optionName.startsWith(optionName))[0];
       if (stringOption && (stringOption.type === OptionType.string
         || (Math.floor(stringOption.type / 10) * 10 ) === 10)) {
@@ -90,7 +90,7 @@ export class ConfigurationOptionBasicFunctions {
    * @returns boolean value
    */
   static getOptionBoolean(options: ConfigurationOption[], optionName: string): boolean | null {
-    if (options) {
+    if (options && optionName) {
       const booleanOption = options.filter(_ => _.optionName.startsWith(optionName))[0];
       if (booleanOption && booleanOption.type === OptionType.boolean) {
         return booleanOption.optionBooleanValue === 1 ? true : false;
@@ -109,7 +109,7 @@ export class ConfigurationOptionBasicFunctions {
    * @returns numeric value
    */
   static getOptionInt(options: ConfigurationOption[], optionName: string): number | null {
-    if (options) {
+    if (options && optionName) {
       const intOption = options.filter(_ => _.optionName.startsWith(optionName))[0];
       if (intOption && (intOption.type === OptionType.int
         || intOption.type === OptionType.intValueChoice
@@ -130,7 +130,7 @@ export class ConfigurationOptionBasicFunctions {
    * @returns Date
    */
   static getOptionDate(options: ConfigurationOption[], optionName: string): Date | null {
-    if (options) {
+    if (options && optionName) {
       const dateOption = options.filter(_ => _.optionName.startsWith(optionName))[0];
       if (dateOption && (dateOption.type === OptionType.date)) {
         return dateOption.optionDateValue;
@@ -148,7 +148,7 @@ export class ConfigurationOptionBasicFunctions {
 
   static getStyleOptionSeq(options: ConfigurationOption[], area: string, style: number,
     optionGroup: number, isStyleHasDefault?: boolean, isStyleIsDefault?: boolean): Array<Array<string>> | null {
-    if (options) {
+    if (options && area && style >= 0 && optionGroup >= 0) {
       const pairedOptions: Array<Array<string | null>> = [];
       const optionNameKey = this.getOptionKey(area, style, optionGroup);
       for (const o of options.filter(option => option.optionName.startsWith(optionNameKey))) {
@@ -176,7 +176,7 @@ export class ConfigurationOptionBasicFunctions {
 
   static getStyleOptionString(options: ConfigurationOption[], area: string,  style: number,
     optionGroup: number, isStringHasDefault?: boolean, isStringIsDefault?: boolean): string | null {
-    if (options) {
+    if (options && area && style >= 0  && optionGroup >= 0) {
       const optionNameKey = this.getOptionKey(area, style, optionGroup);
       let stringOption = '';
       let optionsCount = 0;
@@ -209,7 +209,7 @@ export class ConfigurationOptionBasicFunctions {
   }
 
   static getStyleOptionBoolean(options: ConfigurationOption[], area: string, style: number, optionGroup: number): boolean | null {
-    if (options) {
+    if (options && area && style >= 0 && optionGroup >= 0) {
       const optionNameKey = this.getOptionKey(area, style, optionGroup);
       const booleanOption = options.filter(_ => _.optionName.startsWith(optionNameKey))[0];
       if (booleanOption && booleanOption.type === OptionType.boolean) {
@@ -225,7 +225,7 @@ export class ConfigurationOptionBasicFunctions {
   // int options for styles are int and intValueChoice - style choice cannot be selected
   // (we can not bind style to an option in another style)
   static getStyleOptionInt(options: ConfigurationOption[], area: string, style: number, optionGroup: number): number | null {
-    if (options) {
+    if (options && area && style >= 0 && optionGroup >= 0) {
       const optionNameKey = this.getOptionKey(area, style, optionGroup);
       const intOption = options.filter(_ => _.optionName.startsWith(optionNameKey))[0];
       if (intOption && (intOption.type === OptionType.int

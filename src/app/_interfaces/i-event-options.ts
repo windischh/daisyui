@@ -6,15 +6,14 @@
  */
 export interface IEventOptions {
   [index: string]: number | boolean;
+  /* show events backward and forward - in days */
+  showFrom: number;
+  showTo: number;
+  /* interval length for events in minutes*/
   defaultIntervalLength: number;
   maxIntervalLength: number;
-  /* usContactBooking can be true if servicelLevel.contact > 0    */
-  isContactBooking: boolean;
-  isBookingOffIssueTimes: boolean;
-  isChangeIssueTimes: boolean;
-  isGenerateChildIssues: boolean;
+  /* can we book an event over midnight */
   isBookingOverMidnight: boolean;
-  isChooseAllContactIssues: boolean;
 
   /* these options are user specific event options */
   /* userEventOptions 1 - 7, maintain in calendar-day-options-view
