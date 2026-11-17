@@ -1,4 +1,4 @@
-import { EventFactory } from './../_db/event-factory';
+import { CalendarEventFactory } from '../_db/calendar-event-factory';
 import { IEventListElement } from './i-event-list-element';
 
 /**
@@ -11,7 +11,7 @@ export class IEventExportElementFactory {
   static empty(): IEventListElement {
     return {
       timeString: '',
-      event: EventFactory.empty(),
+      event: CalendarEventFactory.empty(),
       userName : '',
       contactNr :  0,
       contactDisplayNr :   '',
@@ -25,7 +25,7 @@ export class IEventExportElementFactory {
   }
 
   static default(): IEventListElement {
-    const event = EventFactory.empty();
+    const event = CalendarEventFactory.empty();
     event.summary = '-- text --';
     event.description = '-- text --';
     event.location = '-- text --';

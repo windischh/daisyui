@@ -1,4 +1,4 @@
-import { Event } from '../_db/event';
+import { CalendarEvent } from '../_db/calendar-event';
 
 /**
  * IEventGridElement
@@ -10,7 +10,7 @@ export interface IEventGridElement {
   timeElement: string;
   timeBegins: boolean;
   timeRowSpan: number;
-  event?: Event;
+  event?: CalendarEvent;
   eventBegins: boolean;
   eventEnds: boolean;
   eventDurationDisplay: string;

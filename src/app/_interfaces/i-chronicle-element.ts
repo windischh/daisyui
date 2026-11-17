@@ -10,5 +10,5 @@ export interface IChronicleElement {
   documentsCount: number,
   eventsCount: number,
   isElementShown: boolean,
-  subElements?: Array<IChronicleElement>
+  subElements: Array<IChronicleElement>
 }

@@ -1,34 +1,37 @@
 <!-- table-layout: 'fixed' - table head defines column width -->
 @if (txt && userOpts && readySignal() > 0) {
-  <div class="overflow-x-auto p-4">
+  <div class="container mx-auto overflow-x-auto p-4">
     <table class="table table-fixed" [ngStyle]="configurableStyles.tableStyle">
       <thead>
         <tr [ngStyle]="configurableStyles.tableHeaderStyle">
           <th class="w-[8%] text-left">{{txt['time']}}</th>
           @for (d of weekDays; track $index; let i = $index) {
-            <th class="text-center"
+            <th class="text-center cursor-pointer"
               [ngStyle]="setHeaderDayStyle(i)"
               [attr.colspan]="d.isToday && !isShowPlan ? 2 : 1"
-            (click)="!isSelecting ? setCalendarDay(i) : null">{{(isSelecting && !d.isSelected) ? '' : d.dateDisplay}}</th>
+              (click)="!isSelecting ? setCalendarDay(i) : null">
+              <span class="tooltip tooltip-bottom tooltip-primary" [attr.data-tip]="txt['show_day']">{{(isSelecting && !d.isSelected) ? '' : d.dateDisplay}}</span>
+            </th>
           }
         </tr>
         <tr [ngStyle]="configurableStyles.tableHeaderStyle">
           <!-- we need "overflow: visible" to show tooltip over other table elements  -->
-          <th class="w-[8%] text-left" style="overflow: visible;" [ngStyle]="timeHeaderStyle">
+          <th class="w-[8%] text-left border-b-4 overflow-visible">
             @if (isTodayInWeek || isTodayAfterWeek) {
               <div class="form-control tooltip tooltip-bottom tooltip-accent"
                 [attr.data-tip]="txt['show_plan']">
                 <label class="label cursor-pointer gap-2">
                   <input type=checkbox class="checkbox checkbox-sm" [checked]="isShowPlan" (change)="toggleShowPlan($event)">
-                  <span class="label-text"><small>P</small></span>
+                  <span class="label-text test-sm">P</span>
                 </label>
               </div>
             }
           </th>
           @for (c of weekColumns; track $index; let ix = $index) {
-            <th class="text-center"
-              [ngStyle]="c.isSelected ? planHeaderBoldStyle : planHeaderNormalStyle"
-            (click)="!isSelecting?setPlan(ix):null">{{(isSelecting && !c.isSelected) ? '' : c.isPlan ? txt['plan'] : txt['actual']}}</th>
+            <th class="text-center border-b-4"
+              [ngClass]="[c.isSelected ? 'font-bold' : 'font-normal', !isSelecting ? 'cursor-pointer' : '']"
+              (click)="!isSelecting ? setPlan(ix) : null">{{(isSelecting && !c.isSelected) ? '' : c.isPlan ? txt['plan'] : txt['actual']}}
+            </th>
           }
         </tr>
       </thead>
@@ -36,7 +39,7 @@
         @for (timeSpan of timeSpanGrid; track $index; let row = $index) {
           <tr [ngStyle]="configurableStyles.tableRowStyle">
             @if (row === timeSpanGrid.length - 1) {
-              <td [ngStyle]="configurableStyles.timeElementOutsideStyle"
+              <td class="py-0" [ngStyle]="configurableStyles.timeElementOutsideStyle"
                 (click)="toggleShowBeforeStartHour()">
                 @if (isShowBeforeStartHour) {
                   <i class="fas fa-sort-down cursor-pointer"
@@ -51,41 +54,32 @@
               </td>
             }
             @if (row < timeSpanGrid.length - 1) {
-              <td></td>
+              <td class="py-0" [ngStyle]="configurableStyles.timeElementOutsideStyle"></td>
             }
             <!-- columns c for the 7 or 8 day columns  -->
             @for (c of weekColumns; track $index; let column = $index) {
               @if (!timeSpan[column]) {
-                <td></td>
+                <!-- we need py-0 no vertical padding to avoid empty space beween table rows ...-->
+                <td class="py-0"></td>
               }
               @if (timeSpan[column] && timeSpan[column]?.event && timeSpan[column]?.ixFrom === column) {
-                <td [ngStyle]="timeSpan[column]?.eventElementStyle"
-                  [attr.colspan]="1 + (timeSpan[column]?.ixTo ?? 0) - (timeSpan[column]?.ixFrom ?? 0)"
-                  (click)="!isSelecting && timeSpan[column]?.event && (timeSpan[column]?.event?.type ?? 0)  > 22 ? enableEventCard(timeSpan[column]?.event ?? undefined) : null" >
-                  <div class="flex items-center gap-1">
-                    <div class="flex-1">
-                      <small>
-                        @if ((timeSpan[column]?.event?.type ?? 0) > 22 && timeSpan[column]?.category !== '') {
-                          <span
-                            [ngStyle]="setTimeSpanCategoryStyle(column, timeSpan[column] ?? undefined)">
-                            {{timeSpan[column]?.category}} -
-                          </span>
-                        }
-                        @if (timeSpan[column]?.contactDisplayNr && timeSpan[column]?.contactDisplayNr !== '' && configurableStyles.isShowContactColumn) {
-                          <span class="badge text-left"
-                            [ngStyle]="timeSpan[column]?.leftContactStyle"
-                            [attr.data-tip]="timeSpan[column]?.contactDisplayName" [ngClass]="timeSpan[column]?.ixFrom === timeSpan[column]?.ixTo ? 'tooltip tooltip-bottom tooltip-accent' : 'tooltip tooltip-right tooltip-accent'">
-                            {{timeSpan[column]?.contactDisplayNr}}
-                          </span>
-                        }
-                        <span [ngStyle]="setTimeSpanSummaryStyle(column, timeSpan[column] ?? undefined)">
-                          <!-- 1 or 2 columns: text is limited by pipe, in case of 3++ columns we use nowrap -->
-                          {{timeSpan[column]?.ixFrom === timeSpan[column]?.ixTo ? (timeSpan[column]?.summaryDisplay|slice:0:(windowFactor * (33 - (timeSpan[column]?.category?.length ?? 0) - (timeSpan[column]?.contactDisplayNr?.length ?? 0))))
-                          : (timeSpan[column]?.ixFrom ?? 0) + 1 === timeSpan[column]?.ixTo ? (timeSpan[column]?.summaryDisplay|slice:0:(windowFactor * (80 - (timeSpan[column]?.category?.length ?? 0) - (timeSpan[column]?.contactDisplayNr?.length ?? 0))))
-                          : (timeSpan[column]?.summaryDisplay|slice:0:(windowFactor * ((timeSpan[column]?.summaryDisplay?.length ?? 0)- (timeSpan[column]?.contactDisplayNr?.length ?? 0))))}}
-                        </span>
-                      </small>
-                    </div>
+                <td class="p-0" [attr.colspan]="1 + (timeSpan[column]?.ixTo ?? 0) - (timeSpan[column]?.ixFrom ?? 0)">
+                  <div class="badge badge-outline" [ngClass]="[c.isSelected ? 'font-bold' : 'font-normal', !isSelecting && timeSpan[column]?.event && (timeSpan[column]?.event?.type ?? 0)  > 22 ? 'cursor-pointer' : '']"
+                    [ngStyle]="timeSpan[column]?.eventElementStyle"
+                    (click)="!isSelecting && timeSpan[column]?.event && (timeSpan[column]?.event?.type ?? 0)  > 22 ? enableEventCard(timeSpan[column]?.event ?? undefined) : null" >
+                    <span class="text-xs tooltip tooltip-right tooltip-accent" 
+                      [attr.data-tip]="timeSpan[column]?.category !== '' && timeSpan[column]?.ixTo  === timeSpan[column]?.ixFrom  ? timeSpan[column]?.category : ''">
+                      <!-- 1 or 2 columns: text is limited by pipe dependend on window width-->
+                      {{timeSpan[column]?.ixFrom === timeSpan[column]?.ixTo ? (timeSpan[column]?.summaryDisplay|slice:0:( (windowWidth/1000) * (18 - ((timeSpan[column]?.contactDisplayNr?.length ?? 0) > 0 ? 8 : 0) )))
+                      : (timeSpan[column]?.ixFrom ?? 0) + 1 === timeSpan[column]?.ixTo ? (timeSpan[column]?.summaryDisplay|slice:0:( (windowWidth/1000) * (32  - ((timeSpan[column]?.contactDisplayNr?.length ?? 0) > 0 ? 5 : 0) )))
+                      : timeSpan[column]?.summaryDisplay|slice:0:( (windowWidth/1000) * (22 * ((timeSpan[column]?.ixTo ?? 0) - (timeSpan[column]?.ixFrom ?? 0)))  - ((timeSpan[column]?.contactDisplayNr?.length ?? 0) > 0 ? 5 : 0) )}}
+                    </span>
+                    @if (timeSpan[column]?.contactDisplayNr && timeSpan[column]?.contactDisplayNr !== '' && configurableStyles.isShowContactColumn) {
+                      <span class="text-xs" [ngClass]="timeSpan[column]?.ixFrom === timeSpan[column]?.ixTo ? 'tooltip tooltip-left tooltip-accent' : 'tooltip tooltip-right tooltip-accent'"
+                        [attr.data-tip]="timeSpan[column]?.contactDisplayName">
+                        {{timeSpan[column]?.contactDisplayNr}}
+                      </span>
+                    }
                   </div>
                 </td>
               }
@@ -127,7 +121,7 @@
             @for (c of g; track $index; let ix = $index) {
               <!-- td  if no event or at begin of event (with rowspan)-->
               @if (!c.event) {
-                <td [ngStyle]="setPointer(c.rowElementStyle ?? {}, weekColumns[ix].isSelected && !isSelecting)"
+                <td [ngClass]="weekColumns[ix].isSelected && !isSelecting ? 'cursor-pointer' : ''"  [ngStyle]="c.rowElementStyle"
                 (click)="weekColumns[ix].isSelected && !isSelecting && session.isPlanMaint ? insertEventCard(c.roundedMinutes) : null"></td>
               }
               <!-- td for event -->
@@ -136,30 +130,30 @@
                   (click)="!isSelecting && c.event ? enableEventCard(c.event) : null" >
                   <!-- // [attr.data-tip] events due overflow: visible -->
                   <p [ngStyle]="weekColumns[ix].isSelected ? choosenEventStyle : eventStyle"
-                class="tooltip tooltip-top tooltip-left tooltip-accent"
+                    class="tooltip tooltip-top tooltip-left tooltip-accent"
                     [attr.data-tip]="(c.event?.eventBegin|date:'H:mm') + ' - ' +
-                (c.event?.eventEnd|date:'H:mm') + ' : ' + c.eventDurationDisplay">
+                    (c.event?.eventEnd|date:'H:mm') + ' : ' + c.eventDurationDisplay">
                     {{c.event?.eventBegin|date:'HH:mm'}}
-                    @if (c.event?.locationType && (c.event?.locationType ?? 0) >= 1 && (c.event?.locationType ?? 0) <= 5) {
+                    @if (c.event && c.event.locationType && c.event.locationType >= 1 && c.event.locationType <= 5) {
                       <span
                         class="tooltip tooltip-bottom tooltip-accent"
-                        [attr.data-tip]="c.event?.locationType?.toString() + ' - ' + txt[locationTypeEnum[c.event?.locationType ?? 0]]">
-                        @if (c.event?.locationType === 1) {
+                        [attr.data-tip]="c.event.locationType.toString() + ' - ' + txt[locationTypeEnum[c.event.locationType]]">
+                        @if (c.event.locationType === 1) {
                           <i class="fas fa-wrench"></i>
                         }
-                        @if (c.event?.locationType === 2) {
+                        @if (c.event.locationType === 2) {
                           <i class="fas fa-motorcycle"></i>
                         }
-                        @if (c.event?.locationType === 3) {
+                        @if (c.event.locationType === 3) {
                           <i class="fas fa-users"></i>
                         }
-                        @if (c.event?.locationType === 4) {
+                        @if (c.event.locationType === 4) {
                           <i class="fas fa-laptop"></i>
                         }
-                        @if (c.event?.locationType === 5) {
+                        @if (c.event.locationType === 5) {
                           <i class="fas fa-mobile-screen"></i>
                         }
-                        @if (c.event?.locationType === 6) {
+                        @if (c.event.locationType === 6) {
                           <i class="fas fa-briefcase"></i>
                         }
                       </span>

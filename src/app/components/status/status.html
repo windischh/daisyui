@@ -42,7 +42,19 @@
         </select>
       </div>
     </div>
+    @if (session?.app === App.local) {
+      <div class="flex flex-wrap gap-4 mt-4 items-center">
+        <div class="flex-none w-32 ml-12">
+          <h3>  {{auth.txt['calendar']}} {{auth.txt['status']}}: </h3>
+          </div>
+        <div class="flex-1">
+          <div class="flex flex-col">
+            @for (cal of calendarMessages; track $index) {
+            <div [ngClass]="cal[0]">{{cal[1]}}</div>
+            }
+          </div>
+        </div>
+      </div>
+    }
   }
 </div>
-
-

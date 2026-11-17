@@ -11,8 +11,8 @@ import { ChronicleComponent } from './components/chronicle/chronicle';
 import { DocumentComponent } from './components/document/document';
 import { ConfigurationComponent } from './components/configuration/configuration';
 import { ShowLogComponent } from './components/show-log/show-log';
-import { EventComponent } from './components/event/event';
-import { EventExportComponent } from './components/event-export/event-export';
+import { CalendarEventComponent } from './components/calendar-event/calendar-event';
+import { CalendarEventExportComponent } from './components/calendar-event-export/calendar-event-export';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'local', pathMatch: 'full'},
@@ -36,7 +36,7 @@ export const routes: Routes = [
       },
       { path: 'calendarExport', component: CalendarExportComponent
       },
-      { path: 'eventExport', component: EventExportComponent
+      { path: 'calendarEventExport', component: CalendarEventExportComponent
       },
       { path: 'contactExport', component: ContactExportComponent
       },
@@ -44,7 +44,7 @@ export const routes: Routes = [
       },
       { path: 'document', component: DocumentComponent
       },
-      { path: 'event', component: EventComponent
+      { path: 'calendarEvent', component: CalendarEventComponent
       },
       { path: 'configuration', component: ConfigurationComponent
       },

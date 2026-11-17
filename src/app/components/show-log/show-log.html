@@ -50,7 +50,7 @@
                 <div class="form-control">
                   <label class="label cursor-pointer">
                     <input type="checkbox" id="checkboxInput" [value]="l.value" [checked] = "l.isSelected" (change)="setLevel($event)" class="checkbox">
-                    <span class="label-text ml-2"><small>{{l.value}}{{l.text ? ' - ' : ''}}{{l.text|slice:0:10}}</small></span>
+                    <span class="label-text text-sm ml-2">{{l.value}}{{l.text ? ' - ' : ''}}{{l.text|slice:0:10}}</span>
                   </label>
                 </div>
               </li>

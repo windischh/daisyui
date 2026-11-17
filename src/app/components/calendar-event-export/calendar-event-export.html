@@ -1,0 +1,319 @@
+<div class="container mx-auto p-4">
+  <div class="flex flex-wrap gap-4 items-center">
+    <div class="flex-1"></div>
+    <div class="flex-1 md:flex-none w-132 text-center">
+      <h1 class="text-2xl md:text-3xl font-bold">  {{this.auth.txt['event_export']}} </h1>
+      <h3 class="text-xl md:text-2xl">
+        {{ '(.' + fileType + ')'}}
+      </h3>
+    </div>
+    <div class="flex-1">
+      @if (exportDayChoices.length > 0) {
+        <div class="flex flex-col items-end gap-1">
+          <h4 class="text-center">  {{auth.txt['related_to']}}: </h4>
+          @for (e of exportDayChoices; track e; let i = $index) {
+            <div class="form-control">
+              <label class="label cursor-pointer gap-2">
+                <input type="radio" [value]="e.value" [checked] = "e.isChecked"
+                  (change)="setExportDay($event)" name="exportday" class="radio radio-sm">
+                <span class="label-text">{{e.value}}</span>
+              </label>
+            </div>
+          }
+        </div>
+      }
+      @if (resetableSignal() === 1) {
+        <div class="flex justify-end mt-2">
+          <button class="btn btn-sm btn-circle btn-error text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['reset']"
+            (click)="resetExport()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+  @if (refreshSignal() === 1) {
+    <div class="divider"></div>
+    <div class="flex flex-wrap gap-4 items-center">
+      <div class="w-1/5">
+        <h4>{{auth.txt['filter']}} {{auth.txt['select_option']}}:</h4>
+      </div>
+      <div class="w-2/5">
+        @if ((eventSelectChoices && eventSelectChoices.length === 1)) {
+          {{session.eventSelectOption?.name|slice:0:50}}
+        }
+        @if (eventSelectChoices && eventSelectChoices.length > 1) {
+          <select class="select select-primary w-full" (change)="setEventSelectOption($event)">
+            @for (c of eventSelectChoices; track c) {
+              <option [value]="c.nr"
+                [selected]="c.isSelected">
+                {{c.nr}} - {{c.name|slice:0:50}}
+              </option>
+            }
+          </select>
+        }
+      </div>
+      <div class="w-1/3 text-right">
+        <h4>  {{auth.txt['export_according_to_list']}}: </h4>
+      </div>
+      <div class="w-1/12">
+        <!-- open area for showing filter  ...
+        -->
+        @if (!isShowFilter) {
+          <button class="btn btn-xs btn-circle btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['show'] + ' ' + auth.txt['filter']"
+            (click)="setShowFilter()">
+            <i class="fas fa-arrow-down"></i>
+          </button>
+        }
+        @if (isShowFilter) {
+          <button class="btn btn-xs btn-circle btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['hide'] + ' ' + auth.txt['filter'] "
+            (click)="setShowFilter()">
+            <i class="fas fa-arrow-up"></i>
+          </button>
+        }
+      </div>
+    </div>
+    @if (isShowFilter) {
+      <div class="flex flex-wrap gap-4 items-center mt-2">
+        <div class="w-1/6">
+        </div>
+        <div class="w-1/5">
+          <h4>  {{auth.txt['events'] }}  {{(session.eventSelectOption?.isPlan === null && session.isPlan) || session.eventSelectOption?.isPlan ? auth.txt['plan']  : auth.txt['actual'] }} </h4>
+        </div>
+        <div class="w-1/6">
+          <h4>  {{dateFromDisplay}} </h4>
+        </div>
+        <div class="w-1/12">
+          <h4> - </h4>
+        </div>
+        <div class="w-1/6">
+          <h4>  {{dateToDisplay}} </h4>
+        </div>
+        <div class="w-1/5">
+          @if (isMoreFilters) {
+            <h4>  ... {{auth.txt['more_filters_are_set'] }} </h4>
+          }
+        </div>
+      </div>
+    }
+    <div class="divider"></div>
+    <div class="flex flex-wrap gap-4 items-center">
+      <div class="w-1/5">
+        <h4>{{auth.txt['event_export'] + ' ' + auth.txt['style'] }}:</h4>
+      </div>
+      <div class="w-2/5">
+        <select class="select select-primary w-full" (change)="selectStyle($event)">
+          @for (s of styleChoices; track s) {
+            <option [value]="s.value"
+              [selected]="s.isSelected">
+              {{s.value}} - {{s.text}}
+            </option>
+          }
+        </select>
+      </div>
+      <div class="w-1/3 text-right">
+        <h4>  {{auth.txt['export_columns'] }}: </h4>
+      </div>
+      <div class="w-1/12">
+        <!-- open area for showing style - as columns ...
+        -->
+        @if (!isShowStyle) {
+          <button class="btn btn-xs btn-circle btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['show']  + ' ' + auth.txt['style']"
+            (click)="setShowStyle()">
+            <i class="fas fa-arrow-down"></i>
+          </button>
+        }
+        @if (isShowStyle) {
+          <button class="btn btn-xs btn-circle btn-info text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['hide']  + ' ' + auth.txt['style'] "
+            (click)="setShowStyle()">
+            <i class="fas fa-arrow-up"></i>
+          </button>
+        }
+      </div>
+    </div>
+    @if (isShowStyle) {
+      <div class="mt-2" [style]="tableScrollStyle">
+        <table class="table w-full">
+          <thead>
+            <tr>
+              @for (h of showHeader; track h) {
+                <th>
+                  {{h}}
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              @for (c of showContent; track c) {
+                <td>
+                  {{c}}
+                </td>
+              }
+            </tr>
+            <tr>
+              @for (s of columnStyles; track s) {
+                <td>
+                  <small>{{s ? '(' + s['columnContent']+ ')' : ''}}</small>
+                </td>
+              }
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    }
+    <div class="divider"></div>
+    <div class="flex gap-4 items-center">
+      <div class="w-1/6">
+        <!-- open update area for extended file name ....
+        -->
+        @if (exportReadySignal() === 0 && !isUpdateExtendedFileName) {
+          <button class="btn btn-circle btn-sm btn-warning text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['fileName']  + ' ' + auth.txt['update'] "
+            (click)="setUpdateExtendedFileName()">
+            <i class="fas fa-arrow-down"></i>
+          </button>
+        }
+        @if (isUpdateExtendedFileName) {
+          <button class="btn btn-circle btn-sm btn-success text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['fileName']  + ' ' + auth.txt['update']"
+            [disabled]="isUpdateFileName || isUpdateFileType"
+            (click)="setUpdateExtendedFileName()">
+            <i class="fas fa-check"></i>
+          </button>
+        }
+      </div>
+      <div class="w-2/3">
+        <h4>
+          {{auth.txt['fileName']}}: {{extendedFileName}}
+        </h4>
+        @if (exportReadySignal() === 1 && exportFinishedSignal() === 0 && recordCount > 0) {
+          <h4>
+            {{'   ' + auth.txt['record_count'] + ': ' + recordCount}}
+          </h4>
+        }
+      </div>
+      <div class="w-1/6 flex justify-end">
+        @if (exportReadySignal() === 0 && !isUpdateExtendedFileName) {
+          <button class="btn btn-circle btn-sm btn-success text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [attr.data-tip]="auth.txt['prepare_export'] "
+            (click)="prepareExport()">
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        }
+        <!-- design the a link as button is best possibility to use href ....
+        -->
+        @if (exportReadySignal() === 1 && exportFinishedSignal() === 0 && recordCount > 0) {
+          <a class="btn btn-success btn-sm text-primary-content tooltip tooltip-bottom tooltip-accent"
+            [href]="encodedUri|safeResource"
+            [attr.download]="extendedFileName"
+            [attr.data-tip]="auth.txt['do_export']"
+            (click)="setExportFinished()">
+            <i class="fas fa-download mr-2"></i>DOWNLOAD
+          </a>
+        }
+        @if (exportReadySignal() === 1 && recordCount === 0) {
+          <h4>
+            {{auth.txt['no_records_to_export'] }}
+          </h4>
+        }
+        @if (exportFinishedSignal() === 1) {
+          <h4>
+            {{recordCount + ' ' + auth.txt['records_exported'] }}
+          </h4>
+        }
+      </div>
+    </div>
+    <!-- updating file name
+    -->
+    @if (isUpdateExtendedFileName) {
+      <div class="divider"></div>
+      <div class="flex gap-4 items-center">
+        <div class="w-1/6">
+          <h4> {{auth.txt['fileName']}}:</h4>
+        </div>
+        <div class="w-2/3" >
+          @if (!isUpdateFileName) {
+            <h4>
+              {{fileName}}
+            </h4>
+          }
+          @if (isUpdateFileName) {
+            <div class="join w-full">
+              <input (keyup.enter)="updateFileName(name.value)"
+                #name [value]="fileName" type="text" [placeholder]="auth.txt['fileName']  + '  ...'" class="input input-bordered join-item w-full">
+              <button class="btn btn-sm btn-success text-primary-content join-item tooltip tooltip-bottom tooltip-accent"
+                [attr.data-tip]="auth.txt['submit']"
+                (click)="updateFileName(name.value)">
+                <i class="fas fa-check"></i>
+              </button>
+            </div>
+          }
+        </div>
+        @if (!isUpdateFileName && !isUpdateFileType && exportReadySignal() === 0) {
+          <div>
+            <button class="btn btn-circle btn-sm btn-warning text-primary-content tooltip tooltip-bottom tooltip-accent"
+              [attr.data-tip]="auth.txt['fileName']  + ' ' + auth.txt['update'] "
+              (click)="setUpdateFileName()">
+              <i class="fas fa-arrow-left"></i>
+            </button>
+          </div>
+        }
+      </div>
+      <div class="flex gap-4 items-center mt-2">
+        <div class="w-1/6">
+        </div>
+        <div class="w-1/6" >
+          <div class="form-control">
+            <label class="label cursor-pointer gap-2">
+              <input type="checkbox" [checked]="isFileExtension"
+                [disabled]="isUpdateFileName || isUpdateFileType || exportReadySignal() === 1"
+                (change)="setShowExtension($event)" class="checkbox checkbox-sm">
+              <span class="label-text">{{auth.txt['fileNameExtension'] }} </span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-4 items-center mt-2">
+        <div class="w-1/6">
+          <h4> {{auth.txt['fileType'] }}:</h4>
+        </div>
+        <div class="w-1/6" >
+        </div>
+        <div class="w-1/2" >
+          @if (!isUpdateFileType) {
+            <h4>
+              {{fileType}}
+            </h4>
+          }
+          @if (isUpdateFileType) {
+            <div class="join w-full">
+              <input (keyup.enter)="updateFileType(type.value)"
+                #type [value]="fileType" type="text" [placeholder]="auth.txt['fileType'] + '  ...'" class="input input-bordered join-item w-full">
+              <button class="btn btn-sm btn-success text-primary-content join-item tooltip tooltip-bottom tooltip-accent"
+                [attr.data-tip]="auth.txt['submit']"
+                (click)="updateFileType(type.value)">
+                <i class="fas fa-check"></i>
+              </button>
+            </div>
+          }
+        </div>
+        @if (!isUpdateFileName && !isUpdateFileType && exportReadySignal() === 0) {
+          <div>
+            <button class="btn btn-circle btn-sm btn-warning text-primary-content tooltip tooltip-bottom tooltip-accent"
+              [attr.data-tip]="auth.txt['fileType'] + ' ' + auth.txt['update']"
+              (click)="setUpdateFileType()">
+              <i class="fas fa-arrow-left"></i>
+            </button>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>
+

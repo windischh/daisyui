@@ -349,7 +349,7 @@ export class HeaderComponent {
         item.hasIconLeft = true;
         item.iconClassLeft = 'fas fa-list'
         item.text = 'event_list';
-        item.link = 'event';
+        item.link = 'calendarEvent';
         this.routerMenu.items.push(item);
 
       if (session.app === App.admin) {
@@ -364,7 +364,7 @@ export class HeaderComponent {
 
         subItem = MenuItemFactory.empty();
         subItem.text = 'event_export'
-        subItem.link = 'eventExport';
+        subItem.link = 'calendarEventExport';
         subItem.hasIconLeft = true;
         subItem.iconClassLeft = 'fas fa-file-export';
         subMenu.items.push(subItem);

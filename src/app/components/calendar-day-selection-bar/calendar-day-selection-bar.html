@@ -1,6 +1,6 @@
 @if (session && txt && isStylesReadySignal()) {
-  <div class="container mx-auto">
-    <div class="flex items-center">
+  <div class="container mx-auto p-4">
+    <div class="flex items-center mb-2">
        <div class="w-3/12 flex flex-col items-start">
           @if (viewSelected() !== 'week-view' && viewSelected() !== 'contacts-view' && viewSelected() !== 'options-view') {
             @for (p of planActualChoices; track p.value; let i = $index) {
@@ -17,7 +17,7 @@
             }
           }
           @if (viewSelected() === 'week-view' || viewSelected() === 'contacts-view' ) {
-            <div class="flex items-center gap-2"> 
+            <div class="flex items-center gap-2">
               <i class="fas fa-angle-left cursor-pointer" (click)="goWeekBack()"></i>
                 <span class="text-xs md:text-sm lg:text-base font-semibold">{{weekDisplay}}</span>
               <i class="fas fa-angle-right cursor-pointer" (click)="goWeekForward()"></i>
@@ -76,7 +76,7 @@
         }
       </div>
     </div>
-    <!--   menu line      --> 
+    <!--   menu line      -->
     <div class="flex items-center justify-center">
       @if (windowWidth >= WINDOW_WIDTH_MOBILE) {
         <div role="tablist" class="tabs tabs-box">

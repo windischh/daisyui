@@ -1,0 +1,319 @@
+
+<br>
+@if (showSignal() >= 0 && session && txt && documenttxt && eventtxt && monthElement) {
+  <div class="ui grid">
+    @for (element of dayElements; track $index; let i = $index) {
+      @if (element.dayOfWeek === 0) {
+        <div class="row">
+          <div class="sixteen wide column">
+            <div class="ui large horizontal divider">{{txt['week']}}: {{element.weekNr}}&nbsp;&nbsp;&nbsp;&nbsp;({{element.date|date:'dd.MM.'}})</div>
+          </div>
+        </div>
+      }
+      <!-- a day is shown if there is any data - it is shown as calendar if isGridShown  ...-->
+      @if (element.documents.length > 0 || element.event.length > 0 || element.timeSpans.length > 0) {
+          <!-- isGridShown true shows calendar  ...-->
+        @if (showSignal() >= 0 && element.isGridShown) {
+          <div class="row">
+            <div class="six wide column">
+              <div class="ui fluid large basic label" [ngClass]="element.isHoliday || element.dayOfWeek === 6 ? 'red' : 'black'">
+                {{element.date|date:'EEE dd.MM.yyyy'}} {{element.text}}
+                @if (element.isMapAvailable && (!isMapShown || element.isMapShown)) {
+                  <button class="ui right floated mini icon button" [ngClass]="element.isMapShown ? 'red' : ''" [ngStyle]="element.isMapShown ? dateStyle : defaultStyle" id="showMapButton"
+                    (click)="toggleMap(element)"
+                    [attr.data-tooltip]="txt['map']  + ' ' + txt[element.isMapShown ? 'hide' : 'show']  " data-position="top center">
+                    <i class="globe icon"></i>
+                  </button>
+                }
+                <button class="ui mini right floated icon button" id="hideGridButton" [ngStyle]="dateStyle"
+                  (click)="toggleDayGrid(element)"
+                  [attr.data-tooltip]="txt['calendar']  + ' ' + txt['hide']  " data-position="right center">
+                  <i class="calendar icon"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <table class="ui fixed celled very compact table" [ngStyle]="styles.tableStyle">
+            <!-- header line if not smartphone and no timespans -->
+            @if (element.timeSpanGrid.length === 0 && windowWidth >= WINDOW_WIDTH_MOBILE) {
+              <thead>
+                <tr [ngStyle]="styles.tableHeaderStyle">
+                  <th class="one wide left aligned" [ngStyle]="element.dayGrid[0].timeElementStyle">
+                    {{txt['time']}}
+                  </th>
+                  <th>{{txt['events']}}</th>
+                  @if (windowWidth >= WINDOW_WIDTH_MOBILE) {
+                    <th>{{txt['documents']}}</th>
+                  }
+                </tr>
+              </thead>
+            }
+            <tbody [attr.id]="element.date.getDate().toString()">
+              <!-- timeSpanGrid, includes category 1,2 and 3++  -->
+              @for (t of element.timeSpanGrid; track $index; let i = $index) {
+                <tr [ngStyle]="styles.tableRowStyle">
+                  <!-- time header if not smartphone at first time span-->
+                  @if (windowWidth >= WINDOW_WIDTH_MOBILE) {
+                    <td class="one wide left aligned" [ngStyle]="element.dayGrid[0].timeElementStyle">
+                      @if (i === 0) {
+                        {{txt['time']}}
+                      }
+                    </td>
+                  }
+                  <!-- td for time span elemen anyway t  -->
+                  <td [ngStyle]="t.eventElementStyle">
+                    <div class="ui grid container">
+                      <div class="fourteen wide middle aligned not vertically padded column">
+                        <div class="ui grid">
+                          <div class="fourteen wide column">
+                            <p>
+                              @if (t.category !== '') {
+                              <span>{{t.category}} - </span>
+                              }
+                              {{t.event?.summary}}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="two wide middle aligned right aligned column">
+                        @if (t.contactDisplayNr && t.contactDisplayNr !== '' && styles.isShowCustIssueColumn) {
+                          <div class="ui label" [ngStyle]="t.leftContactStyle"
+                            [attr.data-tooltip]="t.contactDisplayName" data-position="left center">{{t.contactDisplayNr}}
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </td>
+                   @if (windowWidth >= WINDOW_WIDTH_MOBILE) {
+                    <td></td>
+                   }
+                </tr>
+              }
+              <!-- dayGrid for all event (here we have only actual event)  -->
+              @for (g of element.dayGrid; track $index; let i = $index) {
+                <!-- we build a row if there is event and anyway if view port greater smartphone -->
+                @if (element.dayGrid[i].minutes / 60 >= element.firstGridHour && element.dayGrid[i].minutes / 60 < element.lastGridHour) {
+                   @if (windowWidth >= WINDOW_WIDTH_MOBILE || g.timeBegins || g.eventBegins) {
+                    <tr [ngStyle]="g.tableRowStyle">
+                      @if (g.timeBegins && windowWidth >= WINDOW_WIDTH_MOBILE) {
+                        <!-- td for time-->
+                        <td [ngStyle]="g.timeElementStyle"
+                          [attr.rowspan]="g.timeRowSpan">
+                          <span [ngStyle]="g.timeInTimeElementStyle">{{g.timeElement}}</span>
+                        </td>
+                      }
+                      <!-- td for event -->
+                      @if (g.eventBegins) {
+                        <td [attr.rowspan]="g.eventRowSpan" [ngStyle]="setEventHeight(g.eventElementStyle ?? {}, g)"
+                          (click)="g.event ? showEvent(g.event) : null">
+                          <div class="ui grid container">
+                            <!-- time entries are center aligned within column -->
+                            @if (styles.isShowTimeColumn) {
+                              <div class="one wide left floated middle aligned column"
+                                [attr.data-tooltip]="(g.event?.eventBegin|date:'H:mm') + ' - ' +
+                                  (g.event?.eventEnd|date:'H:mm') + ' : ' +g.eventDurationDisplay"
+                                data-position="right center">
+                                <p [ngStyle]="styles.timeStyle">{{g.event?.eventBegin|date:'HH:mm'}}</p>
+                                @if (styles.isShowDuration) {
+                                  <p [ngStyle]="styles.durationStyle">{{'[' + GlobalFunctions.getTimeFormatted(g.event?.eventDuration ?? 0) + ']'}}</p>
+                                }
+                                <p [ngStyle]="styles.timeStyle">{{g.event?.eventEnd|date:'HH:mm'}}</p>
+                              </div>
+                            }
+                            @if (!styles.isShowTimeColumn) {
+                              <div class="one wide left floated middle aligned column">
+                              <p class="left aligned" [ngStyle]="styles.eventStyle" [attr.data-tooltip]="(g.event?.eventBegin|date:'H:mm') + ' - ' +
+                                (g.event?.eventEnd|date:'H:mm') + ' : ' +g.eventDurationDisplay"
+                                data-position="right center">{{g.event?.eventBegin|date:'HH:mm'}}</p>
+                              </div>
+                            }
+                            <div class="twelve wide middle aligned not vertically padded column">
+                              <div class="ui grid">
+                                <div class="fourteen wide column">
+                                  <p [ngStyle]="styles.eventStyle">{{g.event?.summary}}</p>
+                                  @if (styles.isShowLocation && g.event && g.event.location) {
+                                    <p [ngStyle]="locationStyle">{{g.event.location}}</p>
+                                  }
+                                  @if (styles.isShowDescription && g.event && g.event.description) {
+                                    <p [ngStyle]="descriptionStyle" [innerHtml]="g.event.description">
+                                      <!-- 
+                                      {{g.event?.description|slice:0:240}}
+                                      @if (g.event?.description?.length > 240) {
+                                        <span>...</span>
+                                      }
+                                      -->
+                                    </p>
+                                  }
+                                </div>
+                              </div>
+                            </div>
+                            <div class="two wide middle aligned right aligned column">
+                              @if (g.event && g.event.locationType >= 1 && g.event.locationType <= 5) {
+                                <div class="ui label" style="background-color: inherit;"
+                                  [attr.data-tooltip]="g.event.locationType.toString() + ' - ' + txt[locationTypeEnum[g.event.locationType]]" data-position="left center">
+                                  @if (g.event.locationType === 1) {
+                                    <i class="wrench icon"></i>
+                                  }
+                                  @if (g.event.locationType === 2) {
+                                    <i class="motorcycle icon"></i>
+                                  }
+                                  @if (g.event.locationType === 3) {
+                                    <i class="users icon"></i>
+                                  }
+                                  @if (g.event.locationType === 4) {
+                                    <i class="laptop icon"></i>
+                                  }
+                                  @if (g.event.locationType === 5) {
+                                    <i class="mobile alternate icon"></i>
+                                  }
+                                  @if (g.event.locationType === 6) {
+                                    <i class="briefcase icon"></i>
+                                  }
+                                </div>
+                              }
+                              @if (g.contactDisplayNr && g.contactDisplayNr !== '' && styles.isShowCustIssueColumn) {
+                                <div class="ui label" [ngStyle]="g.leftContactStyle"
+                                  [attr.data-tooltip]="g.contactDisplayName" data-position="left center">{{g.contactDisplayNr}}
+                                </div>
+                              }
+                            </div>
+                          </div>
+                        </td>
+                      }
+                      @if (windowWidth >= WINDOW_WIDTH_MOBILE) {
+                        @if (!g.event && (g.timeBegins || g.eventRowSpan > 0)) {
+                          <!-- td placeholder -->
+                          <td [attr.rowspan]="g.eventRowSpan"></td>
+                        }
+                        @if (g.timeBegins) {
+                          <!-- td for documents -->
+                          <td
+                            [attr.rowspan]="g.timeRowSpan">
+                              <!-- documents from grid  -->
+                              @for (document of element.documentGrid[i]; track $index; let di = $index) {
+                                {{document.dateTimeOriginal|date:'H:mm'}}
+                                @if (showSignal() > 0 && thumbnails[document.documentId]?.content) {
+                                  <img [src]="thumbnails[document.documentId]?.content|safeResource" [attr.width]="thumbnails[document.documentId]?.width"
+                                    (click)="show(document.documentId)">
+                                }
+                                @else if (showSignal() > 0 && images[document.documentId]?.content) {
+                                  <img [src]="images[document.documentId]?.content|safeResource" [attr.width]="thumbnails[document.documentId]?.width"
+                                    (click)="show(document.documentId)">
+                                }
+                              }
+                          </td>
+                        }
+                      } @else {
+                        @if (!g.event) {
+                          <!-- td for time in 1 row -->
+                          <td [ngStyle]="setTimeStyle(g.rowElementStyle ?? {})">{{g.timeElement}}</td>
+                        }
+                      }
+                    </tr>
+                  }
+                }
+                <!-- at smartphone we show documents in an own row -->
+                @if (showSignal() > 0 && windowWidth < WINDOW_WIDTH_MOBILE && element.shiftedDocuments[i].length > 0) {
+                  <!--here are documents in case of mobile -->
+                  <tr [ngStyle]="g.tableRowStyle">
+                    <!-- td for documents -->
+                    <td>
+                      <!-- documents from grid  -->
+                        @for (document of element.shiftedDocuments[i]; track $index; let di = $index) {
+                          {{document.dateTimeOriginal|date:'H:mm'}}
+                          @if (showSignal() > 0 && thumbnails[document.documentId]?.content) {
+                            <img [src]="thumbnails[document.documentId]?.content|safeResource" [attr.width]="thumbnails[document.documentId]?.width"
+                              (click)="show(document.documentId)">
+                          }
+                          @else if (showSignal() > 0 && images[document.documentId]?.content) {
+                            <img [src]="images[document.documentId]?.content|safeResource" [attr.width]="thumbnails[document.documentId]?.width"
+                              (click)="show(document.documentId)">
+                          }
+                        }
+                    </td>
+                  </tr>
+                  <!-- 2 empty rows-->
+                  <tr [ngStyle]="g.tableRowStyle">
+                  </tr>
+                  <tr [ngStyle]="g.tableRowStyle">
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        } @else {
+          <!-- here we show events and documents without calendar grid-->
+          <div class="row">
+            <div class="six wide column">
+              <div class="ui fluid large basic label" [ngClass]="element.isHoliday || element.dayOfWeek === 6 ? 'red' : 'black'">
+                {{element.date|date:'EEE dd.MM.yyyy'}} {{element.text}}
+                @if (element.isMapAvailable && (!isMapShown || element.isMapShown)) {
+                  <button class="ui right floated mini icon button" [ngStyle]="element.isMapShown ? dateStyle : defaultStyle"  id="showMapButton"
+                    (click)="toggleMap(element)"
+                    [attr.data-tooltip]="txt['map']  + ' ' + txt[element.isMapShown ? 'hide' : 'show']  " data-position="top center">
+                    <i class="globe icon"></i>
+                  </button>
+                }
+                <button class="ui right floated mini icon button" id="showGridButton"
+                  (click)="toggleDayGrid(element)"
+                  [attr.data-tooltip]="txt['calendar']  + ' ' + txt['show']  " data-position="right center">
+                  <i class="calendar icon"></i>
+                </button>
+              </div>
+              @for (timeSpan of element.timeSpans; track $index; let di = $index) {
+                <div class="row" [ngStyle]="timeSpan.style">
+                  {{timeSpan.summary}}
+                  @if (timeSpan.isMapAvailable && (!isMapShown || timeSpan.isMapShown)) {
+                    <button class="ui right floated mini icon button" [ngStyle]="timeSpan.isMapShown ? dateStyle : defaultStyle"  id="showTimeStampMapButton"
+                      (click)="toggleTimeSpanMap(timeSpan)"
+                      [attr.data-tooltip]="txt['map']  + ' ' + txt[timeSpan.isMapShown ? 'hide' : 'show']  " data-position="top center">
+                      <i class="globe icon"></i>
+                    </button>
+                  }
+                </div>
+              }
+              @for (event of element.event; track $index; let di = $index) {
+                <div class="row">
+                  {{event.eventBegin|date:'HH:mm'}}
+                  {{event.summary}}
+                </div>
+              }
+            </div>
+            <div class="ten wide column" [attr.id]="element.date.getDate().toString()">
+              @for (document of element.documents; track $index; let di = $index) {
+                &nbsp;&nbsp;&nbsp;{{document.dateTimeOriginal|date:'H:mm'}}
+                @if (showSignal() > 0 && thumbnails[document.documentId]?.content) {
+                  <img [src]="thumbnails[document.documentId]?.content|safeResource" [attr.width]="thumbnails[document.documentId]?.width"
+                    (click)="show(document.documentId)">
+                }
+                @else if (showSignal() > 0 && images[document.documentId]?.content) {
+                  <img [src]="images[document.documentId]?.content|safeResource" [attr.width]="thumbnails[document.documentId]?.width"
+                    (click)="show(document.documentId)">
+                }
+              }
+            </div>
+          </div>
+        }
+      }
+      @if (showSignal() > 0 && element.isMapShown) {
+        <div class="row">
+          <div class="sixteen wide column">
+            <dsy-map [mapMarkers]="element.markers">
+            </dsy-map>
+          </div>
+        </div>
+      }
+      @for (timeSpan of element.timeSpans; track $index; let di = $index) {
+        @if (timeSpan.isMapShown) {
+          <div class="row">
+            <div class="sixteen wide column">
+              <dsy-map [mapMarkers]="timeSpan.markers">
+              </dsy-map>
+            </div>
+          </div>
+        }
+      }
+    }
+  </div>
+ <br>
+}

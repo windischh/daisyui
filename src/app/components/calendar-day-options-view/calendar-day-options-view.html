@@ -1,126 +1,128 @@
-<div class="card bg-base-100 shadow-md">
-  <div class="card-body">
-    <div class="flex justify-center">
-      <h2 class="text-2xl md:text-3xl font-bold text-center">{{txt['user']}} {{txt['calendar']}}  {{txt['options']}}</h2>
-    </div>
-    <!-- main flex container -->
-    <div class="flex gap-4 mt-4">
-      <div class="w-1/6"></div>
-      <div class="w-2/3">
-        <div class="flex items-center gap-4 mt-2">
-          <div class="w-1/3">
-            <h4 class="text-lg md:text-xl">{{txt['store']}} - {{txt['now']}}</h4>
+<div class="container mx-auto p-4">
+  <div class="card bg-base-100 shadow-md">
+    <div class="card-body">
+      <div class="flex justify-center">
+        <h2 class="text-2xl md:text-3xl font-bold text-center">{{txt['calendar']}}  {{txt['options']}}</h2>
+      </div>
+      <!-- main flex container -->
+      <div class="flex gap-4 mt-4">
+        <div class="w-1/6"></div>
+        <div class="w-2/3">
+          <div class="flex items-center gap-4 mt-2">
+            <div class="w-1/3">
+              <h4 class="text-lg md:text-xl">{{txt['store']}} - {{txt['now']}}</h4>
+            </div>
+            <div class="flex-1">
+              <button class="btn btn-sm btn-circle btn-success text-primary-content tooltip tooltip-bottom tooltip-success"
+                [attr.data-tip]="txt['store'] + ' ' + txt['permanent']"
+                [disabled]="userOpts.isImmediatePersist"
+                type="button" (click)="storeOptions()">
+                <i class="fas fa-check"></i>
+              </button>
+            </div>
           </div>
-          <div class="flex-1">
-            <button class="btn btn-sm btn-circle btn-success text-primary-content tooltip tooltip-bottom tooltip-success"
-              [attr.data-tip]="txt['store'] + ' ' + txt['permanent']"
-              [disabled]="userOpts.isImmediatePersist"
-              type="button" (click)="storeOptions()">
-              <i class="fas fa-check"></i>
-            </button>
-          </div>
-        </div>
-        <div class="flex items-center gap-4 mt-2">
-          <div class="w-1/3">
-            <h4 class="text-lg md:text-xl">{{txt['store']}} - {{txt['at_every_change']}}</h4>
-          </div>
-          <div class="flex-1 flex flex-col gap-1">
-            @for (p of persistChoices; track p) {
-              <div class="form-control">
-                <label class="label cursor-pointer gap-2">
-                  <input type="radio" [value]="p.value" [checked]="p.isChecked" (change)="setPersist($event)" class="radio radio-xs"  >
-                  <span class="label-text">{{p.value}}
-                    @if (p.value === 'true') {
-                      <i class="fas fa-check text-success"></i>
-                    }
-                    @if (p.value === 'false') {
-                      <i class="fas fa-xmark text-error"></i>
-                    }
-                  </span>
-                </label>
-              </div>
-            }
-          </div>
-        </div>
-        <div class="flex items-center gap-4 mt-2">
-          <div class="w-1/3">
-            <h4 class="text-lg md:text-xl">{{txt['calendar'] + ' ' + txt['style']}}</h4>
-          </div>
-          <div class="flex-1">
-            <select class="select select-sm select-primary" (change)="selectStyle($event)">
-              @for (s of styleChoices; track s) {
-                <option [value]="s.value"
-                  [selected]="s.isSelected">
-                  {{s.value}} - {{s.text}}
-                </option>
+          <div class="flex items-center gap-4 mt-2">
+            <div class="w-1/3">
+              <h4 class="text-lg md:text-xl">{{txt['store']}} - {{txt['at_every_change']}}</h4>
+            </div>
+            <div class="flex-1 flex flex-col gap-1">
+              @for (p of persistChoices; track p) {
+                <div class="form-control">
+                  <label class="label cursor-pointer gap-2">
+                    <input type="radio" [value]="p.value" [checked]="p.isChecked" (change)="setPersist($event)" class="radio radio-xs"  >
+                    <span class="label-text">{{p.value}}
+                      @if (p.value === 'true') {
+                        <i class="fas fa-check text-success"></i>
+                      }
+                      @if (p.value === 'false') {
+                        <i class="fas fa-xmark text-error"></i>
+                      }
+                    </span>
+                  </label>
+                </div>
               }
-            </select>
+            </div>
           </div>
-        </div>
-        <div class="flex items-center gap-4 mt-4">
-          <div class="w-1/3">
-            <h4 class="text-lg md:text-xl">{{txt['time_slizes']}}</h4>
-          </div>
-          <div class="flex-1 flex flex-wrap gap-4">
-            @for (t of timeSlizeChoices; track t) {
-              <div class="form-control">
-                <label class="label cursor-pointer gap-2">
-                  <input type="radio" [value]="t.value" [checked] = "t.isChecked" (change)="setTimeSlize($event)" class="radio radio-xs"  >
-                  <span class="label-text">{{t.value}}</span>
-                </label>
-              </div>
-            }
-          </div>
-          <div class="w-1/12">
-            <h4 class="text-lg md:text-xl">{{txt['minutes']}}</h4>
-          </div>
-        </div>
-        <div class="overflow-x-auto mt-2" [style]="tableScrollStyle">
-          <table class="table table-zebra table-xs w-full">
-            <thead>
-              <tr>
-                <td colspan="25">
-                  <h4 class="text-lg md:text-xl">{{txt['startHour']}}</h4>
-                </td>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                @for (s of startHourChoices; track s) {
-                  <td>
-                    <div class="form-control">
-                      <label class="label cursor-pointer gap-2">
-                        <input type="radio" [value]="s.value" [checked]="s.isChecked" (change)="setStartHour($event)" class="radio radio-xs"  >
-                        <span class="label-text"><small>{{s.value}}</small></span>
-                      </label>
-                    </div>
-                  </td>
+          <div class="flex items-center gap-4 mt-2">
+            <div class="w-1/3">
+              <h4 class="text-lg md:text-xl">{{txt['calendar'] + ' ' + txt['style']}}</h4>
+            </div>
+            <div class="flex-1">
+              <select class="select select-sm select-primary" (change)="selectStyle($event)">
+                @for (s of styleChoices; track s) {
+                  <option [value]="s.value"
+                    [selected]="s.isSelected">
+                    {{s.value}} - {{s.text}}
+                  </option>
                 }
-                <td></td>
-              </tr>
-              <tr>
-                <td colspan="25">
-                  <h4 class="text-lg md:text-xl">{{txt['lastHour']}}</h4>
-                </td>
-              </tr>
-              <tr>
-                <td></td>
-                @for (l of lastHourChoices; track l) {
-                  <td>
-                    <div class="form-control">
-                      <label class="label cursor-pointer gap-2">
-                        <input type="radio" [value]="l.value" [checked]="l.isChecked" (change)="setLastHour($event)" class="radio radio-xs"  >
-                        <span class="label-text"><small>{{l.value}}</small></span>
-                      </label>
-                    </div>
+              </select>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 mt-4">
+            <div class="w-1/3">
+              <h4 class="text-lg md:text-xl">{{txt['time_slizes']}}</h4>
+            </div>
+            <div class="flex-1 flex flex-wrap gap-4">
+              @for (t of timeSlizeChoices; track t) {
+                <div class="form-control">
+                  <label class="label cursor-pointer gap-2">
+                    <input type="radio" [value]="t.value" [checked] = "t.isChecked" (change)="setTimeSlize($event)" class="radio radio-xs"  >
+                    <span class="label-text">{{t.value}}</span>
+                  </label>
+                </div>
+              }
+            </div>
+            <div class="w-1/12">
+              <h4 class="text-lg md:text-xl">{{txt['minutes']}}</h4>
+            </div>
+          </div>
+          <div class="overflow-x-auto mt-2" [style]="tableScrollStyle">
+            <table class="table table-zebra table-xs w-full">
+              <thead>
+                <tr>
+                  <td colspan="25">
+                    <h4 class="text-lg md:text-xl">{{txt['startHour']}}</h4>
                   </td>
-                }
-              </tr>
-            </tbody>
-          </table>
-        </div> <!-- end of hours table-->
-      </div>> <!-- end of middle column -->
-      <div class="w-1/6">
-    </div> <!-- end of main flex container-->
-  </div>  <!-- end of card body-->
-</div><!-- end of card -->
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  @for (s of startHourChoices; track s) {
+                    <td>
+                      <div class="form-control">
+                        <label class="label cursor-pointer gap-2">
+                          <input type="radio" [value]="s.value" [checked]="s.isChecked" (change)="setStartHour($event)" class="radio radio-xs"  >
+                          <span class="label-text text-sm">{{s.value}}</span>
+                        </label>
+                      </div>
+                    </td>
+                  }
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colspan="25">
+                    <h4 class="text-lg md:text-xl">{{txt['lastHour']}}</h4>
+                  </td>
+                </tr>
+                <tr>
+                  <td></td>
+                  @for (l of lastHourChoices; track l) {
+                    <td>
+                      <div class="form-control">
+                        <label class="label cursor-pointer gap-2">
+                          <input type="radio" [value]="l.value" [checked]="l.isChecked" (change)="setLastHour($event)" class="radio radio-xs"  >
+                          <span class="label-text text-sm">{{l.value}}</span>
+                        </label>
+                      </div>
+                    </td>
+                  }
+                </tr>
+              </tbody>
+            </table>
+          </div> <!-- end of hours table-->
+        </div>> <!-- end of middle column -->
+        <div class="w-1/6">
+      </div> <!-- end of main flex container-->
+    </div>  <!-- end of card body-->
+  </div><!-- end of card -->
+</div><!-- end of container -->

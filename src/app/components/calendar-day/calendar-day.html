@@ -21,7 +21,7 @@
     [targetCalendarDay]="targetCalendarDay" [firstCalendarDay]="firstCalendarDay"
     [session]="sessionForViews"
     [sessionContact]="sessionContact"
-    [timeSpans]="timeSpans"
+    [timeSpans]="timeSpans" [timeSpanTypeColors]="timeSpanTypeColors"
     [isCreating]="isCreating" [isSelecting]="isSelecting"  [countSelected]="countSelected"
     (selectionSet)="setSelection()"
     (sessionPlanUpdate)="updateSessionPlan($event)"
@@ -55,10 +55,12 @@
 @if (sessionForViews && auth.txt && locale && v['cards-view'] && v['cards-view'].isSelected && isDayLoadedSignal() > 0) {
   <dsy-calendar-day-cards-view
     [locale]="locale"  [txt]="auth.txt"  [eventtxt]="eventtxt"
-    [session]="sessionForViews" [opts]="opts" [userOpts]="userOpts" [options]="options" [events]="events"
+    [session]="sessionForViews" [opts]="opts" [userOpts]="userOpts" [options]="options"
+    [events]="events" [timeSpans]="timeSpans"
+    [timeSpanTypeColors]="timeSpanTypeColors"
     [calendarDayChangeCounter]="calendarDayChangeCounter"
     [isCreating]="isCreating" [isSelecting]="isSelecting" [isViewMode]="isSelecting || !sessionForViews.isPlanMaint"
-    (eventCreate)="setCreating($event)" 
+    (eventCreate)="setCreating($event)"
     (eventUpdate)="updateEvent($event)" (eventSelect)="selectEvent($event)"
     (cardFormViewEnabled)="enableCardFormView($event)">
   </dsy-calendar-day-cards-view>
@@ -85,8 +87,6 @@
     [timeSpanTypeColors]="timeSpanTypeColors" [timeSpans]="timeSpans"
     [actualEvents]="actualEvents" [planEvents]="planEvents"
     [calendarDayChangeCounter]="calendarDayChangeCounter"
-    [linkedUserEvents]="linkedUserEvents"
-    [linkedTimeSpans]="linkedTimeSpans"
     [isSelecting]="isSelecting" (eventSelect)="selectEvent($event)"
     (sessionPlanUpdate)="updateSessionPlan($event)"
     (cardFormViewEnabled)="enableCardFormView($event)">
@@ -97,7 +97,7 @@
     [txt]="auth.txt" [eventtxt]="eventtxt" [contacttxt]="contacttxt"
     [locale]="locale" [sessionContact]="sessionContact"
     [session]="sessionForViews" [opts]="opts"
-    [actualEvents]="weekActualEvents" [planEvents]="weekPlanEvents"
+    [actualEvents]="weekActualEvents" [planEvents]="weekPlanEvents" [timeSpans]="timeSpans"
     [calendarDayChangeCounter]="calendarDayChangeCounter"
     (contactSelected)="selectContact($event)">
   </dsy-calendar-day-contacts-view>

@@ -2,7 +2,8 @@ import { Component, OnInit, Input, OnChanges, SimpleChange, Output, EventEmitter
 import { formatDate, NgStyle, SlicePipe, DatePipe, NgClass } from '@angular/common';
 
 import { StyleFactory } from '../../_globals/style-factory';
-import { GAINSBORO, GREEN, LIGHT_CORAL, LIGHT_GREY, POWDER_BLUE, RED, WHITE_SMOKE, WINDOW_WIDTH_MOBILE, WINDOW_WIDTH_TABLET } from '../../_globals/constants';
+import { WINDOW_WIDTH_MOBILE, WINDOW_WIDTH_TABLET } from '../../_globals/constants';
+import { DAISY_COLOR_BASE_200, DAISY_COLOR_BASE_300, DAISY_COLOR_SECONDARY } from '../../_globals/constants-daisy';
 import { GlobalFunctions } from '../../_globals/global-functions';
 import { ConfigurationOptionBasicFunctions } from '../../_globals/configuration-option-basic-functions';
 
@@ -11,8 +12,8 @@ import { OptionGroupCalendar } from '../../_enums/option-group-calendar.enum';
 import { UpdateType } from '../../_enums/update-type.enum';
 
 import { ConfigurationOption } from '../../_db/configuration-option';
-import { Event } from '../../_db/event';
-import { EventFactory } from '../../_db/event-factory';
+import { CalendarEvent } from '../../_db/calendar-event';
+import { CalendarEventFactory } from '../../_db/calendar-event-factory';
 import { Session } from '../../_db/session';
 
 
@@ -40,11 +41,11 @@ export class CalendarDayWeekViewComponent implements OnInit {
   @Input({required: true}) txt!: { [key: string]: string };
   @Input({required: true}) eventtxt!: { [key: string]: string };
 
-  @Input({required: true}) actualEvents!: Array<Event>;
-  @Input({required: true}) planEvents!: Array<Event>;
-  @Input({required: true}) timeSpans!: Array<Event>;
+  @Input({required: true}) actualEvents!: Array<CalendarEvent>;
+  @Input({required: true}) planEvents!: Array<CalendarEvent>;
+  @Input({required: true}) timeSpans!: Array<CalendarEvent>;
   // categories are indexed by type-part x in time spans with types 2x
-  @Input({required: true}) timeSpanTypeColors!: Array<{text: string, color: string}>;
+  @Input({required: true}) timeSpanTypeColors!: Array<{text: string, backgroundColor: string, color: string}>;
 
   @Input({required: true}) calendarDayChangeCounter!: number;
 
@@ -61,8 +62,8 @@ export class CalendarDayWeekViewComponent implements OnInit {
 
   @Output() viewSelected = new EventEmitter<string>();
 
-  @Output() cardFormViewEnabled = new EventEmitter<{updateType: UpdateType, event: Event, d: Date | null}>();
-  
+  @Output() cardFormViewEnabled = new EventEmitter<{updateType: UpdateType, event: CalendarEvent, d: Date | null}>();
+
   locationTypeEnum: typeof LocationType = LocationType;
 
   // the 7 or 8 day-columns
@@ -111,7 +112,7 @@ export class CalendarDayWeekViewComponent implements OnInit {
     },
     // 301
     timeElementStyle : {
-      'background-color': POWDER_BLUE
+      'background-color': DAISY_COLOR_BASE_300
     },
     // 302
     timeInTimeElementStyle : {
@@ -119,11 +120,11 @@ export class CalendarDayWeekViewComponent implements OnInit {
     },
     // 303
     timeElementOutsideStyle : {
-      'background-color': LIGHT_CORAL
+      'background-color': DAISY_COLOR_SECONDARY
     },
     // 401
     eventElementStyle : {
-      'background-color': POWDER_BLUE
+      'background-color': DAISY_COLOR_BASE_200
     },
     // 402
     timeStyle : {
@@ -136,6 +137,7 @@ export class CalendarDayWeekViewComponent implements OnInit {
       'font-size': '60%'
     },
     // 404
+    // is style for event text nside eevent element
     eventStyle : {
       // 'position': 'relative',
       // left margin not used, we need all space for text  'left': '30px',
@@ -156,7 +158,7 @@ export class CalendarDayWeekViewComponent implements OnInit {
     // 407
     // attn: background-color is set from color scheme of contact
     contactStyle : {
-      'font-size': '50%',
+      'font-size': '80%',
       'font-weight': 'bold'
     },
     // 501 - 505
@@ -176,26 +178,14 @@ export class CalendarDayWeekViewComponent implements OnInit {
   locationStyle!: {};
   descriptionStyle!: {};
 
-  timeHeaderStyle = {
-    'border-bottom' :  'thin solid'
-  }
 
   planHeaderBoldStyle = {
-    'cursor':  'pointer',
     'font-weight':  'bold',
-    'border-bottom' :  'thin solid'
   }
 
   planHeaderNormalStyle = {
-    'cursor':  'pointer',
     'font-weight':  'normal',
-    'border-bottom' :  'thin solid'
   }
-
-  // elStyle for time spans
-  timeSpanElementStyle =  {
-      'background-color': WHITE_SMOKE
-  };
 
   // this is the basic style - width is recalculated depending on timeSlize
   eventElementBorderTopSytle = {
@@ -204,7 +194,7 @@ export class CalendarDayWeekViewComponent implements OnInit {
     'padding' : '0.1em'
   }
 
-   eventElementBorderBottomSytle = {
+  eventElementBorderBottomSytle = {
     'border-bottom-width' :  'thick',
     'border-bottom-style' :  'solid',
     'padding' : '0.1em'
@@ -212,7 +202,6 @@ export class CalendarDayWeekViewComponent implements OnInit {
 
 
   expandIconStyle = {
-    'cursor':  'pointer',
     'font-size': '150%',
     'line-height': '2',
     'margin-top': '-10px'
@@ -220,7 +209,6 @@ export class CalendarDayWeekViewComponent implements OnInit {
 
   // window width for selecting length of summaryDisplay
   windowWidth = window.innerWidth;
-  windowFactor = this.windowWidth >= WINDOW_WIDTH_TABLET ? 1 : 0.7;
   WINDOW_WIDTH_TABLET = WINDOW_WIDTH_TABLET;
   WINDOW_WIDTH_MOBILE = WINDOW_WIDTH_MOBILE;
 
@@ -236,7 +224,7 @@ export class CalendarDayWeekViewComponent implements OnInit {
       if (propKey === 'opts' || propKey === 'options' || propKey === 'calendarDayChangeCounter') {
         // this.opts = propValue.currentValue;
         if (this.session.calendarDay) {
-          this.loadOptions(); 
+          this.loadOptions();
         }
         if (this.actualEvents  && this.planEvents  && this.timeSpans) {
           this.buildColumns();
@@ -264,12 +252,12 @@ export class CalendarDayWeekViewComponent implements OnInit {
         this.getOptions(style);
       }
 
-      // we override some styles
+      // we enhance some styles
 
       const {...eventElementStyles} = this.configurableStyles.eventElementStyle;
       // we override vertical align because we arrange elements in <td> vertical
       // overflow: visible to show tooltip over other table elements
-      this.eventElementStyle = {...eventElementStyles,  'cursor': 'pointer', 'vertical-align':  'top', 'overflow': 'visible'};
+      this.eventElementStyle = {...eventElementStyles, 'vertical-align':  'top', 'overflow': 'visible'};
       const {...eventStyles} = this.configurableStyles.eventStyle;
       // we override font-weight according to choosen column
       // and margin-left to shift text at the left border of element (in the moment not ative)
@@ -503,7 +491,7 @@ export class CalendarDayWeekViewComponent implements OnInit {
    * @param ixFrom  day index of end
    * @returns arrray of  elements for the days between isFrom and ixTo
    */
-  private buildTimeSpanGrid(event: Event, ixFrom: number, ixTo: number): IEventGridElement[] {
+  private buildTimeSpanGrid(event: CalendarEvent, ixFrom: number, ixTo: number): IEventGridElement[] {
     const elements: IEventGridElement[] = [];
     // we build a eventGridElement for each column
     //  in the moment they are all the same; we use just element in column ixFrom
@@ -513,40 +501,43 @@ export class CalendarDayWeekViewComponent implements OnInit {
       let leftContactStyle = {};
       let rightContactStyle = {};
       // time spans have their own eventElementStyle
-      let eventElementStyle: {} = GlobalFunctions.clone(this.timeSpanElementStyle);;
+      let eventElementStyle = {};
       let summaryDisplay = event.summary;
-      const category = this.timeSpanTypeColors[event.type % 10].text;
+      const category = event.type  > 22 ? this.timeSpanTypeColors[event.type % 10].text : '';
+      const backgroundColor = this.timeSpanTypeColors[event.type % 10].backgroundColor;
       const color = this.timeSpanTypeColors[event.type % 10].color;
-      // stringLength depends on viewPort size - resizing is done in html template, thus we can react on resizing event
-      if (i === ixFrom && ixTo - ixFrom > 1) {
-        let stringLength = 20 + (ixTo - ixFrom) * 20 - event.summary.length - category.length;
+      if (i === ixFrom && ixTo > ixFrom) {
+        if (category !== '') {
+        summaryDisplay = category + ' - ' + event.summary
+        }
+        // stringLength depends on viewPort size - resizing is done in html template, thus we can react on resizing event
+        let stringLength = 28 + (ixTo - ixFrom) * 28 - summaryDisplay.length;
         // console.log(event.summary, ' stringLength: ', stringLength );
         if (stringLength > 0) {
-          const lineString = (new Array(stringLength)).join('-');
-          summaryDisplay = event.summary + '  ' + lineString;
+          const emptyString = '\u00A0'.repeat(stringLength);
+          summaryDisplay += emptyString;
         }
       }
       if (event.contactNr && event.contactNr > 0) {
         contactDisplayNr = event.eventInfo?.contactDisplayNr ?? '';
         contactFisplayName = event.eventInfo?.contactDisplayName ?? '';
-        const contactStyle = StyleFactory.getBgColorStyle((event.eventInfo?.contactColor ?? ''), 0, 0, GlobalFunctions.clone(this.configurableStyles.contactStyle));
-        // leftContactStyle and rightContactStyle define position for custIssueLabel - independent of font size, as far as possible
-        leftContactStyle = {...contactStyle, 'margin-right' : '5px'};
-        rightContactStyle = {...contactStyle, 'margin-left' : '10px'};
-        eventElementStyle = StyleFactory.getBgColorStyle((event.eventInfo?.contactColor ?? ''), 90, 0, eventElementStyle);
+        // const contactStyle = StyleFactory.getBgColorStyle((event.eventInfo?.contactColor ?? ''), 0, 0, GlobalFunctions.clone(this.configurableStyles.contactStyle));
+        // leftContactStyle and rightContactStyle are not needed for timeSpan - we setncontact color in eventElementStyle
+        // leftContactStyle = {...contactStyle, 'margin-right' : '5px'};
+        // rightContactStyle = {...contactStyle, 'margin-left' : '10px'};
+        eventElementStyle = StyleFactory.getBgColorStyle((event.eventInfo?.contactColor ?? ''), 90, 0);
         // we want to see tooltip, but we can set overflow only in one-column design cause it would interfere with nowrap, hidden ....
-        eventElementStyle = ixFrom === ixTo ? {...eventElementStyle, 'overflow': 'visible'} : eventElementStyle;
-      } else if (color !== '') {
-        // we set color from time span category
-        eventElementStyle = StyleFactory.getBgColorStyle(color, 80, 2, eventElementStyle);
+        // overflow managed via class ...
+        // eventElementStyle = ixFrom === ixTo ? {...eventElementStyle, 'overflow': 'hidden'} : eventElementStyle;
+      
       } else {
-        eventElementStyle = {...eventElementStyle, 'background-color': WHITE_SMOKE};
+        // we set color from time span category
+        eventElementStyle = {'background-color': backgroundColor, 'color': color};
       }
-      eventElementStyle =  event.type > 22 ? {...eventElementStyle, 'cursor': 'pointer'} : eventElementStyle;
       const element: IEventGridElement = {minutes: 0, roundedMinutes: 0, timeElement: '', timeBegins: true, timeRowSpan: 0, event: event,
       eventBegins: true, eventEnds: true, eventDurationDisplay: '', eventRowSpan: 0,
       contactDisplayNr: contactDisplayNr, contactDisplayName: contactFisplayName, category,
-      leftContactStyle: leftContactStyle, rightContactStyle: rightContactStyle, eventElementStyle,
+      leftContactStyle, rightContactStyle, eventElementStyle,
       summaryDisplay, ixFrom, ixTo
       };
       elements.push(element);
@@ -562,7 +553,7 @@ export class CalendarDayWeekViewComponent implements OnInit {
    * @param calendarDay  day for the grid
    * @returns arrray of 5min elements for 1 day
    */
-  private buildGrid(events: Event[], calendarDay: Date): IEventGridElement[] {
+  private buildGrid(events: CalendarEvent[], calendarDay: Date): IEventGridElement[] {
     // we check events of this day ....
 
     const isEventBeforeStartHour = events?.filter(_ => GlobalFunctions.getDateInMinutes(_.eventEnd) > GlobalFunctions.getDateInMinutes(calendarDay)
@@ -577,7 +568,7 @@ export class CalendarDayWeekViewComponent implements OnInit {
     const gridBegin = this.isShowBeforeStartHour  ? 0 : this.userOpts.startHour * 60;
     const gridEnd = this.isShowAfterLastHour  ? 24 * 60 - 5 : this.userOpts.lastHour * 60 -5;
     for (let i = gridBegin; i <= gridEnd; i += 5) {
-      let event: Event | undefined;
+      let event: CalendarEvent | undefined;
       let minutesBefore: number = 0;
       let minutesAfter: number = 0;
       if (events && events.length > 0) {
@@ -608,14 +599,12 @@ export class CalendarDayWeekViewComponent implements OnInit {
       if (event && event?.eventInfo) {
         // we set color via contactStyle - if no contact defined, style is set to light grey via StyleFactory
         const contactStyle = StyleFactory.getBgColorStyle((event.eventInfo.contactColor ?? ''), 0, 0, GlobalFunctions.clone(this.configurableStyles.contactStyle));
-        // leftContactStyle and rightContactStyle define position for custIssueLabel - independent of font size, as far as possible
-        leftContactStyle = {...contactStyle, 'margin-right' : '5px'};
-        rightContactStyle = {...contactStyle, 'margin-left' : '10px'};
+        // rightContactStyle is used in week view
+        rightContactStyle = contactStyle;
         eventElementStyle = StyleFactory.getBgColorStyle((event.eventInfo.contactColor ?? ''), 90, 0, eventElementStyle);
         contactDisplayName = event.eventInfo.contactDisplayName && event.eventInfo.contactDisplayName !== ''
           ? event.eventInfo.contactDisplayName
-          : this.txt['contact'] + ': ' + event.eventInfo.contactNr.toString();    
-        
+          : this.txt['contact'] + ': ' + event.eventInfo.contactNr.toString();
         contactDisplayNr = event.eventInfo.contactDisplayNr && event.eventInfo.contactDisplayNr !== ''
           ? event.eventInfo.contactDisplayNr
           : event.eventInfo.contactNr.toString();
@@ -627,17 +616,17 @@ export class CalendarDayWeekViewComponent implements OnInit {
       tableRowStyle['height'] = Math.floor(40/Number(Number(this.userOpts.timeSlize))).toString() + 'px';
       // borderUnit is timeSlize, but max. 3ß
       const borderUnit = Number(this.userOpts.timeSlize) > 30 ? 30 : Number(this.userOpts.timeSlize);
-      
+
       const rowElementStyle = i === gridBegin && isEventBeforeStartHour && !this.isShowBeforeStartHour ? {
-           ...this.eventElementBorderTopSytle, 
+           ...this.eventElementBorderTopSytle,
           'border-top-color' :  eventColor
         }
         : i === gridEnd && isEventAfterLastHour && !this.isShowAfterLastHour ? {
-        ...this.eventElementBorderBottomSytle, 
+        ...this.eventElementBorderBottomSytle,
           'border-bottom-color' : eventColor
         }
         : {
-          ...this.eventElementBorderTopSytle, 
+          ...this.eventElementBorderTopSytle,
           'border-top-style' : i % 30 === 0 && Number(this.userOpts.timeSlize) === 60  ? 'dotted' : null,
           'border-top-width' : i % 60 === 0 ?  'thin' : i % 30 === 0 && Number(this.userOpts.timeSlize) === 60  ? '1px' : null
         };
@@ -677,8 +666,8 @@ export class CalendarDayWeekViewComponent implements OnInit {
         timeElementStyle,
         timeInTimeElementStyle,
         rowElementStyle,
-        leftContactStyle: leftContactStyle,
-        rightContactStyle: rightContactStyle,
+        leftContactStyle,
+        rightContactStyle,
         eventElementStyle,
         assocTxt
         };
@@ -692,19 +681,10 @@ export class CalendarDayWeekViewComponent implements OnInit {
   onResize(event: any) {
     // console.log(event.target.innerWidth);
     this.windowWidth = event.target.innerWidth;
-    this.windowFactor = this.windowWidth >= WINDOW_WIDTH_TABLET ? 1 : 0.8;
   }
 
   /** ------------------------  public methods --------------------------------------------------- */
 
-  public setPointer(style: {}, isActive: boolean) {
-    if (isActive) {
-      const pointerStyle = {...style, 'cursor':  'pointer'};
-      return pointerStyle;
-    } else {
-      return style;
-    }
-  }
 
   public toggleShowPlan(event: any) {
     if (event.target.checked === true && !this.isShowPlan) {
@@ -737,39 +717,19 @@ export class CalendarDayWeekViewComponent implements OnInit {
 
   public setHeaderDayStyle(index: number): {} {
     let style = {};
+    const holidayColor = this.timeSpanTypeColors[1].color;
     style = index === 6 || this.timeSpans?.filter(_ => _.type === 21 && GlobalFunctions.getDateInMinutes(_.eventBegin) < GlobalFunctions.getDateInMinutes(GlobalFunctions.addDays(this.weekDays[index].date, 1) )
     && GlobalFunctions.getDateInMinutes(_.eventEnd) > GlobalFunctions.getDateInMinutes(this.weekDays[index].date)).length > 0  ? {
-      'color': RED
+      'color': holidayColor
     } : {};
     style =  this.weekDays[index].isToday ? {...style,
       // 'text-decoration': 'underline'
-      'background-color': GAINSBORO
+      'background-color': DAISY_COLOR_BASE_200
     } : style;
     style = this.weekDays[index].isSelected ? {...this.planHeaderBoldStyle, ...style} : {...this.planHeaderNormalStyle, ...style};
     return style;
   }
 
-  public setTimeSpanCategoryStyle(index: number, element?: IEventGridElement): {} {
-    let style = {};
-    style = element?.event?.type === 21 ? {
-      'color': RED
-    } : {};
-    style = this.weekColumns[index].isSelected && (element?.event?.eventBegin ? GlobalFunctions.getDateInMinutes(element.event?.eventBegin) : 0) === GlobalFunctions.getDateInMinutes(this.weekDays[index].date) ? {...this.planHeaderBoldStyle, ...style} : {...this.planHeaderNormalStyle, ...style};
-    return style;
-  }
-
-  public setTimeSpanSummaryStyle(index: number, element?: IEventGridElement): {} {
-    let style = {};
-    style = element?.event?.type === 21 ? {
-      'color': RED
-    } : {};
-    style = (element?.ixTo ?? 0) - (element?.ixFrom ?? 0) > 1 ? {
-      'white-space': 'nowrap',
-      'overflow': 'hidden'
-      , ...style
-    } : style;
-    return style;
-  }
 
   public setPlan(index: number) {
   // we change calendarDay AND set plan to the according value (which is shown to user)
@@ -778,7 +738,7 @@ export class CalendarDayWeekViewComponent implements OnInit {
   }
 
   // event can also be a timeSpan
-  public enableEventCard(event?: Event) {
+  public enableEventCard(event?: CalendarEvent) {
     if (event) {
       this.cardFormViewEnabled.emit({updateType: UpdateType.update, event, d: null});
     }
@@ -795,7 +755,7 @@ export class CalendarDayWeekViewComponent implements OnInit {
         }
       }
       if (isInsertEvent) {
-        const event = EventFactory.empty();
+        const event = CalendarEventFactory.empty();
         // we round to multiple of timeSlize (max. 30)
         const timeUnit = Number(this.userOpts.timeSlize) > 30 ? 30 : Number(this.userOpts.timeSlize);
         minutes = Math.round(minutes/timeUnit) * timeUnit;
@@ -824,7 +784,7 @@ export class CalendarDayWeekViewComponent implements OnInit {
   }
 
 
-  public selectEvent(event: Event) {
+  public selectEvent(event: CalendarEvent) {
     if (event.isSelected) {
       event.isSelected = false;
     } else {

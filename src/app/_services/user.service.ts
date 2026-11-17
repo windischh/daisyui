@@ -6,8 +6,8 @@ import { GlobalFunctions } from '../_globals/global-functions';
 import { ConfigurationOptionHandlingFunctions } from '../_globals/configuration-option-handling-functions';
 
 import { User } from '../_db/user';
-import { Event } from '../_db/event';
-import { EventFactory } from '../_db/event-factory';
+import { CalendarEvent } from '../_db/calendar-event';
+import { CalendarEventFactory } from '../_db/calendar-event-factory';
 import { EventType } from '../_enums/event-type.enum';
 
 import { IAuthorization } from '../_interfaces/i-authorization';
@@ -68,9 +68,9 @@ private buildAuthorizations(userId: number): Array<IAuthorization> {
    */
   private buildRecurringTimeSpans(userId: number, rangeBegin: Date, rangeEnd: Date, comp: string): void {
     const holidays = GlobalFunctions.buildHolidays(this.locale, rangeBegin, rangeEnd);
-    let holidayTimeSpans: Array<Event> = holidays
+    let holidayTimeSpans: Array<CalendarEvent> = holidays
     .map(_ => {
-      const element = EventFactory.empty();
+      const element = CalendarEventFactory.empty();
       element.summary = this.auth.cal[_.holidayText];
       element.eventBegin = GlobalFunctions.getStartOfDay(_.holidayDate);
       element.eventEnd = GlobalFunctions.addDays(element.eventBegin, 1);
@@ -91,7 +91,7 @@ private buildAuthorizations(userId: number): Array<IAuthorization> {
     const session = this.auth.getSession(comp);
     if (session && session.serviceLevel?.contact > 0) {
       let birthdays: Array<IHoliday> = [];
-      let birthdayTimeSpans: Array<Event> = [];
+      let birthdayTimeSpans: Array<CalendarEvent> = [];
       const userData = this.auth.getUserData(userId, 'contacts', comp);
       const contacts = userData?.contacts?.filter(_ => _.status < 9);
       if (contacts) {
@@ -99,7 +99,7 @@ private buildAuthorizations(userId: number): Array<IAuthorization> {
           birthdayTimeSpans = birthdayTimeSpans.concat(contacts
           .filter(_ => _.contactBirthday &&  _.contactBirthday.getFullYear() > 1900)
           .map(_ => {
-            const birthdayTimeSpan = EventFactory.empty();
+            const birthdayTimeSpan = CalendarEventFactory.empty();
             birthdayTimeSpan.eventBegin = new Date(year, _.contactBirthday?.getMonth() ?? 0, _.contactBirthday?.getUTCDate() ?? 1);
             birthdayTimeSpan.summary = _.contactName;
             birthdayTimeSpan.eventEnd = GlobalFunctions.addDays(birthdayTimeSpan.eventBegin, 1);
@@ -421,11 +421,11 @@ private buildAuthorizations(userId: number): Array<IAuthorization> {
    * setUserCalendarDay()
    *  store calendarDay for user in local storage
    * @param userId id of user
-   * @param calendarDay last chrinicle calendarDay for that user
+   * @param calendarDay last chronicle calendarDay for that user
    * @param comp name of calling component
    * @returns true if user is updated in local storage
    */
-  public setUserCalendarDay(userId: number, calendarDay: Date,  comp: string): boolean {
+  public setUserCalendarDay(userId: number, calendarDay: Date | null,  comp: string): boolean {
     const user = this.auth.getUser(userId, comp);
     if (user) {
       user.calendarDay = calendarDay;
@@ -478,8 +478,8 @@ private buildAuthorizations(userId: number): Array<IAuthorization> {
    * @param comp name of calling component
    * @returns timeSpans as events
    */
-   public getRecurringTimeSpans(userId: number, comp: string): Array<Event> {
-    let timeSpans: Array<Event> = [];
+   public getRecurringTimeSpans(userId: number, comp: string): Array<CalendarEvent> {
+    let timeSpans: Array<CalendarEvent> = [];
     let userData = this.auth.getUserData(userId, 'recurringTimeSpans', comp);
     timeSpans = userData?.events ?? [];
     return timeSpans;
@@ -495,8 +495,8 @@ private buildAuthorizations(userId: number): Array<IAuthorization> {
    * @param comp name of calling component
    * @returns timeSpans  (only active timeSpans are returned)
    */
-   public getRecurringTimeSpanRange(userId: number, fromDate: Date, toDate: Date, comp: string): Array<Event> {
-    let timeSpans: Array<Event>;
+   public getRecurringTimeSpanRange(userId: number, fromDate: Date, toDate: Date, comp: string): Array<CalendarEvent> {
+    let timeSpans: Array<CalendarEvent>;
     timeSpans = this.getRecurringTimeSpans(userId, comp);
     let isRebuild = false;
     let startDate: Date | undefined;

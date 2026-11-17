@@ -3,14 +3,17 @@ import { DatePipe,  formatDate, NgStyle, SlicePipe } from '@angular/common';
 
 import { GlobalFunctions } from '../../_globals/global-functions';
 import { StyleFactory } from '../../_globals/style-factory';
-import { DAISY_COLOR_BASE_300, MAX_CONTACT_NR, WHITE_SMOKE } from '../../_globals/constants';
+import { MAX_CONTACT_NR, WHITE_SMOKE } from '../../_globals/constants';
+
+import { DAISY_COLOR_BASE_300 } from '../../_globals/constants-daisy';
 
 import { IEventOptions } from '../../_interfaces/i-event-options';
-import { Event } from '../../_db/event';
+import { CalendarEvent } from '../../_db/calendar-event';
 import { Session } from '../../_db/session';
 import { Contact } from '../../_db/contact';
+import { EventType } from '../../_enums/event-type.enum';
 
-class EventExtended extends Event {contactSortNr!: number; eventDurationDisplay!: string; style!: {}};
+class EventExtended extends CalendarEvent {contactSortNr!: number; eventDurationDisplay!: string; style!: {}};
 @Component({
   selector: 'dsy-calendar-day-contacts-view',
   templateUrl: './calendar-day-contacts-view.html',
@@ -32,15 +35,19 @@ export class CalendarDayContactsViewComponent implements OnInit {
 
   @Input({required: true}) opts!: IEventOptions;
 
-  @Input({required: true}) actualEvents!: Array<Event>;
-  @Input({required: true}) planEvents!: Array<Event>;
+  @Input({required: true}) actualEvents!: Array<CalendarEvent>;
+  @Input({required: true}) planEvents!: Array<CalendarEvent>;
   @Input({required: true}) calendarDayChangeCounter!: number;
+  @Input({required: true}) timeSpans!: Array<CalendarEvent>;
 
   // contact and issue which are selected for event entry
   @Input({required: true}) sessionContact!: Contact | undefined;
 
   MAX_CONTACT_NR = MAX_CONTACT_NR;
 
+  
+  EventType: typeof EventType = EventType;
+  
   eventsFiltered!: Array<EventExtended>;
 
   isContacts = false;
@@ -58,7 +65,7 @@ export class CalendarDayContactsViewComponent implements OnInit {
 
   ngOnChanges(changes: {[propKey: string]: SimpleChange}) {
     for (const [propKey, propValue] of Object.entries(changes)) {
-      if (propKey === 'session' || propKey === 'actualEvents' || propKey === 'planEvents'  
+      if (propKey === 'session' || propKey === 'actualEvents' || propKey === 'planEvents'  || propKey === 'timeSpans' 
         || propKey === 'opts' ||  propKey === 'calendarDayChangeCounter' ||  propKey === 'sessionContact') {
         this.filterEvents();
       }
@@ -75,45 +82,52 @@ export class CalendarDayContactsViewComponent implements OnInit {
   private filterEvents() {
     this.eventsFiltered = [];
     if (this.session) {
-      const events = this.session.isPlan ? this.planEvents : this.actualEvents;
+      let events = this.session.isPlan ? this.planEvents : this.actualEvents; 
+      const  timeSpansWithContact = this.timeSpans.filter(_ => _.contactNr > 0);
+      events = events.concat(timeSpansWithContact);
       if (events?.length > 0) {
         // we take all events for week of calendarDay - we check again, but planEvents and actualevents are usually  prepared for this week already ..
         // weekDay is day (0 - 6) of selected calendarDay
         const calendarDay = GlobalFunctions.getWeekDay(this.session.calendarDay, 0, this.locale);
-        if (calendarDay) {
+        if (calendarDay >= 0) {
           // weekBegin is the date of first day of week
           const eventBegin = GlobalFunctions.addDays(GlobalFunctions.getStartOfDay(this.session.calendarDay), -1 * calendarDay);
           const nextWeekBegin = GlobalFunctions.addDays(eventBegin, 7);
           this.eventsFiltered = events.filter(_ =>
             GlobalFunctions.isMinuteSameOrEarlier(eventBegin, _.eventBegin)
             && GlobalFunctions.isMinuteEarlier(_.eventBegin, nextWeekBegin)
-            && ( (this.session.isPlan && _.type === 0)
-            || (!this.session.isPlan && _.type === 1) ))
+            && ( (this.session.isPlan && _.type === EventType.plan)
+            || (!this.session.isPlan && _.type === EventType.actual) 
+            || _.type >= EventType.timeSpanUndefined))
             .map((event)  => {
-              this.isContacts = event.contactNr > 0;
               return {...event, contactSortNr: event.contactNr > 0 ? event.contactNr  : MAX_CONTACT_NR,  
                 eventDurationDisplay: '', style: {}};
             });
         }
       }
-      // sort by date, contactNr, issueNr
+      // sort by contactNr, date
       if (this.eventsFiltered?.length > 0) {
         this.eventsFiltered.sort((a: EventExtended, b: EventExtended) => {
           if (a.contactSortNr > b.contactSortNr) {return 1000; }
           if (a.contactSortNr < b.contactSortNr) {return -1000; }
-          if (a.eventBegin > b.eventBegin ) {return 10; }
-          if (a.eventBegin < b.eventBegin) {return -10; }
+          if (a.eventBegin > b.eventBegin ) {return 100; }
+          if (a.eventBegin < b.eventBegin) {return -100; }
+          if (a.type > b.type ) {return 10; }
+          if (a.type < b.type) {return -10; }
           return 0;
         });
         // suppress date if equal date before, also contactNr
         for (let ix = 0; ix < this.eventsFiltered.length; ix++) {
           const worked = this.eventsFiltered[ix].eventDuration;
-          let eventDurationDisplay =  GlobalFunctions.minutesDisplay(worked);
+          let eventDurationDisplay =  this.eventsFiltered[ix].type >= EventType.timeSpanUndefined ? GlobalFunctions.minutesDisplay(24 * 60) : GlobalFunctions.minutesDisplay(worked);
           this.eventsFiltered[ix].eventDurationDisplay = eventDurationDisplay;
           if (GlobalFunctions.getYMD(this.eventsFiltered[ix].eventBegin)  === GlobalFunctions.getYMD(this.session.calendarDay) ) {
             this.eventsFiltered[ix]['style'] = {};
           } else {
             this.eventsFiltered[ix]['style'] = this.otherDayStyle;
+          }
+          if (this.eventsFiltered[ix].contactNr > 0) {
+            this.isContacts = true;
           }
         }
       }

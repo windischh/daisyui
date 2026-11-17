@@ -2,7 +2,7 @@ import { ContactFactory } from "./contact-factory";
 import { ProviderFactory } from "./provider-factory";
 import { UserData } from "./user-data";
 import { UserDataRaw } from "./user-data-raw";
-import { EventFactory } from "./event-factory";
+import { CalendarEventFactory } from "./calendar-event-factory";
 import { EventSelectOptionFactory } from "./event-select-option-factory";
 import { ConfigurationOptionFactory } from "./configuration-option-factory";
 
@@ -22,7 +22,7 @@ export class UserDataFactory {
       rawUserData.providers?.map(provider => ProviderFactory.fromObject(provider)),
       rawUserData.configurationOptions?.map(configurationOption => ConfigurationOptionFactory.fromObject(configurationOption)),
       rawUserData.contacts?.map(contact => ContactFactory.fromObject(contact)),
-      rawUserData.events?.map(event => EventFactory.fromObject(event)),
+      rawUserData.events?.map(event => CalendarEventFactory.fromObject(event)),
       rawUserData.eventSelectOptions?.map(eventSelectOption => EventSelectOptionFactory.fromObject(eventSelectOption))
     )
   }

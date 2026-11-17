@@ -21,7 +21,9 @@ export class Session {
     /* securityLevel - see i-security-level
     */
     public securityLevel: ISecurityLevel,
-    /* documents - name of documents directory for external (linked) documents - if empty, this session has no documents
+    /* documents - name of documents directory for external (linked) documents - if empty, this session has no own documents
+      in the moment, our app has no own documents!
+
     */
     public documents: string,
     /* date/time of last transaction in this session

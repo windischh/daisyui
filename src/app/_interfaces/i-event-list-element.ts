@@ -1,4 +1,4 @@
-import { Event } from '../_db/event';
+import { CalendarEvent } from '../_db/calendar-event';
 
 /**
  * IEventListlement
@@ -7,7 +7,7 @@ import { Event } from '../_db/event';
 export interface IEventListElement {
   [key: string]: any,
   timeString: string;
-  event: Event;
+  event: CalendarEvent;
   userName: string;
   contactNr: number;
   contactDisplayNr: string;

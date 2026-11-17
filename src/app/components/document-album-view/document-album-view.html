@@ -1,0 +1,181 @@
+@if (auth && auth.txt && parametersSetSignal() > 0 ) {
+  <div class="ui grid container">
+    <div class="row">
+      <div class="five wide column"></div>
+      <div class="six wide column">
+        <h2 class="ui center aligned header"> {{immichAssetTxt['className']}} {{auth.txt['list']}}  {{action === 'getDocuments' ? '- import ' + category : ''}}  {{action === 'setAlbums' ? '- album' : ''}} </h2>
+      </div>
+      <div class="five wide column">
+        <!-- here comes selection of list/chronicle -->
+      </div>
+    </div>
+    <div class="row">
+      <div class="two wide column"></div>
+      <div class="three wide column">
+        <div class="ui checkbox">
+          <input type="checkbox" [checked]="isShowSelectable" (change)="showSelectable($event)">
+          <label><small>{{auth.txt['show_selectable'] }}</small></label>
+        </div>
+      </div>
+      <div class="three wide column">
+        <div class="ui checkbox">
+          <input type="checkbox" [checked]="isSelectAll" (change)="selectAll($event)">
+          <label><small>{{auth.txt['select_all'] }}</small></label>
+        </div>
+      </div>
+      <div class="three wide column">
+        @if (action === 'getDocuments') {
+          @if (importCounter >= 0) {
+            <button class="ui tiny circular green icon button"
+              [attr.data-tooltip]="auth.txt['submit']" data-position="top center"
+              type="button"
+              (click)="import()">
+              <i class="check icon"></i>
+            </button>
+            <label>import {{importCounter}} assets</label>
+          }
+        } @else if (action === 'setAlbums') {
+          <button class="ui tiny circular green icon button"
+            [attr.data-tooltip]="auth.txt['submit']" data-position="top center"
+            type="button"
+            (click)="insertInAlbum()">
+            <i class="check icon"></i>
+          </button>
+          <label>set albums</label>
+        }
+      </div>
+      <div class="three wide column">
+        <button class="ui tiny circular red icon button"
+          type="button" [attr.data-tooltip]="auth.txt['cancel'] " data-position="top center"
+          (click)="cancel()">
+          <i class="times icon"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- we await update and getting new data from server   -->
+@if (foldersReadySignal() === 0) {
+  <h3>immich provider not ready</h3>
+} @else if (foldersReadySignal() === 1) {
+  <div class="ui active inverted dimmer">
+    <div class="ui large text loader">processing data on server  ...</div>
+  </div>
+}
+
+@if (auth && foldersReadySignal() === 2 && showProgressSignal() > 0) {
+  <div class="ui indicating progress" [attr.data-percent]="progressPercent">
+    <div class="bar" [ngStyle]="progressStyle">
+      <div class="centered progress">{{progressValue + ' ' + ' folders'}}</div>
+    </div>
+    <div class="label">{{progressPercent + '% ' + auth.txt['prepared']}}</div>
+  </div>
+}
+
+
+ @if (foldersReadySignal() > 2) {
+  <br>
+  <div [style]="scrollWrapperStyle">
+  <!-- first stuck to fix first column since fomantic 2.9 -->
+    <table class="ui first stuck celled structured unstackable table" [style]="tableScrollStyle">
+      <thead>
+        <tr>
+          <th class="two wide left aligned" rowspan="3">
+            folder name
+          </th>
+          <th class="four wide left aligned">
+            # of assets
+          </th>
+          <th class="one wide"></th>
+          <th class="one wide"></th>
+          @if (action === 'getDocuments') {
+            <th class="one wide"></th>
+            <th class="one wide"></th>
+          }
+          <th class="two wide" rowspan="3">
+            {{auth.txt['select']}}
+          </th>
+        </tr>
+        <tr>
+          <th class="right aligned">
+            total
+          </th>
+          <th class="right aligned">
+            {{action === 'getDocuments' ? 'new' : 'not in album' }}
+          </th>
+          <th class="right aligned">
+            {{action === 'getDocuments' ? 'no id' : 'create album'}} 
+          </th>
+          @if (action === 'getDocuments') {
+            <th class="right aligned">
+              same id
+            </th>
+            <th class="right aligned">
+              other id
+            </th>
+            }
+        </tr>
+        <tr>
+          <th class="left aligned">
+            (in subdir)
+          </th>
+          <th [attr.colspan] ="action === 'getDocuments' ? 4 : 2"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (line of shownFolderLines; track $index; let i = $index) {
+          @if (line.type === 1) {
+            <tr>
+              <td class="left aligned" rowspan="3">
+                {{line.text[1] === '' ? '/' : line.text[1]}}
+              </td>
+              <td [attr.colspan] ="action === 'getDocuments' ? 6 : 4"></td>
+            </tr>
+          }
+          @if (line.type === 2) {
+            <tr>
+              @for (counter of line.counters; track $index; let ix = $index) {
+                <td class="right aligned">
+                  {{counter}}
+                </td>
+              }
+              <td class="left aligned">
+                @if (line.isSelectable) {
+                  <div class="ui checkbox">
+                    <input type="checkbox" [checked]="line.isSelected" (change)="select($event, line.sort)">
+                    <label><small>{{auth.txt['select'] }} </small></label>
+                  </div>
+                } @else if (line.text[0] && line.text[0] !== '') {
+                  {{line.text[0]}}
+                } 
+              </td>
+            </tr>
+          }
+          @if (line.type === 3) {
+            <tr>
+              @for (counter of line.counters; track $index; let ix = $index) {
+                <td class="right aligned">
+                  ({{counter}})
+                </td>
+              }
+            <td></td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<br>
+<!-- paginator selectedPage as ngModel -->
+@if (foldersReadySignal() > 2) {
+  <dsy-paginator [(ngModel)]="selectedPage"
+    [total]="total" [limit]="limit"
+    [txt]="auth.txt" [elementName]="immichAssetTxt['className']" [abbrPlaces]="abbrPlaces"
+    [names]="names" (pageSelect)="onPageSelect($event)">
+  </dsy-paginator>
+}
+
+

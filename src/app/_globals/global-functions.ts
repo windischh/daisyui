@@ -1,7 +1,7 @@
 import { MAX_INTERVAL_LENGTH, DEFAULT_TIME_SLIZE, DEFAULT_TIME_ZONE_IDENTIFIER } from './constants';
 
 import { Text } from '../_db/text';
-import { Event } from '../_db/event';
+import { CalendarEvent } from '../_db/calendar-event';
 import { Provider } from '../_db/provider';
 
 import { HolidaysAustria } from '../_enums/holidays-austria.enum';
@@ -349,8 +349,8 @@ export class GlobalFunctions {
    * @param nextEvent - include first event on next day
    * @returns array events (can be empty)
    */
-   static buildEvents(events: Event[],  calendarDay: Date, isPreviousEvent: boolean, isNextEvent: boolean): Event[] {
-    let dailyEvents: Array<Event> = [];
+   static buildEvents(events: CalendarEvent[],  calendarDay: Date, isPreviousEvent: boolean, isNextEvent: boolean): CalendarEvent[] {
+    let dailyEvents: Array<CalendarEvent> = [];
     // we take all events in range except "dayStartCard" - which has eventBegin === eventEnd
     if (events?.length > 0) {
       // we do not need to use array prototype here ...
@@ -379,7 +379,7 @@ export class GlobalFunctions {
    * @param searchDate start date (time) for search
    * @param untilDate optional end date for search (restricts end of search array)
    */
-   static getNextEvent (events: Array<Event>, searchDate: Date, untilDate?: Date): Event | null {
+   static getNextEvent (events: Array<CalendarEvent>, searchDate: Date, untilDate?: Date): CalendarEvent | null {
     if (events?.length > 0) {
       const filtered = events.filter(event => {
         // next event can start direct at minute of search date
@@ -400,7 +400,7 @@ export class GlobalFunctions {
    * @param searchDate  date (time) for search
    * @param fromDate optional start date for search (restricts begin of search array)
    */
-  static getPreviousEvent (events: Array<Event>, searchDate: Date, fromDate?: Date): Event | null  {
+  static getPreviousEvent (events: Array<CalendarEvent>, searchDate: Date, fromDate?: Date): CalendarEvent | null  {
     if (events?.length > 0) {
       return events.filter(event => {
         // previous event must begin earlier than search date
@@ -424,11 +424,11 @@ export class GlobalFunctions {
    *  of an existing event which might be recognized as event before. We need not exclude a event which begins just at given eventBegin
    *
    */
-   static getSpaceBefore(eventBegin: Date, events: Array<Event>, calendarDay: Date, eventId?: number): number {
+   static getSpaceBefore(eventBegin: Date, events: Array<CalendarEvent>, calendarDay: Date, eventId?: number): number {
     if (calendarDay?.getTime() > 0 && eventBegin?.getTime() >= calendarDay.getTime()) {
       let endBefore: Date;
       let ixBefore = -2;
-      let filtered: Event[] = [];
+      let filtered: CalendarEvent[] = [];
       if (events?.length > 0) {
         // we build a local of events array, filtered anyway, to sort in ascending order
         filtered = events.filter(_ => _.eventId !== eventId)
@@ -472,11 +472,11 @@ export class GlobalFunctions {
    * @param eventId  - event with this id is excluded in after-calculation. We need not exclude a event which ends just at given eventEnd
    *
    */
-  static getSpaceAfter(eventEnd: Date, events: Array<Event>, calendarDay: Date, eventId?: number): number {
+  static getSpaceAfter(eventEnd: Date, events: Array<CalendarEvent>, calendarDay: Date, eventId?: number): number {
     if (calendarDay?.getTime() > 0 && eventEnd?.getTime() >= calendarDay.getTime()) {
       let beginAfter: Date;
       let ixAfter = -2;
-      let filtered: Event[] = [];
+      let filtered: CalendarEvent[] = [];
       if (events?.length > 0) {
         // we build a local of events array, filtered anyway, to sort in descending order
         filtered = events.filter(_ => _.eventId !== eventId)
@@ -518,7 +518,7 @@ export class GlobalFunctions {
    * @param calendarDay calendarDay, defined by start of day
    * @retrun begin date,  null if no event is before rangeBegin or if no begin date is possible
    */
-   static getPreviousBegin(rangeBegin: Date, rangeDuration: number, events: Array<Event>, calendarDay: Date): Date | null {
+   static getPreviousBegin(rangeBegin: Date, rangeDuration: number, events: Array<CalendarEvent>, calendarDay: Date): Date | null {
     if (GlobalFunctions.isMinuteSameOrEarlier(calendarDay, rangeBegin)
     && GlobalFunctions.isMinuteEarlier(rangeBegin, GlobalFunctions.addDays(calendarDay, 1))
     && rangeDuration <= MAX_INTERVAL_LENGTH
@@ -553,7 +553,7 @@ export class GlobalFunctions {
    * @param calendarDay calendarDay, defined by start of day
    * @return date where rangeBegin can be placed,  null if no event is after rangeBegin or if no begin date is possible afterwards
    */
-  static getNextBegin(rangeBegin: Date, rangeDuration: number, events: Array<Event>, calendarDay: Date): Date | null {
+  static getNextBegin(rangeBegin: Date, rangeDuration: number, events: Array<CalendarEvent>, calendarDay: Date): Date | null {
     const rangeEnd = GlobalFunctions.addMinutes(rangeBegin, rangeDuration);
     if (GlobalFunctions.isMinuteSameOrEarlier(calendarDay, rangeBegin)
     && GlobalFunctions.isMinuteEarlier(rangeEnd, GlobalFunctions.addDays(calendarDay, 1))
@@ -1475,7 +1475,7 @@ export class GlobalFunctions {
   }
 
   /**
-   * gets minutes from 1.1.1970
+   * gets days from 1.1.1970
    * @param date date object
    * - date is in timezone of browser - we add hours of difference between date and UTC date
    *
@@ -1558,10 +1558,10 @@ export class GlobalFunctions {
   }
 
   /** returns dd.mm.yyyy  day and month with leading zero */
-  static getDDMMYYYY(date: Date): string | null {
+  static getDDMMYYYY(date: Date): string {
     if (date && date instanceof Date) {
       return  this.getDay2String(date) + '.' + this.getMonth2String(date) + '.' +  date.getFullYear().toString();
-    } else return null;
+    } else return '';
   }
 
   /** returns yyyymmddhh  */

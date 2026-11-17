@@ -46,7 +46,7 @@
                 <div class="form-control inline-flex">  <!-- we have recognized events with local timezone -->
                   <label class="label cursor-pointer gap-2">
                     <input type="checkbox" [checked]="isImportLocalTimezone" (change)="toggleLocalTimezone($event)" class="checkbox checkbox-sm">
-                    <span class="label-text"><small>timezone:&nbsp;&nbsp; </small></span>
+                    <span class="label-text text-sm">timezone:&nbsp;&nbsp; </span>
                   </label>
                 </div>
                 @if (isImportLocalTimezone) {
@@ -133,7 +133,7 @@
                     type="text" [placeholder]="auth.txt['date'] + '; dd.mm.yyyy'"  data-testid="calendar-import-dateFrom" class="input input-sm  w-full">
                 </div>
                 <button class="btn btn-sm tooltip tooltip-bottom tooltip-accent" [ngClass]="isDateFromEntered ? 'btn-success text-primary-content' : 'btn-outline'"
-                  type="button" (click)="setDateFrom(dateFromString.value); dateFrom ? dateFromString.value=GlobalFunctions.getDDMMYYYY(dateFrom) ?? '' : ''"
+                  type="button" (click)="setDateFrom(dateFromString.value); dateFrom ? dateFromString.value=GlobalFunctions.getDDMMYYYY(dateFrom) : ''"
                   [attr.data-tip]="auth.txt['set']  + ' ' + auth.txt['dateFrom'] "
                   data-testid="calendar-import-dateFrom-enter">
                   <i class="fas fa-check"></i>
@@ -167,7 +167,7 @@
                     type="text" [placeholder]="auth.txt['date'] + '; dd.mm.yyyy'"  data-testid="calendar-import-dateTo" class="input input-sm  w-full">
                 </div>
                 <button class="btn btn-sm tooltip tooltip-bottom tooltip-accent" [ngClass]="isDateToEntered ? 'btn-success text-primary-content' : 'btn-outline'"
-                  type="button" (click)="setDateTo(dateToString.value); dateTo ? dateToString.value=GlobalFunctions.getDDMMYYYY(dateTo) ?? '' : ''"
+                  type="button" (click)="setDateTo(dateToString.value); dateTo ? dateToString.value=GlobalFunctions.getDDMMYYYY(dateTo) : ''"
                   [attr.data-tip]="auth.txt['set']  + ' ' + auth.txt['dateTo'] "
                   data-testid="calendar-import-dateTo-enter">
                   <i class="fas fa-check"></i>
@@ -200,7 +200,7 @@
               <div class="form-control inline-flex">
                 <label class="label cursor-pointer gap-2">
                   <input type="checkbox" [checked]="isShowRemarked" (change)="toggleRemarked($event)" class="checkbox checkbox-sm">
-                  <span class="label-text"><small>{{auth.txt['show_errors'] }} </small></span>
+                  <span class="label-text text-sm">{{auth.txt['show_errors'] }} </span>
                 </label>
               </div>
               <br>
@@ -212,7 +212,7 @@
             <div class="form-control inline-flex">
               <label class="label cursor-pointer gap-2">
                 <input type="checkbox" [checked]="isShowEvent" (change)="toggleEvent($event)" class="checkbox checkbox-sm">
-                <span class="label-text"><small>{{auth.txt['show'] + ' ' + auth.txt['events'] }} </small></span>
+                <span class="label-text text-sm">{{auth.txt['show'] + ' ' + auth.txt['events'] }}</span>
               </label>
             </div>
               @if (sourceCheckedSignal() === 1) {
@@ -232,7 +232,7 @@
               <div class="form-control inline-flex">
                 <label class="label cursor-pointer gap-2">
                   <input type="checkbox" [checked]="isShowTimeSpans" (change)="toggleTimeSpans($event)" class="checkbox checkbox-sm">
-                  <span class="label-text"><small>{{auth.txt['show'] + ' ' + auth.txt['time_spans']  }} </small></span>
+                  <span class="label-text text-sm">{{auth.txt['show'] + ' ' + auth.txt['time_spans']  }} </span>
                 </label>
               </div>
               <br>
@@ -241,10 +241,10 @@
                 @for (type of timeSpanTypeChoices; track type) {
                   @if (type.value !== '1' && type.value !== '2') {
                     <option [value]="type.value" [ngStyle]="type.style"
-                    [disabled]="importReadySignal() === 1"
-                    [selected]="type.isSelected">
-                    {{type.value}} - {{type.value === '0' ? auth.txt['rejected'] : type.text}}
-                  </option>
+                      [disabled]="importReadySignal() === 1"
+                      [selected]="type.isSelected">
+                      {{type.value}} - {{type.value === '0' ? auth.txt['rejected'] : type.text}}
+                    </option>
                   }
                 }
               </select>
@@ -325,7 +325,7 @@
             <td class="text-left">{{event.eventBegin|date:'HH:mm'}}</td>
             <td class="text-left">{{event.eventEnd|date:'HH:mm'}}</td>
             <!--- : ConfigurationOptionBasicFunctions.getOptionString(options, 'opt_span_' + event.type.toString()) ?? ''}} -->
-            <td class="text-left" [ngStyle]="event.type < 0 || event.status >= 9 ? {'color': 'Red'} :  event.status > 0 ? {'color': 'Yellow'} : {}">
+            <td class="text-left" [ngClass]="event.type < 0 || event.status >= 9 ? 'text-error':  event.status > 0 ? 'text-warning' : ''">
               @if (event.type < 20) {
                 {{event.type < 0 ? 'error' : event.type === EventType.actual ? '' :  event.type === EventType.plan ? 'P'
                 : event.type.toString()
@@ -355,7 +355,7 @@
             <td class="text-left">
               {{event.location|slice:0:30}}
             </td>
-            <td class="text-left" [ngStyle]="event.type < 0 || event.status >= 9 ? {'background-color': 'LightSalmon'} : event.status > 0 ? {'background-color': 'LightYellow'} : {}">
+            <td class="text-left" [ngClass]="event.type < 0 || event.status >= 9 ? 'bg-error text-error-content' : event.status > 0 ? 'bg-warning text-warning-content' : ''">
               {{event.name|slice:0:80}}
             </td>
           </tr>

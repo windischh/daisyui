@@ -6,7 +6,7 @@ import { GlobalFunctions } from '../../_globals/global-functions';
 import { StyleFactory } from '../../_globals/style-factory';
 import { MAX_MONTHS, MAX_INTERVAL_LENGTH, POWDER_BLUE } from '../../_globals/constants';
 
-import { Event } from '../../_db/event';
+import { CalendarEvent } from '../../_db/calendar-event';
 import { Session } from '../../_db/session';
 import { Contact } from '../../_db/contact';
 
@@ -50,7 +50,7 @@ export class CalendarDayCardFormViewComponent implements OnInit {
   @Input({required: true}) contacttxt!: { [key: string]: string };
   @Input({required: true}) eventtxt!: { [key: string]: string };
 
-  @Input({required: true}) timeSpans!: Array<Event>;
+  @Input({required: true}) timeSpans!: Array<CalendarEvent>;
 
   //
   @Input() options: Array<ConfigurationOption> | undefined;
@@ -63,12 +63,12 @@ export class CalendarDayCardFormViewComponent implements OnInit {
   @Input({required: true}) sessionContact!: Contact | undefined;
 
   // eventContainer is the container (event itself,  date) for the event which is to be updated
-  @Input({required: true}) eventContainer!: {updateType: UpdateType, event: Event, d: Date | null};
+  @Input({required: true}) eventContainer!: {updateType: UpdateType, event: CalendarEvent, d: Date | null};
 
-  @Input({required: true}) events!: Array<Event>;
+  @Input({required: true}) events!: Array<CalendarEvent>;
 
   // if event is to be shifted to another date we use targetEvents and targetCalendarDay
-  @Input({required: true}) targetEvents!: Array<Event> | null;
+  @Input({required: true}) targetEvents!: Array<CalendarEvent> | null;
   @Input({required: true}) targetCalendarDay!: Date | null;
 
   // categories are type-part x in time spans with types 2x
@@ -76,9 +76,9 @@ export class CalendarDayCardFormViewComponent implements OnInit {
 
 
   @Output() calendarDaySelected = new EventEmitter<Date>();
-  @Output() timeSpanUpdate = new EventEmitter<{updateType: UpdateType, event: Event}>();
-  @Output() eventUpdate = new EventEmitter<{updateType: UpdateType, event: Event}>();
-  @Output() eventUpdateAssoc = new EventEmitter<{updateType: UpdateType, event: Event}>();
+  @Output() timeSpanUpdate = new EventEmitter<{updateType: UpdateType, event: CalendarEvent}>();
+  @Output() eventUpdate = new EventEmitter<{updateType: UpdateType, event: CalendarEvent}>();
+  @Output() eventUpdateAssoc = new EventEmitter<{updateType: UpdateType, event: CalendarEvent}>();
   @Output() cardFormCancel = new EventEmitter();
 
   GlobalFunctions: typeof GlobalFunctions = GlobalFunctions;
@@ -101,11 +101,11 @@ export class CalendarDayCardFormViewComponent implements OnInit {
   isContactInfo = false;
 
   // event contains a new event object (in case of insert) or cloned from eventContainer.event
-  event!: Event;
+  event!: CalendarEvent;
   // if event is timeSpan, it may have a style
   style!: {};
   // cardFormEvents are surroundingevents on calendarDay (or targetCalendarDay, if choosen), built from this.events or this.targetEvents
-  cardFormEvents!: Array<Event>;
+  cardFormEvents!: Array<CalendarEvent>;
 
   contactChoices!: Array<INumChoice>;
   // isSelected is the contactChoices array index of the element which is shown as selected element
@@ -173,21 +173,21 @@ export class CalendarDayCardFormViewComponent implements OnInit {
     let errorMessage = '';
     switch (updateType) {
       case UpdateType.update:
-        if (event && this.session && this.session.isPlanMaint) { 
+        if (event && this.session && this.session.isPlanMaint) {
           this.prepareUpdate(event)
         } else {
           errorMessage = 'internal error - update parameters missing';
         }
         break;
       case UpdateType.insert:
-        if (event && d && this.session && this.session.isPlanMaint) { 
+        if (event && d && this.session && this.session.isPlanMaint) {
           this.prepareInsert(event, d);
         } else {
           errorMessage = 'internal error - insert parameters missing';
         }
         break;
       case UpdateType.setShow:
-        if (event) { 
+        if (event) {
           this.prepareShow(event);
         } else {
           errorMessage = 'internal error - no event to show';
@@ -246,7 +246,7 @@ export class CalendarDayCardFormViewComponent implements OnInit {
   }
 
   // dateOpts are built
-  private addDpOptions(event: Event) {
+  private addDpOptions(event: CalendarEvent) {
 
     // utils.clone would not event
     this.dateOpts = this.getCopyOfDpOptions(this.myDatepickerOptions);
@@ -327,12 +327,12 @@ export class CalendarDayCardFormViewComponent implements OnInit {
     this.ixSelected = -1;
     const {updateType, event, d} = this.eventContainer;
     // choice value 0 is event is not assigned exists anyway
-    this.contactChoices.push({value: 0, 
+    this.contactChoices.push({value: 0,
     isSelected: false, text: this.txt['not_assigned']});
     // next choice is contact of event, if event is assigned to contact
     if (event.contactNr > 0 ) {
       this.contactChoices.push({value: event.contactNr,
-        text: event.eventInfo?.contactDisplayName?.substring(0,50) ?? ``, 
+        text: event.eventInfo?.contactDisplayName?.substring(0,50) ?? ``,
         isSelected: true
       });
       this.ixSelected = 1;
@@ -341,7 +341,7 @@ export class CalendarDayCardFormViewComponent implements OnInit {
     // choice  contact selected in this session - if not already shown as contact
     if (this.sessionContact && this.sessionContact?.contactNr > 0 && this.sessionContact.contactNr !== event.contactNr) {
       this.contactChoices.push({value: this.sessionContact.contactNr,
-        text: this.sessionContact.displayName?.substring(0,30) ?? ``, 
+        text: this.sessionContact.displayName?.substring(0,30) ?? ``,
         isSelected: false
       });
     } // end check eventIssues length
@@ -359,7 +359,7 @@ export class CalendarDayCardFormViewComponent implements OnInit {
    * @param event (from eventContainer), is cloned to have a new object for updating the model
    *   special handling if event.type >= EventType.timeSpanUndefined (time span, without begin time and end time)
    */
-   private prepareUpdate(event: Event) {
+   private prepareUpdate(event: CalendarEvent) {
     this.event = GlobalFunctions.clone(event);
     let spaceBefore = 0;
     let spaceAfter = 0;
@@ -394,7 +394,7 @@ export class CalendarDayCardFormViewComponent implements OnInit {
    *   special handling if event.type >= EventType.timeSpanUndefined (time span, without begin time and end time)
    * @param d date and time for insertion of new event, entered in other views ...
    */
-  private prepareInsert(event: Event, d: Date) {
+  private prepareInsert(event: CalendarEvent, d: Date) {
     this.event = event;
     if (this.opts) {
       if (this.event.type < EventType.timeSpanUndefined) {
@@ -405,7 +405,7 @@ export class CalendarDayCardFormViewComponent implements OnInit {
           this.event.eventDuration = this.opts.defaultIntervalLength;
           this.event.eventEnd = GlobalFunctions.addMinutes(this.event.eventBegin, this.event.eventDuration);
         }
-        const nextEvent: Event | null = GlobalFunctions.getNextEvent(this.cardFormEvents, this.event.eventBegin);
+        const nextEvent: CalendarEvent | null = GlobalFunctions.getNextEvent(this.cardFormEvents, this.event.eventBegin);
         if (nextEvent && GlobalFunctions.isMinuteEarlier(nextEvent.eventBegin, this.event.eventEnd )) {
           this.event.eventEnd = nextEvent.eventBegin;
         }
@@ -434,15 +434,22 @@ export class CalendarDayCardFormViewComponent implements OnInit {
   }
 
     /**
-   * prepareShow 
-   * @param event (from eventContainer) 
+   * prepareShow
+   * @param event (from eventContainer)
    *   special handling if event.type >= EventType.timeSpanUndefined (time span, without begin time and end time)
    */
-   private prepareShow(event: Event) {
+   private prepareShow(event: CalendarEvent) {
     this.event = event;
     let spaceBefore = 0;
     let spaceAfter = 0;
     const eventDurationDisplay = GlobalFunctions.minutesDisplay(this.event.eventDuration);
+    if (event.type < EventType.timeSpanUndefined) {
+      /// nothing to prepare
+    } else {
+      this.days = GlobalFunctions.getDateInDays(this.event.eventEnd) - GlobalFunctions.getDateInDays(this.event.eventBegin);
+      this.beginDisplay = formatDate(this.event.eventBegin, 'EEE d.MM.yyyy', this.locale);
+      this.endDisplay = formatDate(GlobalFunctions.addDays(this.event.eventEnd, -1), 'EEE d.MM.yyyy', this.locale);
+    }
     this.event.cardElement = {spaceBefore, spaceAfter,
        isTemporary: false, isSummaryEntered: false, isSummaryUpdated: false, eventDurationDisplay, contactDisplayNr: '', contactDisplayName: ''};
     this.dpDisabled = true;
@@ -494,7 +501,7 @@ export class CalendarDayCardFormViewComponent implements OnInit {
           ]
         ],
         locationType: [{
-          value: this.event?.locationType, 
+          value: this.event?.locationType,
           disabled: this.eventContainer.updateType === UpdateType.setShow
         }],
         description: [this.eventContainer.updateType === UpdateType.insert ? '' : this.event.description],
@@ -504,7 +511,7 @@ export class CalendarDayCardFormViewComponent implements OnInit {
         ],
         issueNr: [this.event?.issueNr],
         category: [{
-          value: this.event?.type >= EventType.timeSpanUndefined ? (this.event.type % 10).toString() : '', 
+          value: this.event?.type >= EventType.timeSpanUndefined ? (this.event.type % 10).toString() : '',
           disabled: this.eventContainer.updateType === UpdateType.setShow
         }]
       })
@@ -545,7 +552,7 @@ export class CalendarDayCardFormViewComponent implements OnInit {
    */
   private getNewEnd(begin: Date, end: Date, eventId: number): Date {
     if (this.opts) {
-      let nextEvent: Event | null = GlobalFunctions.getNextEvent(this.cardFormEvents, begin);
+      let nextEvent: CalendarEvent | null = GlobalFunctions.getNextEvent(this.cardFormEvents, begin);
       // if we get this processed event as next event we search for real next event
       if (nextEvent && eventId === nextEvent.eventId) {
         nextEvent = GlobalFunctions.getNextEvent(this.cardFormEvents, GlobalFunctions.addMinutes(nextEvent.eventBegin, 1));
@@ -691,7 +698,7 @@ export class CalendarDayCardFormViewComponent implements OnInit {
     }
   }
 
-  public timeUpdate(event: {updateType: UpdateType, event: Event, id: number}) {
+  public timeUpdate(event: {updateType: UpdateType, event: CalendarEvent, id: number}) {
     this.event = event.event;
     if (this.event.cardElement) {
       this.event.eventEnd = this.getNewEnd(event.event.eventBegin, event.event.eventEnd, event.event.eventId);
@@ -708,7 +715,7 @@ export class CalendarDayCardFormViewComponent implements OnInit {
     }
   }
 
-  public cancelTimeChangeView(event: {updateType: UpdateType, event: Event, id: number}) {
+  public cancelTimeChangeView(event: {updateType: UpdateType, event: CalendarEvent, id: number}) {
     if (this.event.cardElement) {
       this.event.cardElement.isShowTimeChange = false;
     }

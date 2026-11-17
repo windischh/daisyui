@@ -6,7 +6,7 @@ import { GlobalFunctions } from '../../_globals/global-functions';
 import { UpdateType } from '../../_enums/update-type.enum';
 import { EventType } from '../../_enums/event-type.enum';
 
-import { Event } from '../../_db/event';
+import { CalendarEvent } from '../../_db/calendar-event';
 import { Session } from '../../_db/session';
 
 import { IUserEventOptions } from '../../_interfaces/i-user-event-options';
@@ -45,20 +45,20 @@ export class CalendarDayTimeShiftViewComponent implements OnInit {
   isBeforeYesterday = false;
 
   // all events of event-day - dependent of opts.isPlan. Selected events have isSelected = true
-  @Input({required: true}) events!: Array<Event>;
+  @Input({required: true}) events!: Array<CalendarEvent>;
   @Input({required: true}) calendarDayChangeCounter!: number;
 
 
   // independent of opts.isPlan we get actualEvents to check the function copyPlanToEvent
-  @Input({required: true}) actualEvents!: Array<Event>;
+  @Input({required: true}) actualEvents!: Array<CalendarEvent>;
 
   // if selected events are to be shifted to another date we use targetEvents and targetCalendarDay
-  @Input({required: true}) targetEvents!: Array<Event> | null;
+  @Input({required: true}) targetEvents!: Array<CalendarEvent> | null;
   @Input({required: true}) targetCalendarDay!: Date | null;
 
   @Output() timeShiftCancel = new EventEmitter();
   // in case of shift to another day we update only event begin, event end - in case of copyToActual we transfer whole information
-  @Output() eventUpdate = new EventEmitter<{updateType: UpdateType, event: Event | null, events?: Array<Event>}>();
+  @Output() eventUpdate = new EventEmitter<{updateType: UpdateType, event: CalendarEvent | null, events?: Array<CalendarEvent>}>();
 
   @Output() selectionSet = new EventEmitter();
 
@@ -285,8 +285,8 @@ export class CalendarDayTimeShiftViewComponent implements OnInit {
   public copyToActual() {
     let plannedEventBegin = this.events[0].eventBegin;
     let isAllPlannedCopied = true;
-    const copiedEvents: Array<Event> = GlobalFunctions.buildEvents(this.events, this.session.calendarDay, false, false).filter(_ => _.isSelected);
-    let newEvents: Array<Event> = [];
+    const copiedEvents: Array<CalendarEvent> = GlobalFunctions.buildEvents(this.events, this.session.calendarDay, false, false).filter(_ => _.isSelected);
+    let newEvents: Array<CalendarEvent> = [];
     for (const _ of copiedEvents) {
       if (isAllPlannedCopied) {
         const eventCanBegin = GlobalFunctions.getDateInMinutes(plannedEventBegin) > GlobalFunctions.getDateInMinutes(_.eventBegin)
@@ -299,7 +299,7 @@ export class CalendarDayTimeShiftViewComponent implements OnInit {
           const spaceAfter = GlobalFunctions.getSpaceAfter(eventCanBegin, this.actualEvents, this.session.calendarDay);
           newEventDuration = spaceAfter > _.eventDuration ? _.eventDuration : spaceAfter;
           if (newEventDuration >= 5) {
-            const newEvent: Event = GlobalFunctions.clone(_);
+            const newEvent: CalendarEvent = GlobalFunctions.clone(_);
             // new copied event starts at same time as planned event or directly after lat copied event
             newEvent.eventId = 0;
             newEvent.eventBegin = eventCanBegin;
@@ -342,7 +342,7 @@ export class CalendarDayTimeShiftViewComponent implements OnInit {
           }
           // min. timeSlize in our system is 5 min
           if (actualEvent && newEventDuration >= 5  ) {
-            const newEvent: Event = GlobalFunctions.clone(_);
+            const newEvent: CalendarEvent = GlobalFunctions.clone(_);
             newEvent.eventId = 0;
             newEvent.eventDuration = newEventDuration;
             newEvent.type = EventType.actual;
@@ -384,7 +384,7 @@ export class CalendarDayTimeShiftViewComponent implements OnInit {
       const shiftMinutes = this.searchTargetBegin();
       if (shiftMinutes !== undefined && shiftMinutes !== null) {
         let minutesDiff = GlobalFunctions.getDateInMinutes(this.targetCalendarDay) - GlobalFunctions.getDateInMinutes(this.session.calendarDay);
-        let copiedEvents: Event[] = GlobalFunctions.buildEvents(this.events, this.session.calendarDay, false, false).filter(_ => _.isSelected);
+        let copiedEvents: CalendarEvent[] = GlobalFunctions.buildEvents(this.events, this.session.calendarDay, false, false).filter(_ => _.isSelected);
         let targetBegin = GlobalFunctions.addMinutes(copiedEvents[0].eventBegin, minutesDiff + shiftMinutes);
         if (confirm(this.txt['copy_events_to']  + ': ' + this.targetCalendarDayDisplay + ' - ' + formatDate(targetBegin, 'H:mm', this.locale)
         + (shiftMinutes > 0 ? ' ( + ' + GlobalFunctions.minutesDisplay(shiftMinutes) + ' )': shiftMinutes < 0 ? ' ( - ' + GlobalFunctions.minutesDisplay(shiftMinutes) + ' )' : '') +'?')) {
@@ -423,7 +423,7 @@ export class CalendarDayTimeShiftViewComponent implements OnInit {
       const shiftMinutes = this.searchTargetBegin();
       if (shiftMinutes !== undefined && shiftMinutes !== null) {
         let minutesDiff = GlobalFunctions.getDateInMinutes(this.targetCalendarDay) - GlobalFunctions.getDateInMinutes(this.session.calendarDay);
-        let shiftedEvents: Event[] = GlobalFunctions.buildEvents(this.events, this.session.calendarDay, false, false).filter(_ => _.isSelected);
+        let shiftedEvents: CalendarEvent[] = GlobalFunctions.buildEvents(this.events, this.session.calendarDay, false, false).filter(_ => _.isSelected);
         let targetBegin = GlobalFunctions.addMinutes(shiftedEvents[0].eventBegin, minutesDiff + shiftMinutes);
         if (confirm(this.txt['shift_events_to']  + ': ' + this.targetCalendarDayDisplay + ' - ' + formatDate(targetBegin, 'H:mm', this.locale)
         + (shiftMinutes > 0 ? ' ( ' + GlobalFunctions.minutesDisplay(shiftMinutes) + ' )' : shiftMinutes < 0 ? ' ( - ' + GlobalFunctions.minutesDisplay(shiftMinutes) + ' )': '') +'?')) {
@@ -444,7 +444,7 @@ export class CalendarDayTimeShiftViewComponent implements OnInit {
   }
 
   public setDone() {
-    let doneEvents: Event[] = GlobalFunctions.buildEvents(this.events, this.session.calendarDay, false, false).filter(_ => _.isSelected);
+    let doneEvents: CalendarEvent[] = GlobalFunctions.buildEvents(this.events, this.session.calendarDay, false, false).filter(_ => _.isSelected);
     doneEvents.forEach(_ => {
       if (this.isAllDone) {
         _.doneId = 0;
@@ -461,7 +461,7 @@ export class CalendarDayTimeShiftViewComponent implements OnInit {
 
 
   private shiftEventsBefore(minutes: number) {
-    let shiftedEvents: Event[] = GlobalFunctions.buildEvents(this.events, this.session.calendarDay, false, false).filter(_ => _.isSelected);
+    let shiftedEvents: CalendarEvent[] = GlobalFunctions.buildEvents(this.events, this.session.calendarDay, false, false).filter(_ => _.isSelected);
     shiftedEvents.forEach(_ => {
         _.eventBegin = GlobalFunctions.addMinutes( _.eventBegin, -1 * minutes);
         _.eventEnd = GlobalFunctions.addMinutes(_.eventEnd, -1 * minutes);
@@ -472,7 +472,7 @@ export class CalendarDayTimeShiftViewComponent implements OnInit {
   }
 
   private shiftEventsAfter(minutes: number) {
-    let eventsReverse: Event[] = GlobalFunctions.buildEvents(this.events, this.session.calendarDay, false, false).filter(_ => _.isSelected);
+    let eventsReverse: CalendarEvent[] = GlobalFunctions.buildEvents(this.events, this.session.calendarDay, false, false).filter(_ => _.isSelected);
     eventsReverse.reverse().forEach(_ => {
       _.eventBegin = GlobalFunctions.addMinutes(_.eventBegin, minutes);
       _.eventEnd = GlobalFunctions.addMinutes(_.eventEnd, minutes);

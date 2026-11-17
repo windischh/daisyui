@@ -1,0 +1,149 @@
+@if (eventsReadySignal() >= 0 && selectViewSignal() === 0 && auth && auth.txt && session) {
+  <div class="container mx-auto p-4">
+    <div class="flex flex-col md:flex-row gap-4">
+      <!-- at left side we show contact select and default calendar day-->
+      <div class="md:w-1/4 flex flex-col items-start gap-2">
+        @if (sessionContact.contactNr > 0) {
+          <div  class="mb-4">
+            <div class="badge text-left tooltip tooltip-right tooltip-accent"
+              [ngStyle]="contactStyle"
+              [attr.data-tip]="auth.txt['contact'] + ': ' + sessionContact.displayNr +'|'+ sessionContact.displayName">
+              <h5 class="text-sm md:text-base">{{sessionContact.displayName|slice:0:16}}</h5>
+            </div>
+            @if (!isSessionContactAutoSelected) {
+              <div class="form-control">
+                <label class="label cursor-pointer gap-2">
+                  <input type="checkbox" [checked]="isSessionContactSelected" (change)="setShowContact($event)" class="checkbox checkbox-sm">
+                  <span class="label-text">{{auth.txt['select']}}</span>
+                </label>
+              </div>
+            }
+          </div>
+        }
+        <!-- even if eventSelectOpion === eventOption  we show them twice, just a divider before  !!! -->
+        @if (eventSelectOption.contactNr > 0 && sessionContact.contactNr !== eventSelectOption.contactNr ) {
+        <div class="badge text-left tooltip tooltip-right tooltip-accent"
+          [ngStyle]="eventSelectStyle"
+          [attr.data-tip]="auth.txt['contact']+ ': ' + eventSelectOption.contactDisplayNr+'|' + eventSelectOption.contactDisplayName">
+          <h5 class="text-sm md:text-base">{{eventSelectOption.contactDisplayName|slice:0:16}}</h5>
+        </div>
+        }
+        @if (listDayChoices.length > 0) {
+          <div class="flex flex-col md:items-start mt-4 gap-1">
+            @for (l of listDayChoices; track $index; let i = $index) {
+              <div class="form-control">
+                <label class="label cursor-pointer gap-2">
+                  <input type="radio" [value]="l.value" [checked] = "l.isChecked"
+                    (change)="setListDay($event)" name="listday" class="radio radio-sm">
+                  <span class="label-text ml-2">{{l.value}}</span>
+                </label>
+              </div>
+            }
+          </div>
+        }
+      </div>
+      <!-- at central column we show header, user and event select options -->
+      <div class="md:w-1/2 flex flex-col text-center gap-2">
+        <h1 class="text-2xl md:text-3xl font-bold">{{auth.txt['event_list']}} </h1>
+        <div>
+          {{auth.txt['events']}}
+          @if (session.app === App.admin && eventSelectOption.userName) {
+            <span> {{auth.txt['of']}}: {{eventSelectOption.userName}} - </span>
+          }
+          @if ((eventSelectOption.isPlan === null && session.isPlan) || eventSelectOption.isPlan) {
+            <span>{{auth.txt['plan']}}</span>
+          } @else {
+            {{auth.txt['actual']}}
+          }
+        </div>
+        <div class="divider my-2"></div>
+        <div class="flex items-center gap-2">
+          <!-- without label cause of saving space
+          <div>
+            <h4>{{auth.txt['select_option']}}:</h4>
+          </div>
+          -->
+          <div class="flex-1">
+            @if ((eventSelectChoices && eventSelectChoices.length === 1) || isUpdate) {
+              @if (!isUpdate) {
+                <span class="link link-primary cursor-pointer" (click)="setUpdateEventSelectOption()">{{eventSelectOption.name|slice:0:50}}</span>
+              } @else {
+                @if (isInsert) {
+                  {{'(' + eventSelectOption.nr + ')'}} - {{eventSelectOption.name|slice:0:50}}
+                } @else {
+                  {{eventSelectOption.name|slice:0:50}}
+                }
+              }
+            }
+            @if (eventSelectChoices && eventSelectChoices.length > 1 && !isUpdate) {
+              <select class="select select-primary w-full" (change)="setEventSelectOption($event)">
+                @for (c of eventSelectChoices; track c.nr) {
+                  <option [value]="c.nr"
+                    [selected]="c.isSelected">
+                    {{c.nr}} - {{c.name|slice:0:50}}
+                  </option>
+                }
+              </select>
+            }
+          </div>
+          @if ( !isUpdate) {
+            <div>
+              <button class="btn btn-sm btn-circle btn-warning text-primary-content tooltip tooltip-bottom tooltip-primary"
+                [attr.data-tip]="auth.txt['update']"
+                type ="button" (click)="setUpdateEventSelectOption()">
+                <i class="fas fa-arrow-left"></i>
+              </button>
+            </div>
+          }
+          @if (!isUpdate) {
+            <div>
+              <button class="btn btn-sm btn-circle btn-warning text-primary-content tooltip tooltip-bottom tooltip-primary"
+                [attr.data-tip]="auth.txt['clone']"
+                type ="button" (click)="setCloneEventSelectOption()">
+                <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+      <!-- at right side we show dates -->
+      <div class="md:w-1/4 flex flex-col md:items-end gap-1">
+        <h3 class="text-xl md:text-2xl font-semibold">
+          {{dateFromDisplay}}
+        </h3>
+        @if (dateToDisplay && dateToDisplay !== dateFromDisplay) {
+          <h3 class="text-xl md:text-2xl font-semibold"> 
+            <span>- {{dateToDisplay}}</span>
+          </h3>
+        }
+      </div>
+    </div>
+  </div>
+}
+<!-- we use eventSelectOption for maintenance -->
+@if (selectViewSignal() === 1 && auth && auth.txt && users) {
+  <dsy-calendar-event-select-form-view
+    [txt]="auth.txt" [opts]="options" [optiontxt]="optiontxt"  [eventtxt]="eventtxt"
+    [sessionContact]="sessionContact" [eventContacts]="eventContacts"
+    [timeSpans]="timeSpans"
+    [session]="session" [users]="users"  [locale]="locale"
+    [eventSelectOption]="eventSelectOption"
+    (optionUpdate)="updateEventSelectOption($event)"
+    (optionDelete)="deleteEventSelectOption($event)"
+    (cancelUpdate)="cancelUpdate()">
+  </dsy-calendar-event-select-form-view>
+}
+<!-- we use auth.eventSelectOption to filter the list -->
+@if (eventsReadySignal() === 1 && selectViewSignal() === 0 && auth && auth.txt
+    && eventElements.length > 0) {
+  <dsy-calendar-event-list-view
+    [txt]="auth.txt"  [eventtxt]="eventtxt" [session]="session" [isShowUser]="isShowUser"
+    [isShowLocationType]="isShowLocationType" [isLocationTypeGrouped]="isLocationTypeGrouped"
+    [eventSelectOption]="eventSelectOption" [eventElements]="eventElements"
+    (eventShow)="showEvent($event)">
+  </dsy-calendar-event-list-view>
+}
+@if (eventsReadySignal() === 1 && selectViewSignal() === 0 && auth && auth.txt
+  && (!eventElements || eventElements.length === 0)) {
+  <h4 class="text-center font-semibold mt-4">  {{auth.txt['no_records_to_show']}} </h4>
+}

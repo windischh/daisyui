@@ -5,8 +5,8 @@ import { BEGIN, CATEGORIES, CLASS, X_CONTACT, CREATED, CRLF, DESCRIPTION, DTEND,
 import { GlobalFunctions } from '../../_globals/global-functions';
 import { ConfigurationOptionBasicFunctions } from '../../_globals/configuration-option-basic-functions';
 
-import { Event } from '../../_db/event';
-import { EventFactory } from '../../_db/event-factory';
+import { CalendarEvent } from '../../_db/calendar-event';
+import { CalendarEventFactory } from '../../_db/calendar-event-factory';
 
 import { LocationType } from '../../_enums/location-type.enum';
 import { EventType } from '../../_enums/event-type.enum';
@@ -46,7 +46,7 @@ export class CalendarExportComponent implements OnInit {
   fileType!: string;
   extendedFileName!: string;
 
-  calendarEvents!: Event[];
+  calendarEvents!: CalendarEvent[];
   recordCount!: number;
 
   isUpdateFileName = false;
@@ -106,7 +106,7 @@ export class CalendarExportComponent implements OnInit {
     const session = this.auth.getSession(this.name);
     // default language according to application internal language coding (language enum)
     const language = session?.language ? session.language : GlobalFunctions.getDefaultLanguage(this.locale);
-    const event = EventFactory.empty(); // just for dbtxt
+    const event = CalendarEventFactory.empty(); // just for dbtxt
     this.eventtxt = GlobalFunctions.objText(event,
       'Event', this.auth.systemTexts, language,  this.name);
   }

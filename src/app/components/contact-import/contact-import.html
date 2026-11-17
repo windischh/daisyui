@@ -103,7 +103,7 @@
           <div class="form-control">
             <label class="label cursor-pointer">
               <input type="checkbox" [checked]="isShowRemarked" (change)="toggleRemarked($event)" class="checkbox">
-              <span class="label-text ml-2"><small>{{auth.txt['show_errors'] }} </small></span>
+              <span class="label-text text-sm ml-2">{{auth.txt['show_errors'] }} </span>
             </label>
           </div>
         }
@@ -111,7 +111,7 @@
           <div class="form-control">
             <label class="label cursor-pointer">
               <input type="checkbox" [checked]="isOverwriteExisting" (change)="toggleOverwrites($event)" class="checkbox">
-              <span class="label-text ml-2"><small>{{auth.txt['allow_overwrite'] }} </small></span>
+              <span class="label-text text-sm ml-2">{{auth.txt['allow_overwrite'] }} </span>
             </label>
           </div>
         }
@@ -176,7 +176,7 @@
           <div class="form-control">
             <label class="label cursor-pointer">
               <input type="checkbox" [checked]="isUploadDirectory" (change)="setUploadDirectory($event)" class="checkbox">
-              <span class="label-text ml-2"><small>{{auth.txt['choose_directory'] }} </small></span>
+              <span class="label-text text-sm ml-2">{{auth.txt['choose_directory'] }} </span>
             </label>
           </div>
         </div>

@@ -1,22 +1,25 @@
 import { Component, OnInit, ViewChild, Input, EventEmitter, Output, OnChanges, SimpleChange, HostListener, signal } from '@angular/core';
-import { formatDate, NgStyle, NgClass, SlicePipe } from '@angular/common';
+import { formatDate, NgStyle, NgClass } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
+import { AngularMyDatePickerDirective, DefaultView, IAngularMyDpOptions, IMyCalendarViewChanged, IMyDate, IMyDateModel, IMyDefaultMonth, IMyInputFieldChanged, IMyMarkedDate, IMyRangeDateSelection, IMyDateRange, AngularMyDatePickerModule } from '@nodro7/angular-mydatepicker';
+
+import { App } from '../../_enums/app.enum';
 
 import { GlobalFunctions } from '../../_globals/global-functions';
-import { GAINSBORO, LIGHT_CORAL, LIGHT_GREY, MAX_MONTHS, WHITE_SMOKE, WINDOW_WIDTH_MOBILE, WINDOW_WIDTH_TABLET } from '../../_globals/constants';
+import { MAX_MONTHS, WINDOW_WIDTH_MOBILE, WINDOW_WIDTH_TABLET } from '../../_globals/constants';
 import { StyleFactory } from '../../_globals/style-factory';
+import { DAISY_COLOR_BASE_200 } from '../../_globals/constants-daisy';
 
 import { IView } from '../../_interfaces/i-view';
 import { IEventOptions } from '../../_interfaces/i-event-options';
 import { IUserEventOptions } from '../../_interfaces/i-user-event-options';
+import { IChoice } from '../../_interfaces/i-choice';
 
 import { Session } from '../../_db/session';
-import { Event } from '../../_db/event';
+import { CalendarEvent } from '../../_db/calendar-event';
 import { Contact } from '../../_db/contact';
 
-import { AngularMyDatePickerDirective, DefaultView, IAngularMyDpOptions, IMyCalendarViewChanged, IMyDate, IMyDateModel, IMyDefaultMonth, IMyInputFieldChanged, IMyMarkedDate, IMyRangeDateSelection, IMyDateRange, AngularMyDatePickerModule } from '@nodro7/angular-mydatepicker';
-import { FormsModule } from '@angular/forms';
-import { App } from '../../_enums/app.enum';
-import { IChoice } from '../../_interfaces/i-choice';
 
 @Component({
   selector: 'dsy-calendar-day-selection-bar',
@@ -70,7 +73,10 @@ export class CalendarDaySelectionBarComponent implements OnInit {
 
   // @Input({required: true}) locale: string;
 
-  @Input({required: true}) timeSpans!: Array<Event>;
+  @Input({required: true}) timeSpans!: Array<CalendarEvent>;
+  // categories are indexed by type-part x in time spans with types 2x
+  @Input({required: true}) timeSpanTypeColors!: Array<{text: string, backgroundColor: string, color: string}>;
+
   @Input({required: true}) sessionContact!: Contact | undefined;
 
   @Input({required: true}) isCreating!: boolean;
@@ -116,7 +122,7 @@ export class CalendarDaySelectionBarComponent implements OnInit {
   // color of contact
   contactStyle!: {
   };
- 
+
 
   // we show selection bar after having built all styles
   isStylesReadySignal = signal(false);
@@ -152,12 +158,13 @@ export class CalendarDaySelectionBarComponent implements OnInit {
           // we set firstDay to monday
           firstDay = 1;
           const sundayWeekDay = 7 - firstDay;
+          const holidayColor = this.timeSpanTypeColors[1].color;
           // this.calendarDayStyle = GlobalFunctions.getWeekDay(this.session.calendarDay, 0, this.locale)  === sundayWeekDay
           this.calendarDayStyle = GlobalFunctions.getWeekDay(this.session.calendarDay, 1)  === sundayWeekDay
           || (this.timeSpans && this.timeSpans?.filter(_ => _.type === 21 && GlobalFunctions.getDateInMinutes(_.eventBegin) < GlobalFunctions.getDateInMinutes(GlobalFunctions.addDays(this.session.calendarDay, 1) )
           && GlobalFunctions.getDateInMinutes(_.eventEnd) > GlobalFunctions.getDateInMinutes(this.session.calendarDay))).length > 0
             ? {
-              'color': 'Red'
+              'color': holidayColor
             }
             : {};
           // today is underlined
@@ -165,7 +172,7 @@ export class CalendarDaySelectionBarComponent implements OnInit {
             ? {
               ...this.calendarDayStyle,
               // 'text-decoration': 'underline'
-              'background-color': GAINSBORO
+              'background-color': DAISY_COLOR_BASE_200
             }
             : this.calendarDayStyle;
           this.weekDisplay = formatDate(this.session.calendarDay, 'ww/yyyy', this.locale);

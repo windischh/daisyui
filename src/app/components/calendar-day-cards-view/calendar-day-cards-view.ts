@@ -6,13 +6,15 @@ import { StyleFactory } from '../../_globals/style-factory';
 
 import { LocationType } from '../../_enums/location-type.enum';
 import { UpdateType } from '../../_enums/update-type.enum';
+import { EventType } from '../../_enums/event-type.enum';
 
-import { Event } from '../../_db/event';
-import { EventFactory } from '../../_db/event-factory';
+import { CalendarEvent } from '../../_db/calendar-event';
+import { CalendarEventFactory } from '../../_db/calendar-event-factory';
 import { Session } from '../../_db/session';
 import { ConfigurationOption } from '../../_db/configuration-option';
 
 import { INumChoice } from '../../_interfaces/i-num-choice';
+import { IEventGridElement } from '../../_interfaces/i-event-grid-element';
 import { IUserEventOptions } from '../../_interfaces/i-user-event-options';
 import { IEventOptions } from '../../_interfaces/i-event-options';
 import { CalendarDayTimeChangeComponent } from '../calendar-day-time-change/calendar-day-time-change';
@@ -43,7 +45,11 @@ export class CalendarDayCardsViewComponent implements OnInit {
    // startHour, timeSlize, defaultIntervalSize are model parameters, managed by event-day-component
   @Input() userOpts: IUserEventOptions | undefined;
 
-  @Input({required: true}) events!: Array<Event>;
+  @Input({required: true}) events!: Array<CalendarEvent>;
+  @Input({required: true}) timeSpans!: Array<CalendarEvent>;
+  // categories are indexed by type-part x in time spans with types 2x
+  @Input({required: true}) timeSpanTypeColors!: Array<{text: string, backgroundColor: string, color: string}>;
+
   @Input({required: true}) calendarDayChangeCounter!: number;
 
   @Input() isCreating: boolean = false;
@@ -52,11 +58,11 @@ export class CalendarDayCardsViewComponent implements OnInit {
 
   @Output() eventSelect = new EventEmitter<{isSelect: boolean, id: number}>();
   // this view updates only event summary, begin, end
-  @Output() eventUpdate = new EventEmitter<{updateType: UpdateType, event: Event}>();
+  @Output() eventUpdate = new EventEmitter<{updateType: UpdateType, event: CalendarEvent}>();
   @Output() eventCreate = new EventEmitter<boolean>();
-  @Output() cardFormViewEnabled = new EventEmitter<{updateType: UpdateType, event: Event, d: Date | null}>();
+  @Output() cardFormViewEnabled = new EventEmitter<{updateType: UpdateType, event: CalendarEvent, d: Date | null}>();
 
-  
+
   // day of event - 00:00 in browser timezone
   // can be selected by user
   // calendarDay is in opts @Input({required: true}) calendarDay: Date;
@@ -69,7 +75,8 @@ export class CalendarDayCardsViewComponent implements OnInit {
   today = new Date();
 
   // eventCards are enhanced events (time-picker attributes are set via mapping) and have same cardinality and sort-order as events
-  eventCards!: Array<Event>;
+  eventCards!: Array<CalendarEvent>;
+  timeSpanGrid: Array<IEventGridElement> = [];
 
   locationTypeEnum: typeof LocationType = LocationType;
 
@@ -115,6 +122,9 @@ export class CalendarDayCardsViewComponent implements OnInit {
       } else if (this.session?.calendarDay) {
         this.addDayStartCard();
       }
+      if (this.timeSpans && this.timeSpans.length > 0 && this.session?.calendarDay) {
+         this.timeSpanGrid = this.buildTimeSpanGrid(this.timeSpans, this.session.calendarDay);
+      }
       this.isEventsLoaded = true;
     }
   }
@@ -126,13 +136,61 @@ export class CalendarDayCardsViewComponent implements OnInit {
     this.isAfterToday = GlobalFunctions.getDateInMinutes(this.session.calendarDay) >= GlobalFunctions.getDateInMinutes(tomorrow);
   }
 
+  /**
+     * buildTimeSpanGrid builds a grid for timeSpans
+     * @param events array of events ( in this case events are timeSpans)
+     * @param calendarDay  day for the grid
+     * @returns arrray of elements for 1 day
+     */
+    private buildTimeSpanGrid(events: Array<CalendarEvent>, calendarDay: Date): Array<IEventGridElement> {
+      // console.log(events, cat);
+      const grid: IEventGridElement[] = [];
+      // build elements with  contact data, contact color, category
+      events.forEach(_ => {
+        if (GlobalFunctions.getDateInMinutes(_.eventBegin) < GlobalFunctions.getDateInMinutes(GlobalFunctions.addDays(calendarDay, 1))
+        && GlobalFunctions.getDateInMinutes(_.eventEnd) > GlobalFunctions.getDateInMinutes(calendarDay)  ) {
+          let contactDisplayNr = '';
+          let contactDisplayName = '';
+          let leftContactStyle = {};
+          let rightContactStyle = {};
+          let eventElementStyle = {};
+          const category = this.timeSpanTypeColors[_.type % 10].text;
+          const backgroundColor = this.timeSpanTypeColors[_.type % 10].backgroundColor;
+          const color = this.timeSpanTypeColors[_.type % 10].color;
+          if ( _.contactNr && _.contactNr > 0) {
+            contactDisplayNr = _.eventInfo?.contactDisplayNr ?? '';
+            contactDisplayName = _.eventInfo?.contactDisplayName ?? '';
+            let contactStyle = {};
+            if (_.eventInfo?.contactColor) {
+              contactStyle = StyleFactory.getBgColorStyle(_.eventInfo.contactColor, 0, 0);
+              // leftOrderStyle and rightOrderStyle define position for custOrderLabel - independent of font size, as far as possible
+              leftContactStyle = {...contactStyle, 'margin-right' : '5px'};
+              rightContactStyle = {...contactStyle, 'margin-left' : '10px'};
+              eventElementStyle = StyleFactory.getBgColorStyle(_.eventInfo.contactColor, 90, 0, eventElementStyle);
+            }
+          } else {
+            // we set color from time span category
+            eventElementStyle = {'background-color': backgroundColor, 'color': color};
+          }
+          const element: IEventGridElement = {minutes: 0, roundedMinutes: 0, timeElement: '', timeBegins: true, timeRowSpan: 0, event: _,
+          eventBegins: true, eventEnds: true, eventDurationDisplay: '', eventRowSpan: 0,
+          contactDisplayNr, contactDisplayName, category,
+          leftContactStyle, rightContactStyle, eventElementStyle
+          };
+          grid.push(element);
+        }
+      })
+      return grid;
+    }
+
+
   private addDayStartCard() {
     if (this.userOpts) {
-      const dayStartDummy = EventFactory.empty();
+      const dayStartDummy = CalendarEventFactory.empty();
       dayStartDummy.eventBegin = GlobalFunctions.addMinutes(this.session.calendarDay, this.userOpts.startHour * 60);
       dayStartDummy.eventEnd = dayStartDummy.eventBegin;
       dayStartDummy.summary = (this.session?.isPlan ? this.txt['no_plan_entry'] : this.txt['no_entry'] );
-      const eventsDummy: Array<Event> = [];
+      const eventsDummy: Array<CalendarEvent> = [];
       eventsDummy.push(dayStartDummy);
       this.buildEventCards(eventsDummy);
     }
@@ -143,7 +201,7 @@ export class CalendarDayCardsViewComponent implements OnInit {
    * we build eventCards from events
    * (attention: we use this function also for dummyEvents)
    */
-  private buildEventCards(events: Array<Event>) {
+  private buildEventCards(events: Array<CalendarEvent>) {
     this.eventCards = events.filter(_ => GlobalFunctions.isMinuteSameOrEarlier(this.session.calendarDay, _.eventBegin)
     && GlobalFunctions.isMinuteEarlier(_.eventBegin, GlobalFunctions.addDays(this.session.calendarDay, 1)) );
     this.eventCards.map((card) => {
@@ -196,7 +254,7 @@ export class CalendarDayCardsViewComponent implements OnInit {
 
   private getNewEnd(begin: Date, end: Date): Date {
     if (this.opts) {
-      let nextEvent: Event | null = GlobalFunctions.getNextEvent(this.events, begin);
+      let nextEvent: CalendarEvent | null = GlobalFunctions.getNextEvent(this.events, begin);
       // if we get this processed event as next event we search for real next event
       if (nextEvent && GlobalFunctions.isMinuteSame(nextEvent.eventBegin, begin)) {
         nextEvent = GlobalFunctions.getNextEvent(this.events, GlobalFunctions.addMinutes(begin, 1));
@@ -216,8 +274,16 @@ export class CalendarDayCardsViewComponent implements OnInit {
 
   /** ------------------------  public methods --------------------------------------------------- */
 
-  public setContactBgColorStyle (contactColor: string) {
-    return StyleFactory.getBgColorStyle(contactColor, 0);
+  // event can also be a timeSpan
+  public enableEventCard(event: CalendarEvent) {
+    this.cardFormViewEnabled.emit({updateType: UpdateType.update, event, d: null});
+  }
+
+  public insertTimeSpan() {
+    const event = CalendarEventFactory.empty();
+    event.type = EventType.timeSpanUndefined;
+    this.cardFormViewEnabled.emit({updateType: UpdateType.insert, event,
+      d: this.session.calendarDay});
   }
 
   public shiftBefore(i: number) {
@@ -248,7 +314,7 @@ export class CalendarDayCardsViewComponent implements OnInit {
   public insertBefore(i: number): void {
     if (this.opts && this.eventCards.filter(_ => _.cardElement?.isSummaryUpdated || _.cardElement?.isShowTimeChange).length === 0
     && (!this.session.isPlan || GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date())) <= GlobalFunctions.getDateInMinutes(this.session.calendarDay))) {
-      const newEvent = EventFactory.empty();
+      const newEvent = CalendarEventFactory.empty();
       newEvent.type = this.session.isPlan ? 0 : 1;
       newEvent.eventEnd = this.eventCards[i].eventBegin;
       if (newEvent.eventEnd.getMinutes() < this.opts.defaultIntervalLength) {
@@ -260,7 +326,7 @@ export class CalendarDayCardsViewComponent implements OnInit {
         newEvent.eventBegin = GlobalFunctions.addMinutes(newEvent.eventEnd, -1 * newEvent.eventDuration);
         // adding event from previous day
         const allEvents = GlobalFunctions.buildEvents(this.events, this.session.calendarDay, true, false);
-        let previousEvent: Event | null = GlobalFunctions.getPreviousEvent(allEvents, newEvent.eventBegin);
+        let previousEvent: CalendarEvent | null = GlobalFunctions.getPreviousEvent(allEvents, newEvent.eventBegin);
         // if overlapping, eventBegin is set to previous eventEnd
         if (previousEvent && GlobalFunctions.isMinuteEarlier(newEvent.eventBegin, previousEvent.eventEnd )) {
           newEvent.eventBegin = previousEvent.eventEnd;
@@ -288,14 +354,14 @@ export class CalendarDayCardsViewComponent implements OnInit {
   public insertAfter(i: number): void {
     if (this.opts && this.eventCards.filter(_ => _.cardElement?.isSummaryUpdated || _.cardElement?.isShowTimeChange).length === 0
     && (!this.session.isPlan || GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date())) <= GlobalFunctions.getDateInMinutes(this.session.calendarDay))) {
-      const newEvent = EventFactory.empty();
+      const newEvent = CalendarEventFactory.empty();
       newEvent.type = this.session.isPlan ? 0 : 1;
       newEvent.eventBegin = this.eventCards[i].eventEnd;
       newEvent.eventDuration = this.opts.defaultIntervalLength;
       newEvent.eventEnd = GlobalFunctions.addMinutes(newEvent.eventBegin, newEvent.eventDuration);
       // adding first event on next day
       const allEvents = GlobalFunctions.buildEvents(this.events,  this.session.calendarDay, false, true);
-      let nextEvent: Event | null = GlobalFunctions.getNextEvent(allEvents, newEvent.eventBegin);
+      let nextEvent: CalendarEvent | null = GlobalFunctions.getNextEvent(allEvents, newEvent.eventBegin);
       // if we get this processed event as next event we search for real next event
       // here we need this only for dayStartCard
       if (nextEvent && GlobalFunctions.isMinuteSame (nextEvent.eventBegin, this.eventCards[i].eventBegin)) {
@@ -329,7 +395,7 @@ export class CalendarDayCardsViewComponent implements OnInit {
     }
   }
 
-  public timeUpdate(event: {updateType: UpdateType, event: Event, id: number}) {
+  public timeUpdate(event: {updateType: UpdateType, event: CalendarEvent, id: number}) {
     const i = this.eventCards.findIndex(_ => _.eventId === event.id);
     if (i >= 0) {
       this.eventCards[i] = event.event;
@@ -342,7 +408,7 @@ export class CalendarDayCardsViewComponent implements OnInit {
     }
   }
 
-  public cancelTimeChangeView(event: {updateType: UpdateType, event: Event, id: number}) {
+  public cancelTimeChangeView(event: {updateType: UpdateType, event: CalendarEvent, id: number}) {
     const i = this.eventCards.findIndex(_ => _.eventId === event.id);
     if (i >= 0) {
       if (this.eventCards[i].cardElement) this.eventCards[i].cardElement.isShowTimeChange = false;
@@ -465,10 +531,10 @@ export class CalendarDayCardsViewComponent implements OnInit {
   }
 
 
-  public enableCardFormView(eventCard: Event, i: number) {
+  public enableCardFormView(eventCard: CalendarEvent, i: number) {
     let errorMessage = '';
     if (eventCard.eventId === this.eventCards[i].eventId) {
-      const event: Event = GlobalFunctions.clone(this.eventCards[i]);
+      const event: CalendarEvent = GlobalFunctions.clone(this.eventCards[i]);
       if (this.isViewMode) {
         this.cardFormViewEnabled.emit({updateType: UpdateType.setShow, event, d: null});
       } else if (this.eventCards.filter(_ => (_.cardElement?.isSummaryUpdated && _.eventId !== eventCard.eventId)
@@ -493,8 +559,6 @@ export class CalendarDayCardsViewComponent implements OnInit {
     }
   }
 
-
-  
 }
 
 

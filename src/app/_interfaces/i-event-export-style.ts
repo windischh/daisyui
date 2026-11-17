@@ -1,4 +1,4 @@
-import { Event } from '../_db/event';
+import { CalendarEvent } from '../_db/calendar-event';
 
 /**
  * IEventExportStyle

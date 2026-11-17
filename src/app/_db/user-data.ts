@@ -1,7 +1,7 @@
 import { EventSelectOption } from './event-select-option';
 import { Contact } from "./contact";
 import { Provider } from "./provider";
-import { Event } from "./event";
+import { CalendarEvent } from "./calendar-event";
 import { ConfigurationOption } from './configuration-option';
 
 /**
@@ -23,7 +23,7 @@ export class UserData {
     public providers?: Array<Provider>,
     public configurationOptions?: Array<ConfigurationOption>,
     public contacts?: Array<Contact>,
-    public events?: Array<Event>,
+    public events?: Array<CalendarEvent>,
     public eventSelectOptions?: Array<EventSelectOption>
   ) { }
 }

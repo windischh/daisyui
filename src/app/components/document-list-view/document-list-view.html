@@ -1,0 +1,200 @@
+
+<br>
+@if (session) {
+  <dsy-paginator [(ngModel)]="selectedPage"
+    [isTooltipBelow]="true"
+    [externalSelectedPage]="selectedPage"
+    [total]="total" [limit]="limit" [abbrPlaces]="abbrPlaces"
+    [txt]="txt" [elementName]="''"
+    [names]="names" (pageSelect)="onPageSelect($event)">
+  </dsy-paginator>
+}
+@if (showSignal() && session && txt && documenttxt && extendedDocuments) {
+  <table class="ui celled structured table">
+    <thead>
+      <tr>
+        @if (!isDistinctCategory) {
+          <th class="one wide" rowspan="2">{{documenttxt['documentCategory'] }}
+          </th>
+        }
+        <th class="one wide" rowspan="2" [ngStyle]="nrSortStyle">{{documenttxt['documentNr'] }}
+          @if (sortDirection === 1) {
+            <i class="link large angle up icon"></i>
+          }
+          @if (sortDirection !== 1) {
+            <i class="link angle up icon" (click)="sort(1)"></i>
+          }
+          @if (sortDirection === 2) {
+            <i class="link large angle down icon"></i>
+          }
+          @if (sortDirection !== 2) {
+            <i class="link angle down icon" (click)="sort(2)"></i>
+          }
+        </th>
+        <th class="two wide" [ngStyle]="nameSortStyle">{{documenttxt['documentName'] }}
+          @if (sortDirection === 3) {
+            <i class="link large angle up icon"></i>
+          }
+          @if (sortDirection !== 3) {
+            <i class="link angle up icon" (click)="sort(3)"></i>
+          }
+          @if (sortDirection === 4) {
+            <i class="link large angle down icon"></i>
+          }
+          @if (sortDirection !== 4) {
+            <i class="link angle down icon" (click)="sort(4)"></i>
+          }
+        </th>
+        <th class="two wide" colspan="2" [ngStyle]="titleSortStyle">{{(isDistinctDirectory ? documenttxt['documentSubDirectory'] + ' | ' : '') + documenttxt['imageTitle'] }}
+          @if (sortDirection === 5) {
+            <i class="link large angle up icon"></i>
+          }
+          @if (sortDirection !== 5) {
+            <i class="link angle up icon" (click)="sort(5)"></i>
+          }
+          @if (sortDirection === 6) {
+            <i class="link large angle down icon"></i>
+          }
+          @if (sortDirection !== 6) {
+            <i class="link angle down icon" (click)="sort(6)"></i>
+          }
+        </th>
+        <th class="two wide" [ngStyle]="dateSortStyle">{{documenttxt['dateTimeOriginal'] }}
+          @if (sortDirection === 7) {
+            <i class="link large angle up icon"></i>
+          }
+          @if (sortDirection !== 7) {
+            <i class="link angle up icon" (click)="sort(7)"></i>
+          }
+          @if (sortDirection === 8) {
+            <i class="link large angle down icon"></i>
+          }
+          @if (sortDirection !== 8) {
+            <i class="link angle down icon" (click)="sort(8)"></i>
+          }
+        </th>
+        <th class="two wide" rowspan="2">{{documenttxt['document'] }}
+        </th>
+        <th class="two wide center aligned" rowspan="2" colspan="2">{{txt['show'] + (isMaint ? ' / ' + txt['update'] : '')}}
+        </th>
+        <th class="one wide center aligned" rowspan="2">
+        </th>
+      </tr>
+      <tr>
+        <th><small>{{documenttxt['documentOriginalFileName'] }}</small></th>
+        <th><small>{{documenttxt['documentType'] }}</small></th>
+        <th><small>{{documenttxt['documentSize'] }}</small></th>
+        <th><small>{{documenttxt['documentDate'] }}</small></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (doc of shownDocuments; track doc.documentId; let i = $index) {
+        @if (isDistinctCategory && (i === 0 || doc.documentCategory !== shownDocuments[i-1].documentCategory)) {
+          <tr [ngStyle]="categoryHeaderStyle">
+            <td></td>
+            <td><h5>{{doc.documentCategory}} - {{documentCategorys[doc.documentCategory]}}</h5></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>
+
+            </td>
+          </tr>
+        }
+        <tr>
+          @if (!isDistinctCategory) {
+            <td [attr.rowspan]="doc.note !== '' ? 3 : 2">
+              {{doc.documentCategory}} - {{documentCategorys[doc.documentCategory]}}
+            </td>
+          }
+          <td [attr.rowspan]="doc.note !== '' ? 3 : 2">{{doc.displayNr}}
+          </td>
+          <td [attr.colspan]="(isDistinctDirectory && doc.documentSubDirectory !== '') || doc.imageTitle !== '' ? 1 : 3">{{doc.documentName + (doc.documentExtension !== '' ? ('.' + doc.documentExtension) : '')}}
+          </td>
+          @if ((isDistinctDirectory && doc.documentSubDirectory !== '') || doc.imageTitle !== '') {
+            <td colspan="2">{{(isDistinctDirectory && doc.documentSubDirectory !== '' ? doc.documentSubDirectory + (doc.imageTitle !== '' ? '|' : '') : '') + doc.imageTitle}}
+            </td>
+          }
+          <td>{{doc.dateTimeOriginal|date:'dd.MM.yyyy'}} {{(doc.dateTimeOriginal|date:'HH:mm') !== '00:00' ? (doc.dateTimeOriginal|date:' HH:mm') : ''}}
+            @if (doc.displayLocation && doc.displayLocation !== '') {
+              <br>
+              {{doc.displayLocation}}
+            }
+          </td>
+          <td [attr.rowspan]="doc.note !== '' ? 3 : 2" class="ui small document">
+            <!-- show thumbnail here ... if no thumbnail, we show image with thumbnail width --->
+            @if (thumbnails[doc.documentId]?.content) {
+              <img [src]="thumbnails[doc.documentId]?.content|safeResource" [attr.width]="thumbnails[doc.documentId]?.width">
+            }
+            @else if (images[doc.documentId]?.content) {
+              <img [src]="images[doc.documentId]?.content|safeResource" [attr.width]="thumbnails[doc.documentId]?.width">
+            }
+          </td>
+          <td [attr.rowspan]="doc.note !== '' ? 3 : 2">
+            <button class="ui tiny circular teal icon button"
+              [attr.data-tooltip]="txt['show'] " data-inverted=""
+              (click)="show(i)">
+              <i class="arrow right icon"></i>
+            </button>
+          </td>
+          <td [attr.rowspan]="doc.note !== '' ? 3 : 2">
+            @if (isMaint && !isShowDisabled) {
+              <button class="ui tiny circular yellow icon button"
+                [attr.data-tooltip]="txt['update'] " data-inverted=""
+                (click)="maint(i)">
+                <i class="arrow down icon"></i>
+              </button>
+            }
+          </td>
+          <td [attr.rowspan]="doc.note !== '' ? 3 : 2">
+            @if (isMaint && !isShowDisabled  && doc.documentId > 0) {
+              <button class="ui tiny circular gray icon button"
+                [attr.data-tooltip]="txt['delete']"
+                (click)="disable(i)">
+                <i class="trash alternate icon"></i>
+              </button>
+            }
+            @if (isMaint && isShowDisabled  && doc.documentId > 0) {
+              <button class="ui tiny circular green icon button"
+                [attr.data-tooltip]="txt['enable']"
+                (click)="enable(i)">
+                <i class="trash alternate icon"></i>
+              </button>
+            }
+          </td>
+        </tr>
+        <tr>
+          <td><small>{{doc.documentOriginalFileName !== (doc.documentName + (doc.documentExtension !== '' ? ('.' + doc.documentExtension) : '')) ? doc.documentOriginalFileName : ''}}</small></td>
+          <td><small>{{doc.documentType}}</small></td>
+          <td><small>{{(doc.documentSize/1000)|number:'1.3-3'}}</small></td>
+          <td><small>{{doc.documentDate|date:'dd.MM.yyyy HH:mm'}}</small></td>
+        </tr>
+        @if (doc.note !== '') {
+          <tr>
+            <td colspan="4"><small>{{doc.note}}</small></td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+}
+<!-- we do not use template - we have different parameters ...
+
+<ng-container *ngTemplateOutlet="paginator"></ng-container>
+<ng-template #paginator>
+  -->
+<!-- paginator selectedPage as ngModel -->
+@if (session) {
+  <dsy-paginator [(ngModel)]="selectedPage"
+    [externalSelectedPage]="selectedPage"
+    [total]="total" [limit]="limit" [abbrPlaces]="abbrPlaces"
+    [txt]="txt" [elementName]="''"
+    [names]="names" (pageSelect)="onPageSelect($event)">
+  </dsy-paginator>
+}
+
+
+

@@ -1,0 +1,160 @@
+
+<br>
+@if (session && !isShowDocument) {
+  <dsy-paginator [(ngModel)]="selectedPage"
+    [isTooltipBelow]="true"
+    [externalSelectedPage]="selectedPage"
+    [total]="total" [limit]="limit" [abbrPlaces]="abbrPlaces"
+    [txt]="txt" [elementName]="''"
+    [names]="names" (pageSelect)="onPageSelect($event)">
+  </dsy-paginator>
+}
+@if (showSignal() >= 0 && session && txt && documenttxt && eventtxt && yearElements && !isShowDocument) {
+  <div class="ui grid">
+    @for (element of shownElements; track $index; let i = $index) {
+      <div class="row">
+        <div class="eight wide column">
+          <button class="ui fluid huge button" 
+            [style]="element.isElementShown ? headerSelectedStyle : headerStyle"
+            [attr.data-tooltip]="(element.isElementShown  ? txt['hide_details'] : txt['show_details']) + ' ' + txt['for'] + ' ' + txt['year'] + ' ' + element.year"
+            data-position="bottom center"
+            (click)="toggleShowYear(i)"
+          >
+            {{element.year}}
+          </button>
+        </div>
+        <div class="four wide bottom aligned column">
+          @if (element.eventsCount > 0) {
+            <div class="ui tiny statistic">
+              <div class="value">
+                {{element.eventsCount}}
+              </div>
+              <div class="label">
+                {{txt['events']}}
+              </div>
+            </div>
+          }
+        </div>
+        <div class="four wide bottom aligned column">
+          @if (element.documentsCount > 0) {
+            <div class="ui tiny statistic">
+              <div class="value">
+                {{element.documentsCount}}
+              </div>
+              <div class="label">
+                {{txt['documents'] }}
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+      <!-- years element is shown in detail -->
+      @if (element.isElementShown) {
+        <div class="ui divider"></div>
+        @for (quarter of element.subElements; track $index; let q = $index) {
+          <div class="row">
+            @for (month of quarter.subElements; track $index; let m = $index) {
+              <!--  at smartphone viw we show no qurter rows 
+                and we show month and year at month button     -->
+              @if (quarter.isElementShown && windowWidth > WINDOW_WIDTH_TABLET) {
+                <div class="five wide column">
+                  @if (month.documentsCount > 0 || month.eventsCount > 0) {
+                    <ng-container *ngTemplateOutlet="monthButton"></ng-container>
+                    <ng-container *ngTemplateOutlet="monthEvents"></ng-container>
+                    <ng-container *ngTemplateOutlet="monthDocuments"></ng-container>
+                  }
+                </div>
+              } @else {
+                @if (month.documentsCount > 0 || month.eventsCount > 0) {
+                  <div class="four wide column">
+                      <ng-container *ngTemplateOutlet="monthButton"></ng-container>
+                  </div>
+                  <div class="three wide column">
+                    <ng-container *ngTemplateOutlet="monthEvents"></ng-container>
+                  </div>
+                  <div class="three wide column">
+                    <ng-container *ngTemplateOutlet="monthDocuments"></ng-container>
+                  </div>
+                  <div class="six wide column">
+                   <!-- filler to have 16 columns   --> 
+                  </div>
+                  <!-- month element is shown in detail -->
+                  @if (month.isElementShown) {
+                    <div class="sixteen wide column">
+                    <!--  if there is month content, quarter.isElementShown is anyway set to false ...     -->
+                    <dsy-chronicle-month-view
+                      [session]="session"
+                      [locale]="locale"
+                      [options]="options"  [userOpts]="userOpts" 
+                      [monthElement]="month"
+                      [documents]="documents"
+                      [document]="document"
+                      [event]="event"
+                      [thumbnails]="thumbnails" [images]="images"
+                      [txt]="txt" [documenttxt]="documenttxt" [eventtxt]="eventtxt"
+                      [documentCategorys]="documentCategorys"
+                      (documentShow)="showDocument($event)"
+                      (eventShow)="showEvent($event)"
+                      (showDay)="showDay($event)"
+                                         >
+                    </dsy-chronicle-month-view>
+                    </div>
+                  }
+                }
+              }
+              <ng-template #monthButton>
+                <button class="ui small button" 
+                  [style]="month.isElementShown ? headerSelectedStyle : headerStyle"
+                  [attr.data-tooltip]="month.isElementShown  ? txt['hide_details'] : txt['show_details']"
+                  data-position="bottom center"
+                  (click)="toggleShowMonth(i, q, m)"
+                >
+                  <!-- we use date pipe to get localized month abbreviated name -->
+                  {{GlobalFunctions.parseDMYtoDate('01.' + month.month + '.' + month.year)|date:'MMM'}} {{month.year}}
+                </button>
+              </ng-template>
+              <ng-template #monthDocuments>
+                @if (month.documentsCount > 0) {
+                  <div class="ui mini statistic">
+                    <div class="value">
+                      {{month.documentsCount}}
+                    </div>
+                    <div class="label">
+                      {{month.eventsCount > 0 && quarter.isElementShown && windowWidth > WINDOW_WIDTH_TABLET ? txt['documents'].substring(0,3) : txt['documents'] }}
+                    </div>
+                  </div>
+                }
+              </ng-template>
+              <ng-template #monthEvents>   
+                  @if (month.eventsCount > 0) {
+                    <div class="ui mini statistic">
+                      <div class="value">
+                        {{month.eventsCount}}
+                      </div>
+                      <div class="label">
+                        {{month.documentsCount > 0 && quarter.isElementShown && windowWidth > WINDOW_WIDTH_TABLET ? txt['events'].substring(0,6) : txt['events'] }}
+                      </div>
+                    </div>
+                  }
+              </ng-template>
+            }
+          </div>
+        }
+        <div class="ui divider"></div>
+      }
+    }
+  </div>
+}
+<!-- we do not use template - we have different parameters ...
+<ng-container *ngTemplateOutlet="paginator"></ng-container>
+<ng-template #paginator>
+  -->
+<!-- paginator selectedPage as ngModel -->
+@if (session && !isShowDocument) {
+  <dsy-paginator [(ngModel)]="selectedPage"
+    [externalSelectedPage]="selectedPage"
+    [total]="total" [limit]="limit" [abbrPlaces]="abbrPlaces"
+    [txt]="txt" [elementName]="''"
+    [names]="names" (pageSelect)="onPageSelect($event)">
+  </dsy-paginator>
+}

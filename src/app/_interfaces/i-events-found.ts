@@ -1,4 +1,4 @@
-import { Event } from "../_db/event";
+import { CalendarEvent } from "../_db/calendar-event";
 
 /**
  * IEventsFound
@@ -10,5 +10,5 @@ export interface IEventsFound {
   /* isLoginNecessary: true we need provider login  */
   isLoginNecessary: boolean
   /* events -  content which we got from provider*/
-  events: Array<Event>;
+  events: Array<CalendarEvent>;
 }

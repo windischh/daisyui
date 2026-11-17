@@ -1,1 +1,371 @@
-<p>chronicle events!</p>
+@if (showYearsSignal() === 1 && auth && sessionForViews && showDocumentCounterSignal() === 0) {
+  <div class="ui grid">
+    <div class="row">
+      <div class="five wide column"></div>
+      <div class="six wide column">
+        <h2 class="ui center aligned header">  {{auth.txt['chronicle'] }} </h2>
+      </div>
+      <div class="five wide column">
+        <!-- here comes selection of list/chronicle -->
+      </div>
+    </div>
+    <div class="row">
+      <div class="eight wide column">
+        @for (e of elementChoices; track e.value) {
+          <div class="ui radio checkbox" >
+            <input type="radio"  [value]="e.value" [checked]="e.isSelected" (change)="setElements($event)">
+            <label>{{e.text}}</label>
+          </div>
+        }
+      </div>
+      <div class="six wide column">
+        <div class="ui tiny fluid labeled action input">
+          <div class="ui label" [attr.data-tooltip]="dateFrom ? (auth.txt['dateFrom'] + ' ' + auth.txt['is_set'] + ': ' +  GlobalFunctions.getDDMMYYYY(dateFrom)) : (auth.txt['dateFrom'] + ' ' + auth.txt['is_not_set'])">
+            {{auth.txt['dateFrom']}}:
+          </div>
+          @if (!dateFrom) {
+            <!-- we can enter date via enter or via pressing icon button  -->
+            <input (keyup)="setDateFromEntered(dateFromString.value)" (keyup.enter)="setDateFrom(dateFromString.value); dateFromString.value=GlobalFunctions.getDDMMYYYY(dateFrom)" #dateFromString
+              type="text" [placeholder]="auth.txt['date'] + '; dd.mm.yyyy'" [disabled]="dateFrom" data-testid="document-dateFrom">
+            <button class="ui small icon button" [ngClass]="isDateFromEntered ? 'green' : ''"
+              type="button" (click)="setDateFrom(dateFromString.value);"
+              [attr.data-tooltip]="auth.txt['set']  + ' ' + auth.txt['dateFrom'] " data-position="top center"
+              data-testid="document-dateFrom-enter">
+              <i class="check icon"></i>
+            </button>
+          } @else {
+            <input type="text" [value]="dateFrom|date:'dd.MM.yyyy'" readonly>
+            <button class="ui small red icon button"
+              type="button" (click)="setDateFrom('')"
+              [attr.data-tooltip]="auth.txt['reset']  + ' ' + auth.txt['dateFrom'] " data-position="bottom center">
+              <i class="times icon"></i>
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="eight  wide column">
+        @if(elementChoices[0].isSelected || elementChoices[1].isSelected){
+         <!-- integrated search component  -->
+        <dsy-calendar-event-search [isAllEvents]=false [events]="this.filteredEvents" (eventSelected)="showSearched($event)" class="column">
+        </dsy-calendar-event-search>
+        }
+        @if(isDocumentsSelected) {
+          <!-- select on or more category-->
+          <div class="ui tiny fluid labeled input">
+            <div class="ui label">
+              {{documenttxt['documentCategory']}}:
+            </div>
+            <input type="text" [value]="selectedCategorys.toString()" disabled>
+            <div class="ui inline dropdown">
+              <button class="ui tiny right floated circular green icon button" id="dropdownButton"
+                (click)="toggleCategoryMenu()"
+                [attr.data-tooltip]="auth.txt['set']  + ' ' + documenttxt['documentCategory'] " data-position="top center">
+                <i class="ellipsis vertical icon"></i>
+              </button>
+              <div class="menu transition" [ngClass]="{ visible: isShowDropdown }">
+                @for (c of categoryChoices; track $index) {
+                  <div class="item">
+                    <div class="ui checkbox" id="checkbox">
+                      <input type="checkbox" id="checkboxInput" [value]="c.value" [checked] = "c.isSelected" (change)="selectCategory($event)">
+                      <label><small>{{c.value}}{{c.text ? ' - ' : ''}}{{c.text|slice:0:10}}</small></label>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+      <div class="six wide column">
+        <div class="ui tiny fluid labeled action input">
+          <div class="ui label" [attr.data-tooltip]="dateTo ? (auth.txt['dateTo'] + ' ' + auth.txt['is_set'] + ': ' +  GlobalFunctions.getDDMMYYYY(dateTo)) : (auth.txt['dateTo'] + ' ' + auth.txt['is_not_set'])"
+            data-position="bottom center">
+            {{auth.txt['dateTo']}}:
+          </div>
+          @if (!dateTo) {
+            <!-- we can enter date via enter or via pressing icon button  -->
+            <input (keyup)="setDateToEntered(dateToString.value)" (keyup.enter)="setDateTo(dateToString.value); dateToString.value=GlobalFunctions.getDDMMYYYY(dateTo)" #dateToString
+              type="text" [placeholder]="auth.txt['date'] + '; dd.mm.yyyy'" [disabled]="dateTo" data-testid="document-dateTo">
+            <button class="ui small icon button" [ngClass]="dateToString.value !== '' ? 'green' : ''"
+              type="button" (click)="setDateTo(dateToString.value); dateToString.value=GlobalFunctions.getDDMMYYYY(dateTo)"
+              [attr.data-tooltip]="auth.txt['set']  + ' ' + auth.txt['dateTo'] " data-position="bottom center"
+              data-testid="document-dateTo-enter">
+              <i class="check icon"></i>
+            </button>
+          } @else {
+            <input type="text" [value]="dateTo|date:'dd.MM.yyyy'" readonly>
+            <button class="ui small red icon button"
+              type="button" (click)="setDateTo('')"
+              [attr.data-tooltip]="auth.txt['reset']  + ' ' + auth.txt['dateTo'] " data-position="bottom center">
+              <i class="times icon"></i>
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}
+<!-- we activate data load dimmer depending on isElementsLoaded -->
+@if (showYearsSignal() === 0) {
+  <div class="ui active inverted dimmer">
+    <div class="ui large text loader">{{auth.txt['loading_data'] }}</div>
+  </div>
+}
+
+@if (popupSignal() === 1) {
+  <div Class="ui flowing popup visible">
+    <!-- we leave a few spaces due to arrow of popup  ... -->
+    <div class="header">&nbsp;&nbsp;&nbsp;{{popupHeaderText}}</div>
+    @if (popupContentText !== '') {
+      <div class="content">{{popupContentText}}</div>
+    }
+    @if (popupConfirmText!== '') {
+      <div [ngClass]="popupConfirmClass"
+      (click)="closePopUp()">{{popupConfirmText}}</div>
+    }
+  </div>
+}
+
+<!-- years view -->
+@if (auth && sessionForViews && showYearsSignal() > 0) {
+  <dsy-chronicle-years-view
+    [session]="sessionForViews"
+    [locale]="locale"
+    [options]="options" [userOpts]="userOpts" 
+    [yearElements]="yearElements"
+    [documents]="filteredDocuments"  [document]="document" [event]="filteredEvents" 
+    [thumbnails]="thumbnails" [images]="images"
+    [isShowDocument]="showDocumentCounterSignal() === 0 ? false : true"
+    [txt]="auth.txt" [documenttxt]="documenttxt" [eventtxt]="eventtxt"
+    [documentCategorys]="documentCategorys" 
+    (documentsShown)="getFilteredThumbnails($event)"
+    (documentShow)="showDocument($event)" 
+    (eventShow)="showEvent($event)" 
+  >
+  </dsy-chronicle-years-view>
+}
+<!-- document in full view -->
+@if (auth && sessionForViews && showDocumentCounterSignal() > 0) {
+  <div class="ui grid">
+    <div class="row">
+      <div class="one wide column">
+        @if (isPreviousDocument) {
+          <button class="ui tiny circular green icon button"
+            [attr.data-tooltip]="auth.txt['show_previous']"
+            type="button"
+            (click)="previousDocument()">
+            <i class="arrow left icon"></i>
+          </button>
+        }
+        </div>
+      <div class="eleven wide column">
+        <h5 class="ui center aligned header"> {{document.documentSubDirectory}}/{{document.documentName + (document.documentExtension !== '' ? ('.' + document.documentExtension) : '')}}&nbsp;&nbsp;&nbsp;
+          {{document.dateTimeOriginal|date:'dd.MM.yyyy'}} {{(document.dateTimeOriginal|date:'HH:mm') !== '00:00' ? (document.dateTimeOriginal|date:' HH:mm') : ''}}
+        </h5>
+      </div>
+        <div class="one wide column">
+        @if (isNextDocument) {
+          <button class="ui tiny circular green icon button"
+            [attr.data-tooltip]="auth.txt['show_next']"
+            type="button"
+            (click)="nextDocument()">
+            <i class="arrow right icon"></i>
+          </button>
+        }
+        </div>
+        <div class="one wide column">
+        <button class="left floated ui tiny circular red icon button"
+          [attr.data-tooltip]="auth.txt['close']" data-position="bottom center" data-inverted=""
+          type="button"
+          (click)="hideDocument()">
+          <i class="times icon"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+  @if (images[document.documentId]?.content) {
+    <img [src]="images[document.documentId]?.content|safeResource"  [attr.height]="windowHeight * 0.8"
+      style="width: 100%; object-fit: contain;"
+      (click)="hideDocument(showDocumentCounterSignal())">
+    <div class="ui grid">
+      <div class="row"></div>
+      <div class="row">
+        <div class="one wide column">
+            <button class="ui tiny circular green icon button"
+              [attr.data-tooltip]="auth.txt['show_previous']"
+              type="button"
+              (click)="previousDocument()">
+              <i class="arrow left icon"></i>
+            </button>
+          </div>
+        <div class="five wide column">
+          <h3>{{auth.txt['show_details']}}:</h3>
+        </div>
+          <div class="one wide column">
+            <button class="ui tiny circular yellow icon button"
+              [attr.data-tooltip]="auth.txt['show_details']"
+              [disabled]="showDocumentDetailsSignal() > 0"
+              type="button"
+              (click)="showDocumentDetails()">
+              <i class="arrow down icon"></i>
+            </button>
+          </div>
+        <div class="four wide column">
+          @if (document.imageLocation) {
+            <h3>{{auth.txt['show_map']}}:</h3>
+          }
+        </div>
+          <div class="one wide column">
+            @if (document.imageLocation) {
+              <button class="ui tiny circular yellow icon button"
+                [attr.data-tooltip]="auth.txt['show_map']"
+                [disabled]="showMapSignal() === 1"
+                type="button"
+                (click)="showMap()">
+                <i class="arrow down icon"></i>
+              </button>
+            }
+          </div>
+          <div class="one wide column">
+            <button class="ui tiny circular green icon button"
+              [attr.data-tooltip]="auth.txt['show_next']"
+              type="button"
+              (click)="nextDocument()">
+              <i class="arrow right icon"></i>
+            </button>
+          </div>
+          <div class="one wide column">
+          <button class="left floated ui tiny circular red icon button"
+            [attr.data-tooltip]="auth.txt['close']" data-position="bottom center" data-inverted=""
+            type="button"
+            (click)="hideDocument()">
+            <i class="times icon"></i>
+          </button>
+        </div>
+      </div>
+      @if (showDocumentDetailsSignal() > 0) {
+        <div class="row">
+          <div class="one wide column"> </div>
+          <div class="five wide column">
+            <h3>{{documenttxt['documentNr']}}:</h3>
+          </div>
+          <div class="trn wide column">
+            <h3><div class="ui label">{{document.documentNr}}</div></h3>
+          </div>
+        </div>
+        <div class="row">
+          <div class="one wide column"> </div>
+          <div class="five wide column">
+            <h3>{{documenttxt['documentCategory']}}:</h3>
+          </div>
+          <div class="ten wide column">
+            <h3>{{document.documentCategory}} - {{documentCategorys[document.documentCategory]}}</h3>
+          </div>
+        </div>
+        @if (document.documentSubDirectory !== '') {
+          <div class="row">
+            <div class="one wide column"> </div>
+            <div class="five wide column">
+              <h3>{{documenttxt['documentSubDirectory']}}:</h3>
+            </div>
+            <div class="ten wide column">
+              <h3> {{document.documentSubDirectory}}</h3>
+            </div>
+          </div>
+        }
+        <div class="row">
+          <div class="one wide column"> </div>
+          <div class="five wide column">
+            <h3>{{documenttxt['documentName']}}:</h3>
+          </div>
+          <div class="ten wide column">
+            <h3> {{document.documentName + (document.documentExtension !== '' ? ('.' + document.documentExtension) : '')}}</h3>
+          </div>
+        </div>
+        @if (document.dateTimeOriginal) {
+          <div class="row">
+            <div class="one wide column"> </div>
+            <div class="five wide column">
+              <h3>{{documenttxt['dateTimeOriginal']}}:</h3>
+            </div>
+            <div class="ten wide column">
+              <h3> {{document.dateTimeOriginal|date:'dd.MM.yyyy'}} {{(document.dateTimeOriginal|date:'HH:mm') !== '00:00' ? (document.dateTimeOriginal|date:' HH:mm') : ''}}</h3>
+            </div>
+          </div>
+        }
+        @if (document.imageTitle) {
+          <div class="row">
+              <div class="one wide column"> </div>
+            <div class="five wide column">
+              <h3>{{documenttxt['imageTitle']}}:</h3>
+            </div>
+            <div class="ten wide column">
+              <h3> {{document.imageTitle}}</h3>
+            </div>
+          </div>
+        }
+        @if (document.imageLocation) {
+          <div class="row">
+            <div class="one wide column"> </div>
+            <div class="five wide column">
+              <h3>{{documenttxt['imageLocation']}}:</h3>
+            </div>
+            <div class="ten wide column">
+              <h3> {{document.imageLocation}}</h3>
+            </div>
+          </div>
+        }
+      }
+      <!-- -SHOW  location map  -->
+      @if (showMapSignal() === 1) {
+        <div class="row">
+          <div class="sixteen wide column">
+            <dsy-map [mapMarkers]="mapMarkers" [mapCenter]= "mapCenter" >
+            </dsy-map>
+          </div>
+        </div>
+      }
+      @if (showDocumentDetailsSignal() > 0) {
+        <div class="row">
+          <div class="fone wide column"></div>
+          <div class="fourteen wide column">
+            <table class="ui very basic table">
+              <tbody>
+                <tr>
+                  <td class="two wide"><h4>{{documenttxt['documentOriginalFileName']}}:</h4></td>
+                  <td><h4>{{document.documentOriginalFileName}}</h4></td>
+                </tr>
+                <tr>
+                  <td class="two wide"><h4>{{documenttxt['documentType']}}:</h4></td>
+                  <td><h4>{{document.documentType}}</h4></td>
+                </tr>
+                <tr>
+                  <td class="two wide"><h4>{{documenttxt['documentDate']}}:</h4></td>
+                  <td><h4>{{document.documentDate|date:'dd.MM.yyyy HH:mm'}}</h4></td>
+                </tr>
+                <tr>
+                  <td class="two wide"><h4>{{documenttxt['documentSize']}}:</h4></td>
+                  <td><h4>{{document.documentSize/1000|number:'1.3-3'}}</h4></td>
+                </tr>
+                @if (document.imageWidth) {
+                  <tr>
+                    <td class="two wide"><h4>{{documenttxt['imageWidth']}}:</h4></td>
+                    <td><h4>{{document.imageWidth}}</h4></td>
+                  </tr>
+                }
+                @if (document.imageHeight) {
+                  <tr>
+                    <td class="two wide"><h4>{{documenttxt['imageHeight']}}:</h4></td>
+                  <td><h4>{{document.imageHeight}}</h4></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </div>
+  }
+}

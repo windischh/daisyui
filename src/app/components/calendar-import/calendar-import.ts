@@ -9,8 +9,8 @@ import { X_CONTACT, DEFAULT_TIME_SLIZE, X_ISSUE_NR, LF, MAX_INTERVAL_LENGTH, MAX
 import { StyleFactory } from '../../_globals/style-factory';
 import { ConfigurationOptionBasicFunctions } from '../../_globals/configuration-option-basic-functions';
 
-import { Event } from '../../_db/event';
-import { EventFactory } from '../../_db/event-factory';
+import { CalendarEvent } from '../../_db/calendar-event';
+import { CalendarEventFactory } from '../../_db/calendar-event-factory';
 import { ConfigurationOption } from '../../_db/configuration-option';
 
 import { EventType } from '../../_enums/event-type.enum';
@@ -42,7 +42,7 @@ import { ContactService } from '../../_services/contact.service';
 */
 
 // events are all calendar events, including timeSpans - it are extended wprls
-class EventExtended extends Event {style!: {}; typeChoices!: Array<IChoice>};
+class EventExtended extends CalendarEvent {style!: {}; typeChoices!: Array<IChoice>};
 @Component({
   selector: 'dsy-calendar-import',
   templateUrl: './calendar-import.html',
@@ -76,8 +76,6 @@ public name = 'CalendarImportComponent';
   timeSpanStyle!: {};
   
   timeSpanTypeChoices!: Array<IChoice>;
-  // categories are indexed by type-part x in time spans with types 2x
-  timeSpanTypeColors!: Array<{text: string, color: string}>;
   
   // imported events from file system, sorted and eventually updated timeSpan type
   sourceEvents!: Array<EventExtended>;
@@ -197,16 +195,15 @@ public name = 'CalendarImportComponent';
     const session = this.auth.getSession(this.name);
     // default language according to application internal language coding (language enum)
     const language = session?.language ? session.language : GlobalFunctions.getDefaultLanguage(this.locale);
-    const event = EventFactory.empty(); // just for dbtxt
+    const event = CalendarEventFactory.empty(); // just for dbtxt
     this.eventtxt = GlobalFunctions.objText(event,
       'Event', this.auth.systemTexts, language,  this.name);
   }
 
   private async loadTimeSpanTypeChoices() {
-    this.timeSpanTypeChoices = [];
     const options = await this.configurationService.getConfigurationOptions(this.name);
     this.options = options.filter(_ => _.status < 9);
-    this.timeSpanTypeColors = [];
+    let defaultBackgroundColor = ConfigurationOptionBasicFunctions.getOptionString(this.options, 'opt_span_bg_color') ?? WHITE;
     this.timeSpanTypeChoices = [];
     for (let i = 0; i <= 9; i++) {
       const cat = i === 0 ? 'undefined' : i === 1 ? 'holiday' : i === 2 ? 'birthday' : i.toString();
@@ -217,20 +214,37 @@ public name = 'CalendarImportComponent';
       if (category.includes('#')) {
         text = category.substring(0, category.indexOf('#'));
         color = category.substring(category.indexOf('#'));
-        style = StyleFactory.getBgColorStyle(color, 80, 2);
+        style = i > 2 ? StyleFactory.getBgColorStyle(color, 80, 2) : {'background-color': defaultBackgroundColor, 'color': color} ;
       } else {
-        style = {'background-color': WHITE};
+        style =  {'background-color': defaultBackgroundColor};
       }
-      this.timeSpanTypeColors.push({
-        text,
-        color
-      });
+      // we have timeSpanTypeChoices also for recurring timespans ....
       this.timeSpanTypeChoices.push({
         value: i.toString(),
         text,
         style,
         isSelected: false
       });
+    }
+    // we enhance timeSpanTypeColors and timeSpanTypeChoices with color options
+    for (let i = 11; i <= 19; i++) {
+      if (i === 11) {
+        const color  = ConfigurationOptionBasicFunctions.getOptionString(this.options, 'opt_span_holiday_color') ?? '';
+        if (color !== '') {
+          this.timeSpanTypeChoices[1].style = {'background-color': defaultBackgroundColor, 'color': color};
+        }
+      } else if (i === 12) {
+        const color = ConfigurationOptionBasicFunctions.getOptionString(this.options, 'opt_span_birthday_color') ?? '';
+        if (color !== '') {
+          this.timeSpanTypeChoices[2].style = {'background-color': defaultBackgroundColor, 'color': color};
+        }
+      } else {
+        const backgroundColor = ConfigurationOptionBasicFunctions.getOptionString(this.options, 'opt_span_' + (i - 10).toString() + '_bg_color') ?? '';
+        if (backgroundColor !== '') {
+          const textColor = StyleFactory.getTextColor(backgroundColor);
+          this.timeSpanTypeChoices[i - 10].style = {'background-color': backgroundColor, 'color': textColor};
+        }
+      }
     }
     // user can select a time span type - default is category 3, type 23
     this.timeSpanType = EventType.timeSpanCategory3;
@@ -310,7 +324,7 @@ public name = 'CalendarImportComponent';
     let previousEvent: EventExtended | undefined;
     let checkedEvents: Array<EventExtended> = [];
     for (const uncheckedEvent of uncheckedEvents) {
-      let checkedEvent: EventExtended = {...EventFactory.empty(), style: {}, typeChoices: []};
+      let checkedEvent: EventExtended = {...CalendarEventFactory.empty(), style: {}, typeChoices: []};
       this.setEventContent(uncheckedEvent, checkedEvent);
       // we want to find source of checked event ....
       checkedEvent.eventId = uncheckedEvent.eventId;
@@ -495,7 +509,7 @@ public name = 'CalendarImportComponent';
     if (icsEvents?.length > 0) {
       for (const icsEvent of icsEvents) {
         let duration = 0;
-        let sourceEvent: EventExtended = {...EventFactory.empty(), style: {}, typeChoices: []};
+        let sourceEvent: EventExtended = {...CalendarEventFactory.empty(), style: {}, typeChoices: []};
         sourceEvent.name = '';
         // in case duration > 0: begin, end are correct dates . otherwise they might be undefined ...
         const beginMinutes = GlobalFunctions.getDateInMinutes(icsEvent.startDate);
@@ -864,7 +878,7 @@ public name = 'CalendarImportComponent';
     let eventCounter = 0;
     const events = this.events.filter(_ => _.type === EventType.actual || _.type === EventType.plan);
     for (const event of events) {
-      let importEvent: EventExtended = {...EventFactory.empty(), style: {}, typeChoices: []};
+      let importEvent: EventExtended = {...CalendarEventFactory.empty(), style: {}, typeChoices: []};
       this.setEventContent(event, importEvent);
       importEvent.name = '';
       // we want to find source
@@ -967,7 +981,7 @@ public name = 'CalendarImportComponent';
     const timeSpans = this.events.filter(_ => _.type >= EventType.timeSpanUndefined 
       && _.type <= EventType.timeSpanCategory9);
     for (const timeSpan of timeSpans) {
-      let importTimeSpan: EventExtended = {...EventFactory.empty(), style: {}, typeChoices: []};
+      let importTimeSpan: EventExtended = {...CalendarEventFactory.empty(), style: {}, typeChoices: []};
       this.setEventContent(timeSpan, importTimeSpan);
       // we set type if not typed in import
       if (timeSpan.type === EventType.timeSpanCategory1) {

@@ -4,9 +4,9 @@ import { GlobalFunctions } from './../_globals/global-functions';
 
 import { StyleFactory } from '../_globals/style-factory';
 
-import { Event } from '../_db/event';
-import { EventFactory } from '../_db/event-factory';
-import { EventRaw } from '../_db/event-raw';
+import { CalendarEvent } from '../_db/calendar-event';
+import { CalendarEventFactory } from '../_db/calendar-event-factory';
+import { CalendarEventRaw } from '../_db/calendar-event-raw';
 import { User } from '../_db/user';
 import { EventSelectOption } from '../_db/event-select-option';
 import { ContactFactory } from '../_db/contact-factory';
@@ -27,8 +27,7 @@ import { IEventListElement } from '../_interfaces/i-event-list-element';
 import { LogService } from './log.service';
 import { AuthenticationService } from './authentication.service';
 import { FetchApiService } from './fetch-api.service';
-import { ContactService } from './contact.service';
-import { ProviderService } from './provider.service';
+import { ContactService } from './contact.service';;
 import { MessageService } from './message.service';
 import { UserService } from './user.service';
 
@@ -43,7 +42,6 @@ export class CalendarService {
     @Inject(LOCALE_ID) private locale: string,
     private logger: LogService,
     private fetch: FetchApiService,
-    private providerService: ProviderService,
     private contactService: ContactService,
     private userService: UserService,
     private auth: AuthenticationService,
@@ -60,8 +58,8 @@ export class CalendarService {
    * @param comp name of calling component
    * @returns events which are stored in local storage
    */
-  private getLocalEvents(userId: number, comp: string): Array<Event> {
-    let localEvents: Array<Event> = [];
+  private getLocalEvents(userId: number, comp: string): Array<CalendarEvent> {
+    let localEvents: Array<CalendarEvent> = [];
     const session = this.auth.getSession(comp);
     // in the moment we allow local user to get only own contacts ...
     if (session && session.app === App.local && (session.userId === userId || userId === 0)) {
@@ -99,10 +97,10 @@ export class CalendarService {
    * @param events narray of events
    * @param comp name of calling component
    */
-   private setLocalEvents(userId: number, events: Array<Event>, comp: string): boolean {
+   private setLocalEvents(userId: number, events: Array<CalendarEvent>, comp: string): boolean {
     if (events) {
       const session = this.auth.getSession(comp);
-      if (session && session.app === App.local && (session.userId === userId || userId === 0)) { 
+      if (session && session.app === App.local && (session.userId === userId || userId === 0)) {
         // build a user data element with events
         const userData = this.auth.getUserData(session.userId, 'events', comp);
         userData.events = events;
@@ -113,7 +111,7 @@ export class CalendarService {
     return false;
    }
 
-  
+
 
   /** ------------------------  public methods --------------------------------------------------- */
 
@@ -124,8 +122,8 @@ export class CalendarService {
    * @param comp name of calling component
    * @returns events (ATTN: also disabled events are returned)
    */
-  public getEvents(comp: string): Array<Event> {
-    let events: Array<Event> = [];
+  public getEvents(comp: string): Array<CalendarEvent> {
+    let events: Array<CalendarEvent> = [];
     events = this.getLocalEvents(0, comp);
     return events;
   }
@@ -137,8 +135,8 @@ export class CalendarService {
    * @param comp name of calling component
    * @returns events (ATTN: also disabled events are returned)
    */
-  public getUserEvents(userId: number, comp: string): Array<Event> {
-    let events: Array<Event> = [];
+  public getUserEvents(userId: number, comp: string): Array<CalendarEvent> {
+    let events: Array<CalendarEvent> = [];
     const session = this.auth.getSession(comp);
     if (session && session.app === App.admin) {
       events = this.getLocalEvents(userId, comp);
@@ -159,8 +157,8 @@ export class CalendarService {
    * @param comp name of calling component
    * @returns events (only active events are returned)
    */
-  public getEventsRange(userId: number, fromDate: Date, toDate: Date, type: number, comp: string): Array<Event> {
-    let events: Array<Event> = [];
+  public getEventsRange(userId: number, fromDate: Date, toDate: Date, type: number, comp: string): Array<CalendarEvent> {
+    let events: Array<CalendarEvent> = [];
     const session = this.auth.getSession(comp);
     if (session && session.app === App.admin) {
       if (userId === 0) {
@@ -188,11 +186,11 @@ export class CalendarService {
      * @param comp name of calling component
      * @returns events with text contained in summary or description
      */
-    public searchEvents(searchTerm: string, comp: string): Array<Event> {
+    public searchEvents(searchTerm: string, comp: string): Array<CalendarEvent> {
       const events = this.getEvents(comp);
       return events.filter(_ => _.summary.includes(searchTerm) || _.description.includes(searchTerm));
     }
-  
+
 
   /**
    * getEvent()
@@ -201,8 +199,8 @@ export class CalendarService {
    * @param comp name of calling component
    * @returns event
    */
-  public getEvent(eventId: number, comp: string): Event | null{
-    let events: Event[] = [];
+  public getEvent(eventId: number, comp: string): CalendarEvent | null{
+    let events: CalendarEvent[] = [];
     events = this.getEvents(comp);
     const event = events.find(_ => _.eventId === eventId);
     if (event) {
@@ -215,9 +213,9 @@ export class CalendarService {
    * get contact data for contact of event
    * @param comp name of calling component
    * @param event optional event - if not provided, we return data from session contactNr
-   * @returns event contact element 
+   * @returns event contact element
    */
-  public getEventContact(comp: string, event?: Event): {eventContact: Contact, contactVisibleStyle: {},  contactHiddenStyle: {}} | null {
+  public getEventContact(comp: string, event?: CalendarEvent): {eventContact: Contact, contactVisibleStyle: {},  contactHiddenStyle: {}} | null {
     let eventContact = ContactFactory.empty();
     let contactVisibleStyle: {} = {};
     let contactHiddenStyle: {} = {};
@@ -259,8 +257,8 @@ export class CalendarService {
    * @param comp name of component for logging purpose
    * @return events
    */
-  public getEventBegin(eventBegin: Date, type: number, comp: string): Array<Event>  {
-    let events: Event[] = [];
+  public getEventBegin(eventBegin: Date, type: number, comp: string): Array<CalendarEvent>  {
+    let events: CalendarEvent[] = [];
     events = this.getEvents(comp);
     // sort on userId, type, eventBegin
     const firstEvent = events
@@ -301,7 +299,7 @@ export class CalendarService {
    * @param events narray of events
    * @param comp name of calling component
    */
-  public setEvents(events: Array<Event>, comp: string): boolean {
+  public setEvents(events: Array<CalendarEvent>, comp: string): boolean {
     const session = this.auth.getSession(comp);
     if (events && session && session?.userId && session?.userId > 0) {
       return this.setLocalEvents(session.userId, events, comp);
@@ -321,10 +319,10 @@ export class CalendarService {
    * @param comp name of calling component
    * @return inserted or updated eventId, 0 in case of failure in event file
    */
-  public setEvent( event: Event, comp: string): number {
+  public setEvent( event: CalendarEvent, comp: string): number {
     let isSetOk = false;
     const session = this.auth.getSession(comp);
-    let events: Array<Event> = [];
+    let events: Array<CalendarEvent> = [];
     events = this.getEvents(comp);
     // normal event must have duration - timeSpans can have category  3 to 9 and have eventDuration 0
     if (session && event && (event?.eventDuration > 0 || (event?.type >= EventType.timeSpanCategory3 && event?.type <= EventType.timeSpanCategory9))) {
@@ -393,6 +391,130 @@ export class CalendarService {
     return false;
   }
 
+    
+  /**
+   * getCalendarStatus()
+   * gets status of events 
+   * @param comp name of calling component
+   * @returns tuple of numbers
+   */
+  public getCalendarStatus(comp: string): [number, number, number, number,  number, number] {
+    const session = this.auth.getSession(comp);
+    let actualCount = 0;
+    let plannedBeforeTodayCount = 0;
+    let plannedTodayCount = 0;
+    let plannedAfterTodayCount = 0;
+    let firstActualDays = -1;
+    let lastPlannedDays = -1;
+    const events = this.getEvents(this.name);
+    if (events && events.length > 0) {
+      actualCount = events.filter(_ => _.status < 9 && _.type === EventType.actual).length;
+      if (actualCount > 0) {
+        firstActualDays = GlobalFunctions.getDateInDays(new Date()) 
+        - GlobalFunctions.getDateInDays(events.filter(_ => _.status < 9 && _.type === EventType.actual)
+          .sort((a, b) => a.eventBegin.getTime() - b.eventBegin.getTime())[0].eventBegin);
+      }
+      const plannedEvents = events.filter(_ => _.status < 9 && _.type === EventType.plan);
+      if (plannedEvents && plannedEvents.length > 0) {
+        plannedBeforeTodayCount = plannedEvents.filter(_ =>
+          GlobalFunctions.getDateInMinutes(_.eventBegin) < GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date()))
+        ).length;
+        plannedTodayCount = plannedEvents.filter(_ => 
+          GlobalFunctions.getDateInMinutes(_.eventBegin) >= GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date()))
+          && GlobalFunctions.getDateInMinutes(_.eventBegin) < (GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date())) + (24 * 60))
+        ).length;
+        plannedAfterTodayCount = plannedEvents.filter(_ => 
+          GlobalFunctions.getDateInMinutes(_.eventBegin) >= (GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date())) + (24 * 60))
+        ).length;
+        lastPlannedDays = GlobalFunctions.getDateInDays(new Date()) 
+        - GlobalFunctions.getDateInDays(plannedEvents
+          .sort((a, b) => a.eventBegin.getTime() - b.eventBegin.getTime())[plannedEvents.length -1].eventBegin);
+      }
+    }
+    return [actualCount, plannedBeforeTodayCount, plannedTodayCount, plannedAfterTodayCount, firstActualDays, lastPlannedDays ];
+  }
+
+
+  /**
+   * convertEventsActual()
+   * convert all legacy planned events to actual events if they are before today
+   * and no actual elements overlaps
+   * @param isCheckMode true if plan events are checked, not converted
+   * @param comp name of calling component
+   * @returns tuple of numbers:
+   *  plannned events at past days which do not overlap actual events
+   *  days before today for last noOverlap event
+   *  plannned events at past days which overlap actual events
+   *  days before today for last overlap event
+   *  actual events which are not correct an must be disabled
+   */
+  public convertEventsActual(isCheckMode: boolean, comp: string): [number, number, number, number,  number] {
+    const session = this.auth.getSession(comp);
+    let noOverlapCount = 0; // plannned events at past days which do not overlap actual events
+    let lastNoOverlapDays = -1; // days before today for last noOverlap event
+    let overlapCount = 0; // plannned events at past days which overlap actual events
+    let lastOverlapDays = -1; // days before today for last overlap event
+    let disabledActualCount = 0; // actual events which are not correct an must be disabled
+    let legacyEvents: Array<CalendarEvent> = [];
+    legacyEvents = this.getEvents(comp);
+    if (session && legacyEvents && legacyEvents.length > 0) {
+      legacyEvents.sort((a, b) => a.eventBegin.getTime() - b.eventBegin.getTime());
+      let lastActualBegin = 0;
+      let lastActualEnd = 0;
+      let lastPlanIx = -1;
+      for (let ix = 0; ix < legacyEvents.length;  ix++) {
+        let event = legacyEvents[ix];
+        if (event.status < 9 && event.type === EventType.actual) {
+          const begin = GlobalFunctions.getDateInMinutes(event.eventBegin);
+          const end = GlobalFunctions.getDateInMinutes(event.eventEnd);
+          if (begin < end && begin >= lastActualEnd) {
+            lastActualBegin = begin;
+            lastActualEnd = end
+          } else {
+            if (!isCheckMode) event.status = 91;
+            disabledActualCount++;
+          }
+          // we check if there are planToActual candidates which can be overlapped by this actual element
+          if (lastPlanIx >= 0) {
+            if (GlobalFunctions.getDateInMinutes(legacyEvents[lastPlanIx].eventEnd) > lastActualBegin) {
+              lastOverlapDays = GlobalFunctions.getDateInDays(new Date()) - GlobalFunctions.getDateInDays(legacyEvents[lastPlanIx].eventEnd);
+              overlapCount++;
+            } else {
+              if (!isCheckMode) legacyEvents[lastPlanIx].type = EventType.actual;
+              lastNoOverlapDays = GlobalFunctions.getDateInDays(new Date()) - GlobalFunctions.getDateInDays(legacyEvents[lastPlanIx].eventEnd);
+              noOverlapCount++;
+            }
+            lastPlanIx = -1;
+          }
+        }
+        // all entries after today's start are planned ...
+        if (event.status < 9 && event.type === EventType.plan) {
+          if (lastPlanIx >= 0) {
+            if (!isCheckMode) legacyEvents[lastPlanIx].type = EventType.actual;
+            lastNoOverlapDays = GlobalFunctions.getDateInDays(new Date()) - GlobalFunctions.getDateInDays(legacyEvents[lastPlanIx].eventEnd);
+            noOverlapCount++;
+            lastPlanIx = -1;
+          }
+          // planned elements before today 
+          if (GlobalFunctions.getDateInMinutes(event.eventBegin) < GlobalFunctions.getDateInMinutes(GlobalFunctions.getStartOfDay(new Date()))) {
+            if (lastActualEnd > GlobalFunctions.getDateInMinutes(event.eventBegin)) {
+              overlapCount++;
+              lastOverlapDays = GlobalFunctions.getDateInDays(new Date()) - GlobalFunctions.getDateInDays(event.eventEnd);
+            } else {
+              lastPlanIx = ix;
+            }
+          }
+        }
+      } // end for
+      if (lastPlanIx >= 0) {
+        if (!isCheckMode) legacyEvents[lastPlanIx].type = EventType.actual;
+        lastNoOverlapDays = GlobalFunctions.getDateInDays(new Date()) - GlobalFunctions.getDateInDays(legacyEvents[lastPlanIx].eventEnd);
+        noOverlapCount++;
+      }
+    }
+    return [noOverlapCount, lastNoOverlapDays, overlapCount, lastOverlapDays, disabledActualCount];
+  }
+
   /**
    * createEvents()
    *  creates an array of events (usually got via import)
@@ -403,10 +525,10 @@ export class CalendarService {
    * @returns trur if all can be stored, false if not (in this case server - or local - wors remain unchaned)
    */
 
-  public createEvents(events: Array<Event>, comp: string): boolean {
+  public createEvents(events: Array<CalendarEvent>, comp: string): boolean {
     const session = this.auth.getSession(comp);
-    let legacyEvents: Array<Event> = [];
-    let createdEvents: Array<Event> = [];
+    let legacyEvents: Array<CalendarEvent> = [];
+    let createdEvents: Array<CalendarEvent> = [];
     legacyEvents = this.getEvents(comp);
     let lastEventId = 0;
     let isUpdated = false;
@@ -469,7 +591,7 @@ export class CalendarService {
     // we first store event at client or server (depending on config)
     if (lastEventId > 0 || isUpdated) {
       return this.setEvents(legacyEvents.concat(createdEvents), comp);
-    } 
+    }
     return false;
   }
 
@@ -648,7 +770,7 @@ export class CalendarService {
    * @param comp name of calling component
    * @returns event with renewed eventInfo
    */
-   public buildEventInfo(event: Event, comp: string): Event {
+   public buildEventInfo(event: CalendarEvent, comp: string): CalendarEvent {
     let eventInfo: IEventInfo = {contactNr: 0};
     if (event.eventInfo && (event.eventInfo?.contactNr > 0)) {
       // we have an existing eventInfo for this event
@@ -683,7 +805,7 @@ export class CalendarService {
    * @param comp name of calling component
    * @returns array of IEventListElements
    */
-  public filterEvents(events: Array<Event>, users: Array<User>, filterContactNr: number, filterIssueNr: number, comp: string): Array<IEventListElement> {
+  public filterEvents(events: Array<CalendarEvent>, users: Array<User>, filterContactNr: number, filterIssueNr: number, comp: string): Array<IEventListElement> {
     const session = this.auth.getSession(comp);
     // we build sortElements from sortCriterias fo each sort field which is to be sorted, in order of appearance in array
     const sortElements = this.getEventSelectOptionSortElements(comp);
@@ -743,13 +865,13 @@ export class CalendarService {
 
   /***********************************  private methods **************************************/
 
-  private async getEventsFromFile(file: File, comp: string): Promise<Array<Event> | null> {
+  private async getEventsFromFile(file: File, comp: string): Promise<Array<CalendarEvent> | null> {
     const fileString = await this.getFileAsDataURL(file, comp);
-    const rawEvents: Array<EventRaw> = JSON.parse(fileString);
+    const rawEvents: Array<CalendarEventRaw> = JSON.parse(fileString);
     if (rawEvents?.length > 0) {
       // TODO do we need filter here?
       const filteredEvents = rawEvents;
-      return filteredEvents.map(rawEvent => EventFactory.fromObject(rawEvent));
+      return filteredEvents.map(rawEvent => CalendarEventFactory.fromObject(rawEvent));
     } else {
       return null;
     }
@@ -784,21 +906,21 @@ export class CalendarService {
    * @param comp name of calling component
    * @returns array of events from file, if any - otherwise null
    */
-   private async fetchEvent(url: string, comp: string): Promise<Array<Event> | null > {
+   private async fetchEvent(url: string, comp: string): Promise<Array<CalendarEvent> | null > {
     const op = 'fetch event';
     const headers = new Headers({
       'Content-Type': 'text/plain'
     });
     const mode: RequestMode = 'no-cors';
 
-    const rawEvents: EventRaw[] = await this.fetch.get<EventRaw[]>(url, headers, mode)
+    const rawEvents: CalendarEventRaw[] = await this.fetch.get<CalendarEventRaw[]>(url, headers, mode)
     .catch((error: any) : any => {
       this.logger.error(this.auth.getSession(this.name), this.name, `${op} from: ${url} failed: ${error.message}`);
       this.message.info(this.name + `: ${op} from: ${url} failed: ${error.message}`);
       return null;
     });
     if (rawEvents) {
-      return rawEvents.map(rawEvent => EventFactory.fromObject(rawEvent));
+      return rawEvents.map(rawEvent => CalendarEventFactory.fromObject(rawEvent));
     } else {
       return null;
     }

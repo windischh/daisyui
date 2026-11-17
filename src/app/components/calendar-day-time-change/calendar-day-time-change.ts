@@ -8,7 +8,7 @@ import { OptionGroupCalendar } from '../../_enums/option-group-calendar.enum';
 import { UpdateType } from '../../_enums/update-type.enum';
 
 import { ConfigurationOption } from '../../_db/configuration-option';
-import { Event } from '../../_db/event';
+import { CalendarEvent } from '../../_db/calendar-event';
 import { Session } from '../../_db/session';
 
 import { IEventOptions } from '../../_interfaces/i-event-options';
@@ -46,13 +46,13 @@ export class CalendarDayTimeChangeComponent implements OnInit {
   @Input({required: true}) calendarDay!: Date;
 
   // this is the event the time of which is beeing updated
-  @Input({required: true}) event!: Event;
+  @Input({required: true}) event!: CalendarEvent;
   // which time should be updated 1 begin, 2 end, 3 duration
   @Input({required: true}) changeType!: number;
 
   // this view updates only begin, end
-  @Output() timeUpdate = new EventEmitter<{updateType: UpdateType, event: Event, id: number}>();
-  @Output() cancelTimeChangeView = new EventEmitter<{updateType: UpdateType, event: Event, id: number}>();
+  @Output() timeUpdate = new EventEmitter<{updateType: UpdateType, event: CalendarEvent, id: number}>();
+  @Output() cancelTimeChangeView = new EventEmitter<{updateType: UpdateType, event: CalendarEvent, id: number}>();
 
   configurableStyles: {[key: string]: any} = {};
 
@@ -142,7 +142,7 @@ export class CalendarDayTimeChangeComponent implements OnInit {
   }
 
 
-  private buildBeginTimeChoices(event: Event): Array<INumChoice> | undefined {
+  private buildBeginTimeChoices(event: CalendarEvent): Array<INumChoice> | undefined {
     if (this.userOpts.timeSlize > 0) {
       const timeChoices: Array<INumChoice> = [];
       const timeSlize: number  = this.userOpts.timeSlize && Number(this.userOpts.timeSlize) >= 5 && 60 % Number(this.userOpts.timeSlize) === 0 ? Number(this.userOpts.timeSlize) : 5;
@@ -217,7 +217,7 @@ export class CalendarDayTimeChangeComponent implements OnInit {
     } else return undefined;
   }
 
-  private buildEndTimeChoices(event: Event): Array<INumChoice> | undefined {
+  private buildEndTimeChoices(event: CalendarEvent): Array<INumChoice> | undefined {
     if (this.userOpts.timeSlize > 0) {
       const timeChoices: Array<INumChoice> = [];
       const timeSlize: number  = this.userOpts.timeSlize && Number(this.userOpts.timeSlize) >= 5 && 60 % Number(this.userOpts.timeSlize) === 0 ? Number(this.userOpts.timeSlize) : 5;
@@ -292,7 +292,7 @@ export class CalendarDayTimeChangeComponent implements OnInit {
     } else return undefined;
   }
 
-  private buildDurationChoices(event: Event): Array<INumChoice> | undefined {
+  private buildDurationChoices(event: CalendarEvent): Array<INumChoice> | undefined {
     if (this.userOpts.timeSlize > 0) {
       const timeChoices: Array<INumChoice> = [];
       const timeSlize: number  = this.userOpts.timeSlize && Number(this.userOpts.timeSlize) >= 5 && 60 % Number(this.userOpts.timeSlize) === 0 ? Number(this.userOpts.timeSlize) : 5;

@@ -3,7 +3,7 @@
   (ngSubmit)="submitForm()">
 
   <!-- outer container with empty margins on each side-->
-  <div class="container mx-auto p-4" id="cardForm">
+  <div class="container mx-auto" id="cardForm">
     <!-- modal - needs modal-background to hide other content  ... -->
     <div class="modal modal-open">
       <div class="modal-box" [ngClass]="session.isPlan ? 'border border-success' : ''">
@@ -27,7 +27,7 @@
                   }
                 </span>
               }
-              @if (event.type >= EventType.timeSpanUndefined && (endDisplay !== '' || eventContainer.updateType !== UpdateType.setShow )) {
+              @if (event.type >= EventType.timeSpanUndefined && days > 1) {
                 <span>{{txt['from']}}:</span>
               }
             </div>
@@ -73,15 +73,15 @@
             </div>
           </div>
            <!-- second line for timeSpan to  not show if not updateable ...-->
-          @if (event.type >= EventType.timeSpanUndefined && (endDisplay !== '' || eventContainer.updateType !== UpdateType.setShow )) {
-            <div class="flex flex-wrap items-center gap-2">
+          @if (event.type >= EventType.timeSpanUndefined && (days > 1 || eventContainer.updateType !== UpdateType.setShow )) {
+            <div class="flex items-center gap-2">
               <div class="w-1/12">
                 {{txt['to']}}:
               </div>
               @if (days > 1) {
+                <div class="w-1/12"></div>
                 <div class="w-1/2 flex justify-center gap-2">
                   <h2 class="text-2xl md:text-3xl font-bold text-center">{{endDisplay}}</h2>
-                  <span>{{days}} {{txt['days']}}</span>
                 </div>
               }
               @if (days <= 1) {
@@ -122,16 +122,18 @@
             </div>
           }
           <!-- button to change duration   -->
-          @if (event.type < EventType.timeSpanUndefined) {
+          @if (event.type < EventType.timeSpanUndefined && !GlobalFunctions.isMinuteSame(event.eventBegin, event.eventEnd)) {
             <div class="flex items-center justify-center gap-4">
-              @if (!GlobalFunctions.isMinuteSame(event.eventBegin, event.eventEnd)) {
-                <button class="btn btn-xs tooltip tooltip-bottom tooltip-accent"
-                  [attr.data-tip]="eventtxt['eventDuration']"
-                  type="button"
-                  (click)="setShowTimeChange(3)">
-                  {{event.cardElement?.eventDurationDisplay}}
-                </button>
-              }
+              <button class="btn btn-xs tooltip tooltip-bottom tooltip-accent"
+                [attr.data-tip]="eventtxt['eventDuration']"
+                type="button"
+                (click)="setShowTimeChange(3)">
+                {{event.cardElement?.eventDurationDisplay}}
+              </button>
+            </div>
+          } @else if (event.type >= EventType.timeSpanUndefined && days > 1) {
+            <div class="flex items-center justify-center gap-4">
+              <span>{{days}} {{txt['days']}}</span>
             </div>
           }
           <!-- end of time setting button area, start of form without divider ...    -->

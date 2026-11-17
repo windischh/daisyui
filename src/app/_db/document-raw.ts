@@ -1,0 +1,31 @@
+export interface DocumentRaw {
+  documentId: number;
+  documentCategory: number;
+  documentNr: number;
+  documentName: string;
+  documentExtension: string;
+  documentFileName: string;
+  documentSubDirectory: string;
+  documentDirectory: string;
+  thumbnailDirectory: string;
+  documentOriginalFileName: string;
+  documentType: string;
+  documentSize: number;
+  documentDate: Date;
+  dateTimeOriginal: Date;
+  imageTitle: string;
+  imageHeight: string;
+  imageWidth: string;
+  imageLocation: string;
+  immichAssetId: string;
+  note: string;
+  type: number;
+  status: number;
+  created: Date;
+  createdBy: string;
+  releaseCreated: number;
+  updated: Date;
+  updatedBy: string;
+  releaseUpdated: number;
+  version: number;
+  }

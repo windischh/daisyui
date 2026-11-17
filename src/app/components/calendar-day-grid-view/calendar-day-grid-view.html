@@ -1,31 +1,30 @@
 <!-- table-layout: 'fixed' - table head defines column width -->
 @if (txt && userOpts) {
-  <div class="overflow-x-auto p-4">
+  <div class="container mx-auto overflow-x-auto p-4">
     <table class="table table-fixed w-full" [ngStyle]="configurableStyles.tableStyle">
       <thead>
         <tr [ngStyle]="configurableStyles.tableHeaderStyle">
-          <th [ngClass]="windowWidth >= WINDOW_WIDTH_MOBILE ? 'w-[10%]' : 'w-[20%]'" class="text-left"
-            [ngStyle]="timeHeaderStyle">
+          <th class="text-left border-b-4" [ngClass]="windowWidth >= WINDOW_WIDTH_MOBILE ? 'w-[10%]' : 'w-[20%]'" >
             {{txt['time']}}
           </th>
           @if (windowWidth >= WINDOW_WIDTH_MOBILE || !session.isPlan ) {
-            <th [ngStyle]="session.isPlan ? planHeaderNormalStyle : planHeaderBoldStyle"
-            (click)="!isSelecting?togglePlan():null">{{(isSelecting && session.isPlan ? '' : (this.session.serviceLevel.contact === 1 ? txt['events'] : txt['event']) + ' ' + txt['actual']) }}</th>
+            <th class="cursor-pointer border-b-4" [ngClass]="session.isPlan ? 'font-normal' : 'font-bold'"
+            (click)="!isSelecting?togglePlan():null">{{(isSelecting && session.isPlan ? '' : txt['events'] + ' ' + txt['actual']) }}</th>
           }
           @if (windowWidth >= WINDOW_WIDTH_MOBILE || session.isPlan ) {
-            <th [ngStyle]="session.isPlan ? planHeaderBoldStyle : planHeaderNormalStyle"
-            (click)="!isSelecting?togglePlan():null">{{(isSelecting && !session.isPlan ? '' : (this.session.serviceLevel.contact === 1 ? txt['events'] : txt['event']) + ' ' + txt['plan'])}}</th>
+            <th class="cursor-pointer border-b-4" [ngClass]="session.isPlan ? 'font-bold' : 'font-normal'"
+            (click)="!isSelecting?togglePlan():null">{{(isSelecting && !session.isPlan ? '' :  txt['events'] + ' ' + txt['plan'])}}</th>
           }
         </tr>
       </thead>
       <tbody>
-          <tr>
-            <td [ngStyle]="configurableStyles.timeElementOutsideStyle"
+        <tr>
+          <td [ngStyle]="configurableStyles.timeElementOutsideStyle"
             (click)="toggleShowBeforeStartHour()">
             @if (isShowBeforeStartHour) {
               <i class="fas fa-sort-down cursor-pointer"
                 [ngStyle]="expandIconStyle">
-              </i>
+                </i>
             }
             @if (!isShowBeforeStartHour) {
               <i class="fas fa-sort-up cursor-pointer"
@@ -35,51 +34,27 @@
           </td>
           <!-- td for time span elements   -->
           <td [colSpan]="windowWidth < WINDOW_WIDTH_MOBILE ? 1 : 2">
-            <div flex flex-wrap items-center gap-4>
-               <!-- timeSpanGrid category 1,2 (recurring) and 3++ side by side  -->
+            <!-- bordered box for timeSpans -->
+            <div class="border rounded-box p-4 flex flex-wrap items-center gap-2">
+              <!-- timeSpanGrid category 1,2 (recurring) and 3++ side by side  -->
               @for (t of timeSpanGrid; track $index; let i = $index) {
-                @if (t.recurring) {
-                  <div class="flex items-center justify-between gap-2">
-                    <div class="flex-1" [ngStyle]="t.recurring.eventElementStyle">
-                      <div class="badge" [ngStyle]="t.recurring.event?.type === 21 ? {color: 'Red'} : {}">
-                        @if (t.recurring.category !== '') {
-                          <span>{{t.recurring.category}} - </span>
-                        }
-                        {{t.recurring.event?.summary}}
-                      </div>
-                    </div>
-                    <div class="shrink-0 flex justify-end">
-                      @if (t.recurring.contactDisplayNr && t.recurring.contactDisplayNr !== '' && configurableStyles.isShowContactColumn) {
-                        <div class="badge text-left tooltip tooltip-left tooltip-accent" [ngStyle]="t.recurring.leftContactStyle"
-                          [attr.data-tip]="t.recurring.contactDisplayName">{{t.recurring.contactDisplayNr}}
-                        </div>
-                      }
-                    </div>
-                  </div>
-                } @else if (t.timeSpan) {
-                  <div class="flex items-center justify-between gap-2">
-                    <div class="flex-1" [ngStyle]="setPointer(t.timeSpan.eventElementStyle ?? {}, !isSelecting)">
-                      @if (t.timeSpan.category !== '') {
-                        <span>{{t.timeSpan.category}} - </span>
-                      }
-                      {{t.timeSpan.event?.summary}}
-                    </div>
-                    <div class="shrink-0 flex justify-end">
-                      @if (t.timeSpan.contactDisplayNr && t.timeSpan.contactDisplayNr !== '' && configurableStyles.isShowContactColumn) {
-                        <div class="badge text-left tooltip tooltip-left tooltip-accent" [ngStyle]="t.timeSpan.leftContactStyle"
-                          [attr.data-tip]="t.timeSpan.contactDisplayName">{{t.timeSpan.contactDisplayNr}}
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
+                <div class="badge badge-outline" [ngClass]="t.event && t.event.type > 22 && !isSelecting ? 'cursor-pointer' : ''" [ngStyle]="t.eventElementStyle"
+                  (click)="t.event && t.event.type > 22 && !isSelecting ? enableEventCard(t.event) : null">
+                  @if (t.category !== '') {
+                    <span>{{t.category}} - </span>
+                  }
+                  {{t.event?.summary|slice:0:20}}
+                  @if (t.contactDisplayNr && t.contactDisplayNr !== '') {
+                    <span class="tooltip tooltip-left tooltip-accent" [attr.data-tip]="t.contactDisplayName">| {{t.contactDisplayNr}}</span>
+                  }
+                </div>
               }
               @if (!isSelecting) {
-              <button class="btn btn-xs btn-circle btn-info text-primary-content tooltip tooltip-left tooltip-accent"
-                [attr.data-tip]="txt['insert'] + ' ' + txt['time_span']"
-                (click)="insertTimeSpan()">
-                <i class="fas fa-plus"></i>
-              </button>
+                <button class="btn btn-xs btn-circle btn-info text-primary-content  tooltip tooltip-right tooltip-accent"
+                  [attr.data-tip]="txt['insert'] + ' ' + txt['time_span']"
+                  (click)="insertTimeSpan()">
+                  <i class="fas fa-plus"></i>
+                </button>
               }
             </div>
           </td>
@@ -95,13 +70,14 @@
             @if (windowWidth >= WINDOW_WIDTH_MOBILE || !session.isPlan ) {
               <!-- td  if no event or at begin of event (with rowspan)-->
               @if (!g.actual.event) {
-                <td [ngStyle]="setPointer(g.actual.rowElementStyle ?? {}, !session.isPlan && !isSelecting)"
+                <!-- tooltip not possible - due to too much elements with tooltip ?? [attr.data-tip]="txt['insert'] + ' ' + txt['event']"-->
+                <td [ngClass]="!session.isPlan && !isSelecting ? 'cursor-pointer' : ''" [ngStyle]="g.actual.rowElementStyle"
                   data-testid="calendar-day-grid-insert-actual"
                 (click)="session.isPlanMaint && !session.isPlan && !isSelecting ? insertEventCard(g.actual.roundedMinutes) : null"></td>
               }
               <!-- td for event -->
               @if (g.actual.eventBegins) {
-                <td [attr.rowspan]="g.actual.eventRowSpan" [ngStyle]="g.actual.eventElementStyle"
+                <td [attr.rowspan]="g.actual.eventRowSpan" [ngClass]="!isSelecting ? 'cursor-pointer' : ''" [ngStyle]="g.actual.eventElementStyle"
                   (click)="g.actual.event && !isSelecting? enableEventCard(g.actual.event) : null">
                   <div class="flex items-stretch gap-2">
                     <!-- time entries are center aligned within column -->
@@ -184,12 +160,14 @@
             @if (windowWidth >= WINDOW_WIDTH_MOBILE || session.isPlan ) {
               <!-- td  if no planned event or at begin of event (with rowspan)-->
               @if (!g.plan.event) {
-                <td [ngStyle]="setPointer(g.plan.rowElementStyle ?? {}, session.isPlan && !isSelecting)"
+              <!-- tooltip not possible - due to too much elements with tooltip ?? [attr.data-tip]="txt['insert'] + ' ' + txt['event']"-->
+                <td [ngClass]="session.isPlan && !isSelecting ? 'cursor-pointer' : ''" [ngStyle]="g.plan.rowElementStyle"
+                data-testid="calendar-day-grid-insert-plan"
                 (click)="session.isPlanMaint && session.isPlan && !isSelecting ? insertEventCard(g.plan.roundedMinutes) : null" ></td>
               }
               <!-- td for planned event -->
               @if (g.plan.eventBegins) {
-                <td [attr.rowspan]="g.plan.eventRowSpan" [ngStyle]="g.plan.eventElementStyle"
+                <td [attr.rowspan]="g.plan.eventRowSpan" [ngClass]="!isSelecting ? 'cursor-pointer' : ''" [ngStyle]="g.plan.eventElementStyle"
                   (click)="!isSelecting && g.plan.event ? enableEventCard(g.plan.event) : null">
                   <div class="flex items-stretch gap-2">
                     <div class="shrink-0 flex flex-col items-start gap-1" [ngStyle]="leftIconStyle">

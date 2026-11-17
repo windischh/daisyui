@@ -1,0 +1,63 @@
+<!-- FORM starts here                    -->
+<form [formGroup] = "thisForm"
+  (ngSubmit)="submitForm()">
+
+  <!-- SHOW  - outer frame                                     -->
+  <div class="ui two column centered grid">
+    <div class="column">
+      <p>  </p>
+      <!-- TODO make number of columns responsive: three columns at desktop, 2 columns at tablet, 1 column at smartphone  -->
+      <!-- UPDATE login user, pw                       -->
+      <div class="left floated column">
+        <div class="ui form">
+          <fieldset  formGroupName="uniqueId" >
+            <legend class = "ui green label" >{{loginProvider.providerName}} - {{auth.txt['enter_your_login']}}:</legend>
+            <div class="inline field">
+              <label for="login" class="ui label">{{auth.txt['login']}}:</label>
+              <input type="text" placeholder="login" id="login" formControlName="login">
+            </div>
+            @if (errors['uniqueId_login']) {
+              <div class="ui negative message">
+                {{ errors['uniqueId_login'] }}
+              </div>
+            }
+            <div class="inline field" >
+              <label for="pw" class="ui label">{{auth.txt['password']}}:</label>
+              <input type="password" placeholder="password" id="pw" formControlName="password">
+            </div>
+            @if (errors['uniqueId_password']) {
+              <div class="ui negative message">
+                {{ errors['uniqueId_password'] }}
+              </div>
+            }
+            @if (errors['uniqueId']) {
+              <div class="ui negative message">
+                {{ errors['uniqueId'] }}
+              </div>
+            }
+            @if (!isRememberAnyway) {
+              <div class="ui checkbox">
+                <input type="checkbox" formControlName="isRemember">
+                <label>{{auth.txt['remember_login']}}</label>
+              </div>
+            }
+          </fieldset>
+        </div>
+        <p>  </p>
+        <!-- BUTTONs submit "actual" form            -->
+        <button class="ui tiny green labeled icon button"
+          type="submit" data-testid="login-submit"
+          [disabled]="!thisForm.valid">{{auth.txt['enter']}}
+          <i class="check icon"></i>
+        </button>
+        <button class="ui tiny red labeled icon button"
+          type="submit"
+          (click)="thisForm.value.uniqueId.password = ''">{{auth.txt['cancel']}}
+          <i class="cancel icon"></i>
+        </button>
+      </div>
+
+      <!-- SHOW  - END of outer frame                                     -->
+    </div>
+  </div>
+

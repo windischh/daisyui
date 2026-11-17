@@ -1,5 +1,29 @@
 @if (isEventsLoaded) {
   <div class="container mx-auto p-4">
+    <!-- bordered box for timeSpans -->
+    <div class="border rounded-box p-4 mb-2 flex flex-wrap items-center gap-2">
+      <!-- timeSpanGrid category 1,2 (recurring) and 3++ side by side  -->
+      @for (t of timeSpanGrid; track $index; let i = $index) {
+        <div class="badge badge-outline" [ngClass]="t.event && t.event.type > 22 ? 'cursor-pointer' : ''" [ngStyle]="t.eventElementStyle"
+          (click)="t.event && t.event.type > 22 && !isSelecting ? enableEventCard(t.event) : null">
+          @if (t.category !== '') {
+            <span>{{t.category}} - </span>
+          }
+          {{t.event?.summary|slice:0:20}}
+          @if (t.contactDisplayNr && t.contactDisplayNr !== '') {
+            <span class="tooltip tooltip-left tooltip-accent" [attr.data-tip]="t.contactDisplayName">| {{t.contactDisplayNr}}</span>
+          }
+        </div>
+      }
+      @if (!isSelecting) {
+        <button class="btn btn-xs btn-circle btn-info text-primary-content tooltip tooltip-right tooltip-accent"
+          [attr.data-tip]="txt['insert'] + ' ' + txt['time_span']"
+          (click)="insertTimeSpan()">
+          <i class="fas fa-plus"></i>
+        </button>
+      }
+    </div>
+    <!-- flex area for eventCards -->
     <div class="flex flex-wrap gap-4">
       <!-- we must track eventCard as we are inserting cards - which have no index at creating status ...-->
       @for (eventCard of eventCards; track eventCard; let i = $index) {
@@ -75,7 +99,7 @@
               </div>
             </div>
           }
-          <!-- event summary        --> 
+          <!-- event summary        -->
           <div class="card-body py-2">
             @if (eventCard.cardElement) {
               @if (!eventCard.cardElement.isSummaryUpdated) {
@@ -89,7 +113,7 @@
                 <div class="card-title">
                   <input class="input input-sm input-bordered w-full"
                       (keyup)="setSummaryEntered(i, summaryString.value)"
-                      (keyup.enter)="updateSummary(i, summaryString.value)"                    
+                      (keyup.enter)="updateSummary(i, summaryString.value)"
                       #summaryString [value]="eventCard.summary" type="text" placeholder="summary ...">
                 </div>
                 <div class="flex items-center gap-2">
@@ -162,7 +186,7 @@
                     @if (eventCard.locationType === 6) {
                       <i class="fas fa-briefcase"></i>
                     }
-                    
+
                   </div>
                 }
               </div>

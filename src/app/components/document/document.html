@@ -1,1 +1,246 @@
-<p>document events!</p>
+@if (refreshSignal() === 1 && auth && sessionForViews && !isShowForm) {
+  <div class="ui grid container">
+    <div class="row">
+      <div class="five wide column"></div>
+      <div class="six wide column">
+        <h2 class="ui center aligned header">  {{documenttxt['className'] }} {{auth.txt['list'] }} </h2>
+      </div>
+      <div class="five wide column">
+        <!-- here comes selection of list/chronicle -->
+      </div>
+    </div>
+    <div class="row">
+      <div class="seven wide column">
+        <!-- select on or more category-->
+        <div class="ui tiny fluid labeled input">
+          <div class="ui label">
+            {{documenttxt['documentCategory']}}:
+          </div>
+          <input type="text" [value]="selectedCategorys.toString()" disabled>
+          <div class="ui inline dropdown">
+            <button class="ui tiny right floated circular green icon button" id="dropdownButton"
+              (click)="toggleCategoryMenu()"
+              [attr.data-tooltip]="auth.txt['set']  + ' ' + documenttxt['documentCategory'] " data-position="top center">
+              <i class="ellipsis vertical icon"></i>
+            </button>
+            <div class="menu transition" [ngClass]="{ visible: isShowDropdown }">
+              @for (c of categoryChoices; track $index) {
+                <div class="item">
+                  <div class="ui checkbox" id="checkbox">
+                    <input type="checkbox" id="checkboxInput" [value]="c.value" [checked] = "c.isSelected" (change)="selectCategory($event)">
+                    <label><small>{{c.value}}{{c.text ? ' - ' : ''}}{{c.text|slice:0:10}}</small></label>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="three wide column">
+        <div class="ui checkbox">
+          <input type="checkbox" [checked]="isDistinctCategory" (change)="setDistinctCategory($event)">
+          <label><small>{{auth.txt['distinct_category'] }} </small></label>
+        </div>
+      </div>
+      <div class="six wide column">
+        <div class="ui tiny fluid labeled action input">
+          <div class="ui label" [attr.data-tooltip]="dateFrom ? (auth.txt['dateFrom'] + ' ' + auth.txt['is_set'] + ': ' +  GlobalFunctions.getDDMMYYYY(dateFrom)) : (auth.txt['dateFrom'] + ' ' + auth.txt['is_not_set'])">
+            {{auth.txt['dateFrom']}}:
+          </div>
+          @if (!dateFrom) {
+            <!-- we can enter date via enter or via pressing icon button  -->
+            <input (keyup)="setDateFromEntered(dateFromString.value)" (keyup.enter)="setDateFrom(dateFromString.value); dateFromString.value=GlobalFunctions.getDDMMYYYY(dateFrom)" #dateFromString
+              type="text" [placeholder]="auth.txt['date'] + '; dd.mm.yyyy'" [disabled]="dateFrom" data-testid="document-dateFrom">
+            <button class="ui small icon button" [ngClass]="isDateFromEntered ? 'green' : ''"
+              type="button" (click)="setDateFrom(dateFromString.value); dateFromString.value=GlobalFunctions.getDDMMYYYY(dateFrom)"
+              [attr.data-tooltip]="auth.txt['set']  + ' ' + auth.txt['dateFrom'] " data-position="top center"
+              data-testid="document-dateFrom-enter">
+              <i class="check icon"></i>
+            </button>
+          } @else {
+            <input type="text" [value]="dateFrom|date:'dd.MM.yyyy'" readonly>
+            <button class="ui small red icon button"
+              type="button" (click)="setDateFrom('')"
+              [attr.data-tooltip]="auth.txt['reset']  + ' ' + auth.txt['dateFrom'] " data-position="bottom center">
+              <i class="times icon"></i>
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="ten wide column">
+        <div class="ui tiny fluid labeled action input">
+          <!-- we show a filter which is set via tooltip -...-->
+          <div class="ui label" [attr.data-tooltip]="documentFilter !== '' ? (auth.txt['filter'] + ' ' + auth.txt['is_set'] + ': ' + documentFilter) : (auth.txt['filter'] + ' ' + auth.txt['is_not_set'])"
+            data-position="bottom center">
+            {{documenttxt['documentName']}}/{{documenttxt['imageTitle']}}:
+          </div>
+          @if (documentFilter === '') {
+            <!-- we do not reset filter when leaving the filter entry ...
+            (blur)="setFilter(filterTerm.value); filterTerm.value='' " -->
+            <input (keyup)="setFilterEntered(filterTerm.value)" (keyup.enter)="setFilter(filterTerm.value)" #filterTerm
+              type="text" [placeholder]="auth.txt['filter'] + '---'" [disabled]="documentFilter !== ''" data-testid="document-filter">
+            <button class="ui small icon button" [ngClass]="isFilterEntered ? 'green' : ''"
+              type="button" (click)="setFilter(filterTerm.value)"
+              [attr.data-tooltip]="auth.txt['set']  + ' ' + auth.txt['filter'] " data-position="bottom center"
+              data-testid="document-filter-enter">
+              <i class="check icon"></i>
+            </button>
+          }
+          @if (documentFilter !== '') {
+            <input type="text" [value]="documentFilter" readonly>
+            <button class="ui small red icon button"
+              type="button" (click)="setFilter('')"
+              [attr.data-tooltip]="auth.txt['reset']  + ' ' + auth.txt['filter'] " data-position="bottom center">
+              <i class="times icon"></i>
+            </button>
+          }
+        </div>
+      </div>
+      <div class="six wide column">
+        <div class="ui tiny fluid labeled action input">
+          <div class="ui label" [attr.data-tooltip]="dateTo ? (auth.txt['dateTo'] + ' ' + auth.txt['is_set'] + ': ' +  GlobalFunctions.getDDMMYYYY(dateTo)) : (auth.txt['dateTo'] + ' ' + auth.txt['is_not_set'])"
+            data-position="bottom center">
+            {{auth.txt['dateTo']}}:
+          </div>
+          @if (!dateTo) {
+            <!-- we can enter date via enter or via pressing icon button  -->
+            <input (keyup)="setDateToEntered(dateToString.value)" (keyup.enter)="setDateTo(dateToString.value); dateToString.value=GlobalFunctions.getDDMMYYYY(dateTo)" #dateToString
+              type="text" [placeholder]="auth.txt['date'] + '; dd.mm.yyyy'" [disabled]="dateTo" data-testid="document-dateTo">
+            <button class="ui small icon button" [ngClass]="dateToString.value !== '' ? 'green' : ''"
+              type="button" (click)="setDateTo(dateToString.value); dateToString.value=GlobalFunctions.getDDMMYYYY(dateTo)"
+              [attr.data-tooltip]="auth.txt['set']  + ' ' + auth.txt['dateTo'] " data-position="bottom center"
+              data-testid="document-dateTo-enter">
+              <i class="check icon"></i>
+            </button>
+          } @else {
+            <input type="text" [value]="dateTo|date:'dd.MM.yyyy'" readonly>
+            <button class="ui small red icon button"
+              type="button" (click)="setDateTo('')"
+              [attr.data-tooltip]="auth.txt['reset']  + ' ' + auth.txt['dateTo'] " data-position="bottom center">
+              <i class="times icon"></i>
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="ten wide column">
+        <div class="ui tiny fluid labeled action input">
+          <!-- we show a filter which is set via tooltip -...-->
+          <div class="ui label" [attr.data-tooltip]="subdirFilter !== '' ? (auth.txt['filter'] + ' ' + auth.txt['is_set'] + ': ' + subdirFilter) : (auth.txt['filter'] + ' ' + auth.txt['is_not_set'])"
+            data-position="bottom center">
+            {{documenttxt['documentSubDirectory']}}:
+          </div>
+          @if (subdirFilter === '') {
+            <!-- we do not reset filter when leaving the filter entry ...
+            (blur)="setFilter(filterTerm.value); filterTerm.value='' " -->
+            <input (keyup)="setSubdirEntered(subdirFilterTerm.value)" (keyup.enter)="setSubdir(subdirFilterTerm.value)" #subdirFilterTerm
+              type="text" [placeholder]="auth.txt['filter'] + '---'" [disabled]="documentFilter !== ''" data-testid="document-subdir-filter">
+            <button class="ui small icon button" [ngClass]="isSubdirFilterEntered ? 'green' : ''"
+              type="button" (click)="setSubdir(subdirFilterTerm.value)"
+              [attr.data-tooltip]="auth.txt['set']  + ' ' + auth.txt['filter'] " data-position="bottom center"
+              data-testid="document-subdir-filter-enter">
+              <i class="check icon"></i>
+            </button>
+          }
+          @if (subdirFilter !== '') {
+            <input type="text" [value]="subdirFilter" readonly>
+            <button class="ui small red icon button"
+              type="button" (click)="setSubdir('')"
+              [attr.data-tooltip]="auth.txt['reset']  + ' ' + auth.txt['filter'] " data-position="bottom center">
+              <i class="times icon"></i>
+            </button>
+          }
+        </div>
+      </div>
+      <div class="six wide column">
+        <div class="ui checkbox">
+          <input type="checkbox" [checked]="isDistinctDirectory" (change)="setDistinctDirectory($event)">
+          <label><small>{{auth.txt['distinct_directory'] }} </small></label>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="four wide column">
+        <div class="ui checkbox">
+          <input type="checkbox" [checked]="isShowDisabled" (change)="setShowDisabled($event)">
+          <label><small>{{auth.txt['show_disabled'] }}</small></label>
+        </div>
+      </div>
+      <div [ngClass]="isMaint ? 'five wide column' : 'eleven wide column'">
+        @for (d of documentTypeChoices; track d.value) {
+          <div class="ui radio checkbox" >
+            <input type="radio"  [value]="d.value" [checked]="d.isSelected" (change)="setDocumentType($event)">
+            <label>{{d.text}}</label>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+@if (auth && sessionForViews && document && isShowForm) {
+  <dsy-document-form-view
+    [formAction]="formAction"
+    [session]="sessionForViews"
+    [documentCategorys]="documentCategorys"
+    [isImmichAvailable]="isImmichAvailable"
+    [document]="document" [images]="images" [txt]="auth.txt" [documenttxt]="documenttxt"
+    (documentFormClose)="closeDocumentForm()" (updateDocument)="documentUpdate($event)">
+  </dsy-document-form-view>
+}
+
+@if (auth && sessionForViews && showProgressSignal() > 0) {
+  <div class="ui indicating progress" [attr.data-percent]="progressPercent">
+    <div class="bar" [ngStyle]="progressStyle">
+      <div class="centered progress">{{progressValue + ' ' + auth.txt['documents']}}</div>
+    </div>
+    <div class="label">{{progressPercent + '% ' + (isProgressPrepare ? auth.txt['prepared'] :  auth.txt['uploaded']) }}</div>
+  </div>
+}
+
+<!-- we activate data load dimmer depending on isDocumentsLoaded -->
+@if (refreshSignal() === 0 && isShowList) {
+  <div class="ui active inverted dimmer">
+    <div class="ui large text loader">{{auth.txt['loading_data'] }}</div>
+  </div>
+}
+
+@if (popupSignal() === 1) {
+  <div Class="ui flowing popup visible">
+    <!-- we leave a few spaces due to arrow of popup  ... -->
+    <div class="header">&nbsp;&nbsp;&nbsp;{{popupHeaderText}}</div>
+    @if (popupContentText !== '') {
+      <div class="content">{{popupContentText}}</div>
+    }
+    @if (popupConfirmText!== '') {
+      <div [ngClass]="popupConfirmClass"
+      (click)="closePopUp()">{{popupConfirmText}}</div>
+    }
+  </div>
+}
+
+<!-- document-list is shown if there are documents or document may be created -->
+@if (auth && sessionForViews && isShowList && showProgressSignal() === 0 && thumbnailCountSignal() >= 0) {
+  <dsy-document-list-view
+    [session]="sessionForViews"
+    [isCreate]="isCreate" [isMaint]="isMaint"
+    [documents]="filteredDocuments"  [document]="document"
+    [thumbnails]="thumbnails" [thumbnailCount]="thumbnailCountSignal()" [images]="images"
+    [txt]="auth.txt" [documenttxt]="documenttxt"
+    [isDistinctCategory]="isDistinctCategory" [isDistinctDirectory]="isDistinctDirectory" [isShowDisabled]="isShowDisabled"
+    [documentCategorys]="documentCategorys"  
+    (documentsShown)="getFilteredThumbnails($event)"
+    (documentListClose)="closeDocumentList()" 
+    (documentShow)="showDocument($event)" (documentMaint)="maintDocument($event)"
+    (documentDisable)="disableDocument($event)" (documentEnable)="enableDocument($event)">
+  </dsy-document-list-view>
+}
+
+
+
+
+
+

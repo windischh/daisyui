@@ -1,14 +1,16 @@
 import { Component,  Inject,  LOCALE_ID, OnInit, signal, SimpleChange } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 
-import { POWDER_BLUE, WHITE } from '../../_globals/constants';
 import { GlobalFunctions } from '../../_globals/global-functions';
 import { ConfigurationOptionBasicFunctions } from '../../_globals/configuration-option-basic-functions';
 import { ConfigurationOptionHandlingFunctions } from '../../_globals/configuration-option-handling-functions';
 import { StyleFactory } from '../../_globals/style-factory';
+import { DAISY_COLOR_BASE_100 } from '../../_globals/constants-daisy';
+import { TLWND_COLOR_GREEN_500, TLWND_COLOR_RED_500 } from '../../_globals/constants-tlwnd';
 
 import { ConfigurationOption } from '../../_db/configuration-option';
-import { Event } from '../../_db/event';
-import { EventFactory } from '../../_db/event-factory';
+import { CalendarEvent } from '../../_db/calendar-event';
+import { CalendarEventFactory } from '../../_db/calendar-event-factory';
 import { ContactFactory } from '../../_db/contact-factory';
 import { Contact } from '../../_db/contact';
 import { Session } from '../../_db/session';2
@@ -27,7 +29,6 @@ import { MessageService } from '../../_services/message.service';
 import { AuthenticationService } from '../../_services/authentication.service';
 import { CalendarService } from '../../_services/calendar.service';
 import { ContactService } from '../../_services/contact.service';
-import { ProviderService } from '../../_services/provider.service';
 import { ConfigurationService } from '../../_services/configuration.service';
 import { UserService } from '../../_services/user.service';
 
@@ -39,7 +40,6 @@ import { CalendarDayCardsViewComponent } from '../calendar-day-cards-view/calend
 import { CalendarDayCardFormViewComponent } from '../calendar-day-card-form-view/calendar-day-card-form-view';
 import { CalendarDayTimeShiftViewComponent } from '../calendar-day-time-shift-view/calendar-day-time-shift-view';
 import { CalendarDaySelectionBarComponent } from '../calendar-day-selection-bar/calendar-day-selection-bar';
-import { ActivatedRoute, Router } from '@angular/router';
 
 
 @Component({
@@ -68,33 +68,33 @@ export class CalendarDayComponent implements OnInit {
   public contacttxt: { [key: string]: string } = {};
 
   // timeSpans contain event elements of type "time span"  - for performance reason we build it for one week
-  public timeSpans!:  Array<Event>;
-  public linkedTimeSpans:  Array<Event> = [];
+  public timeSpans!:  Array<CalendarEvent>;
+  public linkedTimeSpans:  Array<CalendarEvent> = [];
 
   // all events for current user
-  public allEvents!: Array<Event>;
+  public allEvents!: Array<CalendarEvent>;
 
  // refresh signal triggers change detection
   // signal value   0 - no data loaded   1 - data loded
   public refreshSignal = signal(0);
 
   // actualEvents are building the client model for actual event. Includes last event of previous day - if it reaches into this.calendarday and first event of next day
-  actualEvents!: Array<Event>;
-  weekActualEvents!: Array<Event>;
+  actualEvents!: Array<CalendarEvent>;
+  weekActualEvents!: Array<CalendarEvent>;
 
   // planWevents are building the client model for planned event. Includes last event of previous day - if it reaches into this.celandarday and first event of next day
-  planEvents!: Array<Event>;
-  weekPlanEvents!: Array<Event>;
+  planEvents!: Array<CalendarEvent>;
+  weekPlanEvents!: Array<CalendarEvent>;
 
   // references to either planEvents or actualEvents
-  events!: Array<Event>;
+  events!: Array<CalendarEvent>;
   // oldest event day
   firstCalendarDay!: Date;
 
   // all events for linked user
-  allLinkedUserEvents!: Array<Event>;
+  allLinkedUserEvents!: Array<CalendarEvent>;
   // actualized events of a linked user
-  linkedUserEvents!:  Array<Event>;
+  linkedUserEvents!:  Array<CalendarEvent>;
 
   // is set true if events of calendarDay are loaded first time
   isDayLoadedSignal = signal(0);
@@ -103,7 +103,7 @@ export class CalendarDayComponent implements OnInit {
   // is set true if time span arrays are filled from DB
   isTimeSpanLoadedSignal = signal(0);
 
-  // sessionContact  from session 
+  // sessionContact  from session
   sessionContact: Contact | undefined;
 
   // is increased if relevant options for calendar-day-views are changed
@@ -119,17 +119,17 @@ export class CalendarDayComponent implements OnInit {
   countSelected = 0;
 
   // if selected events are to be shifted to another date we use targetEvents and targetCalendarDay
-  targetEvents: Array<Event> | null = null;
+  targetEvents: Array<CalendarEvent> | null = null;
   targetCalendarDay: Date | null = null;
 
   // isCreating is true if user just creates new event (in cards view) to prohibit set selecting at same time
   isCreating = false;
 
   // eventContainer is used when calling calendar-day-card-form-view
-  eventContainer!: {updateType: UpdateType, event: Event, d: Date | null};
+  eventContainer!: {updateType: UpdateType, event: CalendarEvent, d: Date | null};
 
   // types are indexed by type-part x in time spans with types 2x
-  timeSpanTypeColors!: Array<{text: string, color: string}>;
+  timeSpanTypeColors!: Array<{text: string, backgroundColor: string, color: string}>;
   // type 21,22 is not selectable
   timeSpanTypeChoices!: Array<IChoice>;
 
@@ -218,7 +218,7 @@ export class CalendarDayComponent implements OnInit {
     const session = this.auth.getSession(this.name);
     // default language according to application internal language coding (language enum)
     const language = session?.language ? session.language : GlobalFunctions.getDefaultLanguage(this.locale);
-    const event = EventFactory.empty(); // just for dbtxt
+    const event = CalendarEventFactory.empty(); // just for dbtxt
     const contact = ContactFactory.empty(); // just for dbtxt
     this.eventtxt = GlobalFunctions.objText(event,
       'Event', this.auth.systemTexts, language,  this.name);
@@ -254,21 +254,34 @@ export class CalendarDayComponent implements OnInit {
     this.options = options.filter(_ => _.status < 9);
     this.timeSpanTypeColors = [];
     this.timeSpanTypeChoices = [];
+    let defaultBackgroundColor = ConfigurationOptionBasicFunctions.getOptionString(this.options, 'opt_span_bg_color') ?? DAISY_COLOR_BASE_100;
     for (let i = 0; i <= 9; i++) {
       const cat = i === 0 ? 'undefined' : i === 1 ? 'holiday' : i === 2 ? 'birthday' : i.toString();
       const category = ConfigurationOptionBasicFunctions.getOptionString(this.options, 'opt_span_' + cat) ?? '';
       let text = category;
-      let color = '';
+      let backgroundColor = defaultBackgroundColor;
+      let color  = '';
       let style: {};
+      // here we have "old" time span category styles which are coded as #hex or #Color after category name
       if (category.includes('#')) {
         text = category.substring(0, category.indexOf('#'));
-        color = category.substring(category.indexOf('#'));
-        style = StyleFactory.getBgColorStyle(color, 80, 2);
+        if (i <= 2) {
+          backgroundColor = defaultBackgroundColor;
+          color = category.substring(category.indexOf('#'));
+          style =  {'color': color};
+        } else {
+          backgroundColor = category.substring(category.indexOf('#'));
+          color = StyleFactory.getTextColor(backgroundColor);
+          style = StyleFactory.getBgColorStyle(backgroundColor, 80, 2);
+        }
       } else {
-        style =  {'background-color': WHITE};
+        backgroundColor = defaultBackgroundColor;
+        color = StyleFactory.getTextColor(backgroundColor);
+        style =  {'background-color': defaultBackgroundColor};
       }
       this.timeSpanTypeColors.push({
         text,
+        backgroundColor,
         color
       });
       if (i > 2) {
@@ -280,6 +293,35 @@ export class CalendarDayComponent implements OnInit {
         });
       }
     }
+    // we enhance timeSpanTypeColors and timeSpanTypeChoices with color options
+    for (let i = 11; i <= 19; i++) {
+      if (i === 11) {
+        const color  = ConfigurationOptionBasicFunctions.getOptionString(this.options, 'opt_span_holiday_color') ?? '';
+        if (color !== '') {
+          this.timeSpanTypeColors[1].color = color;
+        }
+        if (this.timeSpanTypeColors[1].color === '') {
+          this.timeSpanTypeColors[1].color = TLWND_COLOR_RED_500;
+        }
+      } else if (i === 12) {
+        const color = ConfigurationOptionBasicFunctions.getOptionString(this.options, 'opt_span_birthday_color') ?? '';
+        if (color !== '') {
+          this.timeSpanTypeColors[2].color = color;
+        }
+         if (this.timeSpanTypeColors[2].color === '') {
+          this.timeSpanTypeColors[2].color = TLWND_COLOR_GREEN_500;
+        }
+      } else {
+        const backgroundColor = ConfigurationOptionBasicFunctions.getOptionString(this.options, 'opt_span_' + (i - 10).toString() + '_bg_color') ?? '';
+        if (backgroundColor !== '') {
+          const color = StyleFactory.getTextColor(backgroundColor);
+          this.timeSpanTypeColors[i - 10].backgroundColor = backgroundColor;
+          this.timeSpanTypeColors[i - 10].color = color;
+          this.timeSpanTypeChoices[i - 13].style = {'background-color': backgroundColor, 'color': color};
+        }
+      }
+    }
+
     const session = this.auth.getSession(this.name);
     if (session) {
       this.opts = ConfigurationOptionHandlingFunctions.initializeEventOptions(this.options);
@@ -428,7 +470,7 @@ export class CalendarDayComponent implements OnInit {
    * @param isWeek - if true, we return events for week of calendarDay - otherwise for calendarDay
    * @returns event array
    */
-  private getEventsForDate(events: Array<Event>, isPlan: boolean, calendarDay: Date, isWeek: boolean): Array<Event> {
+  private getEventsForDate(events: Array<CalendarEvent>, isPlan: boolean, calendarDay: Date, isWeek: boolean): Array<CalendarEvent> {
     const type = isPlan? 0 : 1;
     const weekDay = GlobalFunctions.getWeekDay(calendarDay, 0, this.locale);
     const previous = isWeek ? weekDay + 1 : 1;
@@ -440,7 +482,7 @@ export class CalendarDayComponent implements OnInit {
     const nextDay = GlobalFunctions.addDays(calendarDay, next);
     const prevDate = GlobalFunctions.addDays(calendarDay, previous * -1);
     const nextDate = GlobalFunctions.addDays(calendarDay, next + 1);
-    let selectedEvents: Event[] = [];
+    let selectedEvents: CalendarEvent[] = [];
     const eventsPreviousToNext = events?.filter(_ =>
         GlobalFunctions.getDateInMinutes(_.eventBegin) >= GlobalFunctions.getDateInMinutes(prevDate)
         && GlobalFunctions.getDateInMinutes(_.eventEnd) <= GlobalFunctions.getDateInMinutes(nextDate)
@@ -477,12 +519,12 @@ export class CalendarDayComponent implements OnInit {
   }
 
   // we updat event data, with unchanged eventId and unchanged type
-  private eventUpdate(event: Event): boolean {
+  private eventUpdate(event: CalendarEvent): boolean {
     const session = this.auth.getSession(this.name);
     const operation = 'event update';
     let message = 'error - undefined';
     if (session && session.isPlanMaint && event.eventId > 0) {
-      const formerEvent: Event = GlobalFunctions.clone(this.allEvents.find(_ => _.eventId === event.eventId));
+      const formerEvent: CalendarEvent = GlobalFunctions.clone(this.allEvents.find(_ => _.eventId === event.eventId));
       if (formerEvent && formerEvent.type === event.type) {
         const targetCalendarDay: Date = GlobalFunctions.getStartOfDay(event.eventBegin);
         const isPlan = event.type === EventType.plan;
@@ -495,7 +537,7 @@ export class CalendarDayComponent implements OnInit {
           this.dbFailure(operation, message);
           return false;
         }
-        let updEvent = EventFactory.empty();
+        let updEvent = CalendarEventFactory.empty();
         // setting event fields from event
         updEvent = this.setEventContent(event, updEvent);
         if (event.contactNr > 0) {
@@ -527,7 +569,7 @@ export class CalendarDayComponent implements OnInit {
   }
 
   // we nsert event with id 0 and with type for plan/actual
-  private eventInsert(event: Event): boolean {
+  private eventInsert(event: CalendarEvent): boolean {
     const session = this.auth.getSession(this.name);
     const operation = 'event insert';
     let message = 'error - undefined';
@@ -748,7 +790,7 @@ export class CalendarDayComponent implements OnInit {
   /** --------------------  calendar-day-grid-view ------------------------- */
   /** -------------------- calendar-day-cards-view ------------------------- */
 
-  
+
   public async selectEvent(event: {isSelect: boolean, id: number}) {
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
     const session = this.auth.getSession(this.name);
@@ -788,7 +830,7 @@ export class CalendarDayComponent implements OnInit {
    *   in case of insert event is empty except event.type which indicates 0 for event, 20 for time space
    * @param eventContainer.d: calendarDay and time of inserted event
    */
-  public async enableCardFormView(eventContainer: {updateType: UpdateType, event: Event, d: Date | null}) {
+  public async enableCardFormView(eventContainer: {updateType: UpdateType, event: CalendarEvent, d: Date | null}) {
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
     const session = this.auth.getSession(this.name);
     if (session) {
@@ -813,7 +855,7 @@ export class CalendarDayComponent implements OnInit {
     } else {
       alert('internal error - session missing');
     }
-  } 
+  }
 
   public setCreating(isCreating: boolean) {
     this.isCreating = isCreating;
@@ -824,7 +866,7 @@ export class CalendarDayComponent implements OnInit {
   /** -------------------- calendar-day-cards-view ------------------------- */
   /** -------------------- calendar-day-time-shift-view ------------------------- */
 
-  public async updateEvent(eventContainer: {updateType: UpdateType, event: Event | null, events?: Array<Event>}) {
+  public async updateEvent(eventContainer: {updateType: UpdateType, event: CalendarEvent | null, events?: Array<CalendarEvent>}) {
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
     const session = this.auth.getSession(this.name);
     // let ix: number;
@@ -894,7 +936,7 @@ export class CalendarDayComponent implements OnInit {
         operation = 'insert event';
         message = 'error - no confirmation for posted event';
         if (event && session?.isPlanMaint) {
-          let newEvent = EventFactory.empty();
+          let newEvent = CalendarEventFactory.empty();
           // setting event fields from event
           newEvent = this.setEventContent(event, newEvent);
           if (event.contactNr > 0) {
@@ -940,7 +982,7 @@ export class CalendarDayComponent implements OnInit {
           }
           let isAllInserted = true;
           for (const _ of events) {
-            let newEvent = EventFactory.empty();
+            let newEvent = CalendarEventFactory.empty();
             // setting event fields from event
             newEvent = this.setEventContent(_, newEvent);
             if (_.contactNr > 0) {
@@ -997,7 +1039,7 @@ export class CalendarDayComponent implements OnInit {
   }
 
   // updating event and also associated events
-  public updateEventAssoc(eventContainer: {updateType: UpdateType, event: Event}) {
+  public updateEventAssoc(eventContainer: {updateType: UpdateType, event: CalendarEvent}) {
     // first we update event
     this.updateEvent(eventContainer);
     const {updateType, event} = eventContainer;
@@ -1050,7 +1092,7 @@ export class CalendarDayComponent implements OnInit {
   }
 
   // insert, update, delete timespan
-  public async updateTimeSpan(eventContainer: {updateType: UpdateType, event: Event}) {
+  public async updateTimeSpan(eventContainer: {updateType: UpdateType, event: CalendarEvent}) {
     if (!this.auth.isSessionActive()) { await this.sessionActivate() };
     const session = this.auth.getSession(this.name);
     // let ix: number;
@@ -1060,7 +1102,7 @@ export class CalendarDayComponent implements OnInit {
     switch (updateType) {
       case UpdateType.update:
         if (session?.isPlanMaint) {
-          const updEvent = EventFactory.empty();
+          const updEvent = CalendarEventFactory.empty();
           // setting event fields from event
           this.setEventContent(event, updEvent);
           updEvent.eventId = event.eventId;
@@ -1085,7 +1127,7 @@ export class CalendarDayComponent implements OnInit {
         } // isPlanMaint
         break;
       case UpdateType.insert:
-        const newEvent = EventFactory.empty();
+        const newEvent = CalendarEventFactory.empty();
         // setting event fields from event
         this.setEventContent(event, newEvent);
         if (session?.isPlanMaint) {
@@ -1204,7 +1246,7 @@ export class CalendarDayComponent implements OnInit {
    * @param view event element in view
    * @param model event element in model
    */
-  private setEventContent(view: Event, model: Event): Event {
+  private setEventContent(view: CalendarEvent, model: CalendarEvent): CalendarEvent {
     model.summary = view.summary;
     model.description = view.description;
     model.location = view.location;
@@ -1223,7 +1265,7 @@ export class CalendarDayComponent implements OnInit {
    * @param view event element in view
    * @param model event element in model
    */
-  private setEventContactIssueContent(view: Event, model: Event): Event {
+  private setEventContactIssueContent(view: CalendarEvent, model: CalendarEvent): CalendarEvent {
     model.contactNr = view.contactNr;
     model.issueNr = view.issueNr;
     model.eventInfo = view.eventInfo;
