@@ -1,31 +1,31 @@
 @if (immichDocumentsSignal() === 0) {
   <br>
   @if (txt && documenttxt) {
-    <div class="ui grid">
-      <div class="row">
-        <div class="two wide column">
+    <div class="container mx-auto p-4">
+      <div class="flex items-center justify-between gap-2">
+        <div class="w-1/12">
         </div>
-        <div class="twelve wide column">
+        <div class="flex-1 flex justify-center">
           <!-- be careful - we can not use isUpdate here, because isUpdate is the swith for changing between display and update mode !!!-->
           @if (!(isNew || isClone) && isMaint) {
-            <h2 class="ui center aligned header"> {{documenttxt['className']}} {{txt['data']}} {{txt['update']}} </h2>
+            <h2 class="text-2xl md:text-3xl font-bold text-center"> {{documenttxt['className']}} {{txt['data']}} {{txt['update']}} </h2>
           }
           @if (!isMaint && !isNew && !isClone) {
-            <h2 class="ui center aligned header"> {{documenttxt['className']}} {{txt['show']}} </h2>
+            <h2 class="text-2xl md:text-3xl font-bold text-center"> {{documenttxt['className']}} {{txt['show']}} </h2>
           }
         </div>
-        <div class="right floated one wide column">
-          <button class="left floated ui tiny circular red icon button"
-            [attr.data-tooltip]="txt['close']" data-position="bottom center" data-inverted=""
+        <div class="w-1/12 flex justify-end">
+          <button class="btn btn-xs btn-circle btn-error text-primary-content tooltip tooltip-bottom tooltip-primary"
+            [attr.data-tip]="txt['close']"
             type="button"
             (click)="return()">
-            <i class="times icon"></i>
+            <i class="fas fa-times"></i>
           </button>
         </div>
       </div>
     </div>
   }
-  <div class="ui divider"></div>
+  <div class="divider"></div>
 
   <!-- FORM starts here                    -->
 
@@ -33,136 +33,132 @@
     (ngSubmit)="submitForm()">
 
     <!-- this place is used for tests: <p>document objects: {{ intChoices | json }}</p> -->
-    <!-- GRID (no container - container would recalc width in a sub document presentation, without
-    regarding pusher and reduced width!!)  -->
     @if (txt && documenttxt) {
-      <div class="ui grid">
+      <div class="container mx-auto p-4 flex flex-col gap-3">
         <!-- -UPDATE trigger BUTTONs  uniqueId  -->
         @if (document && !isNew) {
-          <div class="row">
-            <div class="four wide column">
+          <div class="flex items-center gap-4">
+            <div class="w-1/4">
             </div>
-            <div class="four wide column">
-              <h4>{{documenttxt['documentNr']}}:</h4>
+            <div class="w-1/4">
+              <h4 class="text-lg md:text-xl font-bold">{{documenttxt['documentNr']}}:</h4>
             </div>
-            <div class="six wide column">
-              <h4><div class="ui label">{{document.documentNr}}</div></h4>
+            <div class="w-3/8 flex-1">
+              <h4 class="text-lg md:text-xl font-bold"><span class="badge">{{document.documentNr}}</span></h4>
             </div>
-            <div class="two wide column">
+            <div class="w-1/12">
             </div>
           </div>
         }
         <!-- SHOW  uniqueId field -->
-        <div class="row">
-          <div class="six wide column">
-            <h3>{{documenttxt['documentCategory']}}:</h3>
+        <div class="flex items-center gap-4">
+          <div class="w-3/8">
+            <h3 class="text-xl md:text-2xl font-semibold">{{documenttxt['documentCategory']}}:</h3>
           </div>
-          <div class="ten wide column">
-            <h3>{{document.documentCategory}} - {{documentCategorys[document.documentCategory]}}</h3>
+          <div class="flex-1">
+            <h3 class="text-xl md:text-2xl font-semibold">{{document.documentCategory}} - {{documentCategorys[document.documentCategory]}}</h3>
           </div>
         </div>
         @if (!isNew && document.documentSubDirectory !== '') {
-          <div class="row">
-            <div class="six wide column">
-              <h3>{{documenttxt['documentSubDirectory']}}:</h3>
+          <div class="flex items-center gap-4">
+            <div class="w-3/8">
+              <h3 class="text-xl md:text-2xl font-semibold">{{documenttxt['documentSubDirectory']}}:</h3>
             </div>
-            <div class="ten wide column">
-              <h3> {{document.documentSubDirectory}}</h3>
+            <div class="flex-1">
+              <h3 class="text-xl md:text-2xl font-semibold"> {{document.documentSubDirectory}}</h3>
             </div>
           </div>
         }
         @if (!isNew) {
-          <div class="row">
-            <div class="six wide column">
-              <h3>{{documenttxt['documentName']}}:</h3>
+          <div class="flex items-center gap-4">
+            <div class="w-3/8">
+              <h3 class="text-xl md:text-2xl font-semibold">{{documenttxt['documentName']}}:</h3>
             </div>
-            <div class="ten wide column">
-              <h3> {{document.documentName + (document.documentExtension !== '' ? ('.' + document.documentExtension) : '')}}</h3>
+            <div class="flex-1">
+              <h3 class="text-xl md:text-2xl font-semibold"> {{document.documentName + (document.documentExtension !== '' ? ('.' + document.documentExtension) : '')}}</h3>
             </div>
           </div>
         }
         @if (!isNew && document.dateTimeOriginal) {
-          <div class="row">
-            <div class="six wide column">
-              <h3>{{documenttxt['dateTimeOriginal']}}:</h3>
+          <div class="flex items-center gap-4">
+            <div class="w-3/8">
+              <h3 class="text-xl md:text-2xl font-semibold">{{documenttxt['dateTimeOriginal']}}:</h3>
             </div>
-            <div class="ten wide column">
-              <h3> {{document.dateTimeOriginal|date:'dd.MM.yyyy'}} {{(document.dateTimeOriginal|date:'HH:mm') !== '00:00' ? (document.dateTimeOriginal|date:' HH:mm') : ''}}</h3>
+            <div class="flex-1">
+              <h3 class="text-xl md:text-2xl font-semibold"> {{document.dateTimeOriginal|date:'dd.MM.yyyy'}} {{(document.dateTimeOriginal|date:'HH:mm') !== '00:00' ? (document.dateTimeOriginal|date:' HH:mm') : ''}}</h3>
             </div>
           </div>
         }
         @if (!isNew && document.imageTitle) {
-          <div class="row">
-            <div class="six wide column">
-              <h3>{{documenttxt['imageTitle']}}:</h3>
+          <div class="flex items-center gap-4">
+            <div class="w-3/8">
+              <h3 class="text-xl md:text-2xl font-semibold">{{documenttxt['imageTitle']}}:</h3>
             </div>
-            <div class="ten wide column">
-              <h3> {{document.imageTitle}}</h3>
+            <div class="flex-1">
+              <h3 class="text-xl md:text-2xl font-semibold"> {{document.imageTitle}}</h3>
             </div>
           </div>
         }
         @if (!isNew && document.imageLocation) {
-          <div class="row">
-            <div class="six wide column">
-              <h3>{{documenttxt['imageLocation']}}:</h3>
+          <div class="flex items-center gap-4">
+            <div class="w-3/8">
+              <h3 class="text-xl md:text-2xl font-semibold">{{documenttxt['imageLocation']}}:</h3>
             </div>
-            <div class="ten wide column">
-              <h3> {{document.imageLocation}}</h3>
+            <div class="flex-1">
+              <h3 class="text-xl md:text-2xl font-semibold"> {{document.imageLocation}}</h3>
             </div>
           </div>
         }
-        
+
         <!-- SHOW  (extended) uniqueId fields and unchangeable attributes of uploaded file -->
         @if (isShowBody) {
-          <div class="row">
-            <div class="fourteen wide column">
-              <table class="ui very basic table">
-                <tbody>
+          <div class="w-7/8">
+            <table class="table table-zebra w-full">
+              <tbody>
+                <tr>
+                  <td class="w-1/6"><h4 class="text-lg md:text-xl font-bold">{{documenttxt['documentOriginalFileName']}}:</h4></td>
+                  <td><h4 class="text-lg md:text-xl font-bold">{{document.documentOriginalFileName}}</h4></td>
+                </tr>
+                <tr>
+                  <td class="w-1/6"><h4 class="text-lg md:text-xl font-bold">{{documenttxt['documentType']}}:</h4></td>
+                  <td><h4 class="text-lg md:text-xl font-bold">{{document.documentType}}</h4></td>
+                </tr>
+                <tr>
+                  <td class="w-1/6"><h4 class="text-lg md:text-xl font-bold">{{documenttxt['documentDate']}}:</h4></td>
+                  <td><h4 class="text-lg md:text-xl font-bold">{{document.documentDate|date:'dd.MM.yyyy HH:mm'}}</h4></td>
+                </tr>
+                <tr>
+                  <td class="w-1/6"><h4 class="text-lg md:text-xl font-bold">{{documenttxt['documentSize']}}:</h4></td>
+                  <td><h4 class="text-lg md:text-xl font-bold">{{document.documentSize/1000|number:'1.3-3'}}</h4></td>
+                </tr>
+                @if (document.imageWidth) {
                   <tr>
-                    <td class="two wide"><h4>{{documenttxt['documentOriginalFileName']}}:</h4></td>
-                    <td><h4>{{document.documentOriginalFileName}}</h4></td>
+                    <td class="w-1/6"><h4 class="text-lg md:text-xl font-bold">{{documenttxt['imageWidth']}}:</h4></td>
+                    <td><h4 class="text-lg md:text-xl font-bold">{{document.imageWidth}}</h4></td>
                   </tr>
+                }
+                @if (document.imageHeight) {
                   <tr>
-                    <td class="two wide"><h4>{{documenttxt['documentType']}}:</h4></td>
-                    <td><h4>{{document.documentType}}</h4></td>
+                    <td class="w-1/6"><h4 class="text-lg md:text-xl font-bold">{{documenttxt['imageHeight']}}:</h4></td>
+                    <td><h4 class="text-lg md:text-xl font-bold">{{document.imageHeight}}</h4></td>
                   </tr>
-                  <tr>
-                    <td class="two wide"><h4>{{documenttxt['documentDate']}}:</h4></td>
-                    <td><h4>{{document.documentDate|date:'dd.MM.yyyy HH:mm'}}</h4></td>
-                  </tr>
-                  <tr>
-                    <td class="two wide"><h4>{{documenttxt['documentSize']}}:</h4></td>
-                    <td><h4>{{document.documentSize/1000|number:'1.3-3'}}</h4></td>
-                  </tr>
-                  @if (document.imageWidth) {
-                    <tr>
-                      <td class="two wide"><h4>{{documenttxt['imageWidth']}}:</h4></td>
-                      <td><h4>{{document.imageWidth}}</h4></td>
-                    </tr>
-                  }
-                  @if (document.imageHeight) {
-                    <tr>
-                      <td class="two wide"><h4>{{documenttxt['imageHeight']}}:</h4></td>
-                      <td><h4>{{document.imageHeight}}</h4></td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
+                }
+              </tbody>
+            </table>
           </div>
         }
-        <div class="ui divider"></div>
+        <div class="divider"></div>
         <!-- -UPDATE trigger BUTTON  body  -->
         @if (isMaint) {
-          <div class="row">
-            <div class="four wide column">
+          <div class="flex items-center gap-4">
+            <div class="w-1/4">
               @if (!(isNew || isClone)) {
-                <button class="ui tiny circular yellow icon button"
-                  [attr.data-tooltip]="txt['update']"
+                <button class="btn btn-xs btn-circle btn-warning text-primary-content tooltip tooltip-accent"
+                  [attr.data-tip]="txt['update']"
                   [disabled]="isUpdate()"
                   type="button"
                   (click)="setBody()">
-                  <i class="arrow down icon"></i>
+                  <i class="fas fa-arrow-down"></i>
                 </button>
               }
             </div>
@@ -170,66 +166,74 @@
         }
         <!-- -UPDATE document body  -->
         @if (isUpdateBody) {
-          <div class="row">
-            <div class="twelve wide column">
-              <div class="ui form">
-                <fieldset  formGroupName="bodyGroup">
-                  <legend class = "ui green label">{{documenttxt['className']}} {{txt['data']}} {{txt['update']}} </legend>
+          <div class="flex flex-wrap items-start gap-4">
+            <div class="w-3/4">
+              <fieldset formGroupName="bodyGroup" class="card bg-base-100 shadow-md">
+                <div class="card-body flex flex-col gap-3">
+                  <legend class="badge badge-success text-primary-content">{{documenttxt['className']}} {{txt['data']}} {{txt['update']}} </legend>
                   <!-- we allow width update only if there is not extract width and height from upload ...-->
                   @if (document.imageHeight === undefined || document.imageHeight === null) {
-                    <div class="one inline fields">
-                      <label for="imageWidth" class="ui label">{{documenttxt['imageWidth']}}</label>
-                      <input id="imageWidth" formControlName="imageWidth" ><input>
+                    <div class="flex items-center gap-4">
+                      <div class="w-1/3">
+                        <label for="imageWidth" class="label">{{documenttxt['imageWidth']}}</label>
+                      </div>
+                      <div class="flex-1">
+                        <input id="imageWidth" formControlName="imageWidth" class="input input-bordered w-full">
+                      </div>
                     </div>
                   }
-                  <div class="one inline fields">
-                    <label for="note" class="ui label">{{documenttxt['note']}}</label>
-                    <textarea id="note" formControlName="note" rows="2"></textarea>
+                  <div class="flex items-center gap-4">
+                    <div class="w-1/3">
+                      <label for="note" class="label">{{documenttxt['note']}}</label>
+                    </div>
+                    <div class="flex-1">
+                      <textarea id="note" formControlName="note" rows="2" class="textarea textarea-bordered w-full"></textarea>
+                    </div>
                   </div>
-                </fieldset>
-              </div>
+                </div>
+              </fieldset>
             </div>
             <!-- BUTTONs document body content updating                -->
-            <div class="four wide column">
-              <button class="left aligned ui tiny circular green icon button"
-                [attr.data-tooltip]="txt['submit']" data-position="top center"
+            <div class="flex gap-2">
+              <button class="btn btn-xs btn-circle btn-success text-primary-content tooltip tooltip-top tooltip-primary"
+                [attr.data-tip]="txt['submit']"
                 [disabled]="!thisForm.valid || !isUpdateBody"
                 type="submit">
-                <i class="check icon"></i>
+                <i class="fas fa-check"></i>
               </button>
-              <button class="left aligned ui tiny circular red icon button"
-                [attr.data-tooltip]="txt['cancel']" data-position="top center"
+              <button class="btn btn-xs btn-circle btn-error text-primary-content tooltip tooltip-top tooltip-accent"
+                [attr.data-tip]="txt['cancel']"
                 [disabled]="!isUpdateBody"
                 type="button" (click)="cancelUpdates()">
-                <i class="times icon"></i>
+                <i class="fas fa-times"></i>
               </button>
             </div>
           </div>
         }
         <!-- -SHOW  document body  -->
         @if (isShowBody) {
-          <div class="row">
-            <div class="fourteen wide column">
-              <table class="ui very basic table">
+          <div class="flex flex-col gap-2">
+            <div class="w-7/8">
+              <table class="table table-zebra w-full">
                 <tbody>
                   <tr>
-                    <td class="two wide"><h4>{{documenttxt['note']}}:</h4></td>
-                    <td><small><pre>{{document.note}}</pre></small></td>
+                    <td class="w-1/6"><h4 class="text-lg md:text-xl font-bold">{{documenttxt['note']}}:</h4></td>
+                    <td><small><pre class="whitespace-pre-wrap">{{document.note}}</pre></small></td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            <div class="sixteen wide column">
+            <div>
               <br>
-              <div class="center aligned">
+              <div class="flex justify-center">
                 @if (images[document.documentId]?.content) {
                   <img [src]="images[document.documentId]?.content|safeResource" [attr.width]="images[document.documentId]?.width">
                 }
               </div>
               <br>
-              <h4>
+              <h4 class="text-lg md:text-xl font-bold text-center">
                 @if (images[document.documentId]?.content) {
-                  <a [href]="images[document.documentId]?.content|safeResource"
+                  <a class="link link-primary" [href]="images[document.documentId]?.content|safeResource"
                     [download]="document.documentName + (document.documentExtension !== '' ? ('.' + document.documentExtension) : '')"
                   >DOWNLOAD</a>
                 }
@@ -239,20 +243,16 @@
         }
         <!-- -SHOW  location map  -->
         @if (isShowMap) {
-          <div class="row">
-            <div class="sixteen wide column">
-              <dsy-map [mapMarkers]="mapMarkers" [mapCenter]= "mapCenter" >
-              </dsy-map>
-            </div>
+          <div class="w-full">
+            <dsy-map [mapMarkers]="mapMarkers" [mapCenter]= "mapCenter" >
+            </dsy-map>
           </div>
         }
-        <!-- end of GRID Container  -->
+        <!-- end of Container  -->
       </div>
     }
   </form>
-  <div class="ui divider"></div>
+  <div class="divider"></div>
 } @else {
- 
+
 }
-
-

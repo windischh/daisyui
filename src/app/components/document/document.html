@@ -1,179 +1,182 @@
 @if (refreshSignal() === 1 && auth && sessionForViews && !isShowForm) {
-  <div class="ui grid container">
-    <div class="row">
-      <div class="five wide column"></div>
-      <div class="six wide column">
-        <h2 class="ui center aligned header">  {{documenttxt['className'] }} {{auth.txt['list'] }} </h2>
+  <div class="container mx-auto p-4 flex flex-col gap-2">
+    <div class="flex items-center justify-between gap-2">
+      <div class="w-5/12"></div>
+      <div class="w-3/8 flex justify-center">
+        <h2 class="text-2xl md:text-3xl font-bold text-center">  {{documenttxt['className'] }} {{auth.txt['list'] }} </h2>
       </div>
-      <div class="five wide column">
+      <div class="w-5/12">
         <!-- here comes selection of list/chronicle -->
       </div>
     </div>
-    <div class="row">
-      <div class="seven wide column">
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="w-7/12">
         <!-- select on or more category-->
-        <div class="ui tiny fluid labeled input">
-          <div class="ui label">
-            {{documenttxt['documentCategory']}}:
-          </div>
-          <input type="text" [value]="selectedCategorys.toString()" disabled>
-          <div class="ui inline dropdown">
-            <button class="ui tiny right floated circular green icon button" id="dropdownButton"
+        <div class="flex items-center gap-2">
+          <span class="badge">{{documenttxt['documentCategory']}}:</span>
+          <input type="text" [value]="selectedCategorys.toString()" disabled class="input input-xs input-bordered w-32">
+          <div class="dropdown" [ngClass]="{ 'dropdown-open': isShowDropdown }">
+            <button class="btn btn-xs btn-circle btn-success text-primary-content tooltip tooltip-top tooltip-accent" id="dropdownButton"
               (click)="toggleCategoryMenu()"
-              [attr.data-tooltip]="auth.txt['set']  + ' ' + documenttxt['documentCategory'] " data-position="top center">
-              <i class="ellipsis vertical icon"></i>
+              [attr.data-tip]="auth.txt['set']  + ' ' + documenttxt['documentCategory'] ">
+              <i class="fas fa-ellipsis-vertical"></i>
             </button>
-            <div class="menu transition" [ngClass]="{ visible: isShowDropdown }">
+            <ul class="dropdown-content menu bg-base-100 rounded-box z-10 p-2 shadow" [ngClass]="{ 'hidden': !isShowDropdown }">
               @for (c of categoryChoices; track $index) {
-                <div class="item">
-                  <div class="ui checkbox" id="checkbox">
-                    <input type="checkbox" id="checkboxInput" [value]="c.value" [checked] = "c.isSelected" (change)="selectCategory($event)">
-                    <label><small>{{c.value}}{{c.text ? ' - ' : ''}}{{c.text|slice:0:10}}</small></label>
-                  </div>
-                </div>
+                <li>
+                  <label class="label cursor-pointer gap-2">
+                    <input type="checkbox" class="checkbox checkbox-xs" id="checkboxInput" [value]="c.value" [checked] = "c.isSelected" (change)="selectCategory($event)">
+                    <span class="label-text"><small>{{c.value}}{{c.text ? ' - ' : ''}}{{c.text|slice:0:10}}</small></span>
+                  </label>
+                </li>
               }
-            </div>
+            </ul>
           </div>
         </div>
       </div>
-      <div class="three wide column">
-        <div class="ui checkbox">
-          <input type="checkbox" [checked]="isDistinctCategory" (change)="setDistinctCategory($event)">
-          <label><small>{{auth.txt['distinct_category'] }} </small></label>
+      <div class="w-3/16">
+        <div class="form-control">
+          <label class="label cursor-pointer gap-2">
+            <input type="checkbox" class="checkbox checkbox-sm" [checked]="isDistinctCategory" (change)="setDistinctCategory($event)">
+            <span class="label-text"><small>{{auth.txt['distinct_category'] }} </small></span>
+          </label>
         </div>
       </div>
-      <div class="six wide column">
-        <div class="ui tiny fluid labeled action input">
-          <div class="ui label" [attr.data-tooltip]="dateFrom ? (auth.txt['dateFrom'] + ' ' + auth.txt['is_set'] + ': ' +  GlobalFunctions.getDDMMYYYY(dateFrom)) : (auth.txt['dateFrom'] + ' ' + auth.txt['is_not_set'])">
+      <div class="w-3/8 flex-1">
+        <div class="flex items-center gap-1">
+          <span class="badge tooltip tooltip-accent" [attr.data-tip]="dateFrom ? (auth.txt['dateFrom'] + ' ' + auth.txt['is_set'] + ': ' +  GlobalFunctions.getDDMMYYYY(dateFrom)) : (auth.txt['dateFrom'] + ' ' + auth.txt['is_not_set'])">
             {{auth.txt['dateFrom']}}:
-          </div>
+          </span>
           @if (!dateFrom) {
             <!-- we can enter date via enter or via pressing icon button  -->
-            <input (keyup)="setDateFromEntered(dateFromString.value)" (keyup.enter)="setDateFrom(dateFromString.value); dateFromString.value=GlobalFunctions.getDDMMYYYY(dateFrom)" #dateFromString
+            <input class="input input-xs input-bordered flex-1" (keyup)="setDateFromEntered(dateFromString.value)" (keyup.enter)="setDateFrom(dateFromString.value); dateFromString.value=GlobalFunctions.getDDMMYYYY(dateFrom)" #dateFromString
               type="text" [placeholder]="auth.txt['date'] + '; dd.mm.yyyy'" [disabled]="dateFrom" data-testid="document-dateFrom">
-            <button class="ui small icon button" [ngClass]="isDateFromEntered ? 'green' : ''"
+            <button class="btn btn-xs btn-circle tooltip tooltip-top tooltip-accent" [ngClass]="isDateFromEntered ? 'btn-success text-primary-content' : 'btn-outline'"
               type="button" (click)="setDateFrom(dateFromString.value); dateFromString.value=GlobalFunctions.getDDMMYYYY(dateFrom)"
-              [attr.data-tooltip]="auth.txt['set']  + ' ' + auth.txt['dateFrom'] " data-position="top center"
+              [attr.data-tip]="auth.txt['set']  + ' ' + auth.txt['dateFrom'] "
               data-testid="document-dateFrom-enter">
-              <i class="check icon"></i>
+              <i class="fas fa-check"></i>
             </button>
           } @else {
-            <input type="text" [value]="dateFrom|date:'dd.MM.yyyy'" readonly>
-            <button class="ui small red icon button"
+            <input type="text" class="input input-xs input-bordered flex-1" [value]="dateFrom|date:'dd.MM.yyyy'" readonly>
+            <button class="btn btn-xs btn-circle btn-error text-primary-content tooltip tooltip-bottom tooltip-accent"
               type="button" (click)="setDateFrom('')"
-              [attr.data-tooltip]="auth.txt['reset']  + ' ' + auth.txt['dateFrom'] " data-position="bottom center">
-              <i class="times icon"></i>
+              [attr.data-tip]="auth.txt['reset']  + ' ' + auth.txt['dateFrom'] ">
+              <i class="fas fa-times"></i>
             </button>
           }
         </div>
       </div>
     </div>
-    <div class="row">
-      <div class="ten wide column">
-        <div class="ui tiny fluid labeled action input">
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="w-5/8">
+        <div class="flex items-center gap-1">
           <!-- we show a filter which is set via tooltip -...-->
-          <div class="ui label" [attr.data-tooltip]="documentFilter !== '' ? (auth.txt['filter'] + ' ' + auth.txt['is_set'] + ': ' + documentFilter) : (auth.txt['filter'] + ' ' + auth.txt['is_not_set'])"
-            data-position="bottom center">
+          <span class="badge tooltip tooltip-bottom tooltip-accent" [attr.data-tip]="documentFilter !== '' ? (auth.txt['filter'] + ' ' + auth.txt['is_set'] + ': ' + documentFilter) : (auth.txt['filter'] + ' ' + auth.txt['is_not_set'])">
             {{documenttxt['documentName']}}/{{documenttxt['imageTitle']}}:
-          </div>
+          </span>
           @if (documentFilter === '') {
             <!-- we do not reset filter when leaving the filter entry ...
             (blur)="setFilter(filterTerm.value); filterTerm.value='' " -->
-            <input (keyup)="setFilterEntered(filterTerm.value)" (keyup.enter)="setFilter(filterTerm.value)" #filterTerm
+            <input class="input input-xs input-bordered flex-1" (keyup)="setFilterEntered(filterTerm.value)" (keyup.enter)="setFilter(filterTerm.value)" #filterTerm
               type="text" [placeholder]="auth.txt['filter'] + '---'" [disabled]="documentFilter !== ''" data-testid="document-filter">
-            <button class="ui small icon button" [ngClass]="isFilterEntered ? 'green' : ''"
+            <button class="btn btn-xs btn-circle tooltip tooltip-bottom tooltip-accent" [ngClass]="isFilterEntered ? 'btn-success text-primary-content' : 'btn-outline'"
               type="button" (click)="setFilter(filterTerm.value)"
-              [attr.data-tooltip]="auth.txt['set']  + ' ' + auth.txt['filter'] " data-position="bottom center"
+              [attr.data-tip]="auth.txt['set']  + ' ' + auth.txt['filter'] "
               data-testid="document-filter-enter">
-              <i class="check icon"></i>
+              <i class="fas fa-check"></i>
             </button>
           }
           @if (documentFilter !== '') {
-            <input type="text" [value]="documentFilter" readonly>
-            <button class="ui small red icon button"
+            <input type="text" class="input input-xs input-bordered flex-1" [value]="documentFilter" readonly>
+            <button class="btn btn-xs btn-circle btn-error text-primary-content tooltip tooltip-bottom tooltip-accent"
               type="button" (click)="setFilter('')"
-              [attr.data-tooltip]="auth.txt['reset']  + ' ' + auth.txt['filter'] " data-position="bottom center">
-              <i class="times icon"></i>
+              [attr.data-tip]="auth.txt['reset']  + ' ' + auth.txt['filter'] ">
+              <i class="fas fa-times"></i>
             </button>
           }
         </div>
       </div>
-      <div class="six wide column">
-        <div class="ui tiny fluid labeled action input">
-          <div class="ui label" [attr.data-tooltip]="dateTo ? (auth.txt['dateTo'] + ' ' + auth.txt['is_set'] + ': ' +  GlobalFunctions.getDDMMYYYY(dateTo)) : (auth.txt['dateTo'] + ' ' + auth.txt['is_not_set'])"
-            data-position="bottom center">
+      <div class="w-3/8 flex-1">
+        <div class="flex items-center gap-1">
+          <span class="badge tooltip tooltip-bottom tooltip-accent" [attr.data-tip]="dateTo ? (auth.txt['dateTo'] + ' ' + auth.txt['is_set'] + ': ' +  GlobalFunctions.getDDMMYYYY(dateTo)) : (auth.txt['dateTo'] + ' ' + auth.txt['is_not_set'])">
             {{auth.txt['dateTo']}}:
-          </div>
+          </span>
           @if (!dateTo) {
             <!-- we can enter date via enter or via pressing icon button  -->
-            <input (keyup)="setDateToEntered(dateToString.value)" (keyup.enter)="setDateTo(dateToString.value); dateToString.value=GlobalFunctions.getDDMMYYYY(dateTo)" #dateToString
+            <input class="input input-xs input-bordered flex-1" (keyup)="setDateToEntered(dateToString.value)" (keyup.enter)="setDateTo(dateToString.value); dateToString.value=GlobalFunctions.getDDMMYYYY(dateTo)" #dateToString
               type="text" [placeholder]="auth.txt['date'] + '; dd.mm.yyyy'" [disabled]="dateTo" data-testid="document-dateTo">
-            <button class="ui small icon button" [ngClass]="dateToString.value !== '' ? 'green' : ''"
+            <button class="btn btn-xs btn-circle tooltip tooltip-bottom tooltip-accent" [ngClass]="dateToString.value !== '' ? 'btn-success text-primary-content' : 'btn-outline'"
               type="button" (click)="setDateTo(dateToString.value); dateToString.value=GlobalFunctions.getDDMMYYYY(dateTo)"
-              [attr.data-tooltip]="auth.txt['set']  + ' ' + auth.txt['dateTo'] " data-position="bottom center"
+              [attr.data-tip]="auth.txt['set']  + ' ' + auth.txt['dateTo'] "
               data-testid="document-dateTo-enter">
-              <i class="check icon"></i>
+              <i class="fas fa-check"></i>
             </button>
           } @else {
-            <input type="text" [value]="dateTo|date:'dd.MM.yyyy'" readonly>
-            <button class="ui small red icon button"
+            <input type="text" class="input input-xs input-bordered flex-1" [value]="dateTo|date:'dd.MM.yyyy'" readonly>
+            <button class="btn btn-xs btn-circle btn-error text-primary-content tooltip tooltip-bottom tooltip-accent"
               type="button" (click)="setDateTo('')"
-              [attr.data-tooltip]="auth.txt['reset']  + ' ' + auth.txt['dateTo'] " data-position="bottom center">
-              <i class="times icon"></i>
+              [attr.data-tip]="auth.txt['reset']  + ' ' + auth.txt['dateTo'] ">
+              <i class="fas fa-times"></i>
             </button>
           }
         </div>
       </div>
     </div>
-    <div class="row">
-      <div class="ten wide column">
-        <div class="ui tiny fluid labeled action input">
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="w-5/8">
+        <div class="flex items-center gap-1">
           <!-- we show a filter which is set via tooltip -...-->
-          <div class="ui label" [attr.data-tooltip]="subdirFilter !== '' ? (auth.txt['filter'] + ' ' + auth.txt['is_set'] + ': ' + subdirFilter) : (auth.txt['filter'] + ' ' + auth.txt['is_not_set'])"
-            data-position="bottom center">
+          <span class="badge tooltip tooltip-bottom tooltip-accent" [attr.data-tip]="subdirFilter !== '' ? (auth.txt['filter'] + ' ' + auth.txt['is_set'] + ': ' + subdirFilter) : (auth.txt['filter'] + ' ' + auth.txt['is_not_set'])">
             {{documenttxt['documentSubDirectory']}}:
-          </div>
+          </span>
           @if (subdirFilter === '') {
             <!-- we do not reset filter when leaving the filter entry ...
             (blur)="setFilter(filterTerm.value); filterTerm.value='' " -->
-            <input (keyup)="setSubdirEntered(subdirFilterTerm.value)" (keyup.enter)="setSubdir(subdirFilterTerm.value)" #subdirFilterTerm
+            <input class="input input-xs input-bordered flex-1" (keyup)="setSubdirEntered(subdirFilterTerm.value)" (keyup.enter)="setSubdir(subdirFilterTerm.value)" #subdirFilterTerm
               type="text" [placeholder]="auth.txt['filter'] + '---'" [disabled]="documentFilter !== ''" data-testid="document-subdir-filter">
-            <button class="ui small icon button" [ngClass]="isSubdirFilterEntered ? 'green' : ''"
+            <button class="btn btn-xs btn-circle tooltip tooltip-bottom tooltip-accent" [ngClass]="isSubdirFilterEntered ? 'btn-success text-primary-content' : 'btn-outline'"
               type="button" (click)="setSubdir(subdirFilterTerm.value)"
-              [attr.data-tooltip]="auth.txt['set']  + ' ' + auth.txt['filter'] " data-position="bottom center"
+              [attr.data-tip]="auth.txt['set']  + ' ' + auth.txt['filter'] "
               data-testid="document-subdir-filter-enter">
-              <i class="check icon"></i>
+              <i class="fas fa-check"></i>
             </button>
           }
           @if (subdirFilter !== '') {
-            <input type="text" [value]="subdirFilter" readonly>
-            <button class="ui small red icon button"
+            <input type="text" class="input input-xs input-bordered flex-1" [value]="subdirFilter" readonly>
+            <button class="btn btn-xs btn-circle btn-error text-primary-content tooltip tooltip-bottom tooltip-accent"
               type="button" (click)="setSubdir('')"
-              [attr.data-tooltip]="auth.txt['reset']  + ' ' + auth.txt['filter'] " data-position="bottom center">
-              <i class="times icon"></i>
+              [attr.data-tip]="auth.txt['reset']  + ' ' + auth.txt['filter'] ">
+              <i class="fas fa-times"></i>
             </button>
           }
         </div>
       </div>
-      <div class="six wide column">
-        <div class="ui checkbox">
-          <input type="checkbox" [checked]="isDistinctDirectory" (change)="setDistinctDirectory($event)">
-          <label><small>{{auth.txt['distinct_directory'] }} </small></label>
+      <div class="w-3/16">
+        <div class="form-control">
+          <label class="label cursor-pointer gap-2">
+            <input type="checkbox" class="checkbox checkbox-sm" [checked]="isDistinctDirectory" (change)="setDistinctDirectory($event)">
+            <span class="label-text"><small>{{auth.txt['distinct_directory'] }} </small></span>
+          </label>
         </div>
       </div>
     </div>
-    <div class="row">
-      <div class="four wide column">
-        <div class="ui checkbox">
-          <input type="checkbox" [checked]="isShowDisabled" (change)="setShowDisabled($event)">
-          <label><small>{{auth.txt['show_disabled'] }}</small></label>
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="w-1/4">
+        <div class="form-control">
+          <label class="label cursor-pointer gap-2">
+            <input type="checkbox" class="checkbox checkbox-sm" [checked]="isShowDisabled" (change)="setShowDisabled($event)">
+            <span class="label-text"><small>{{auth.txt['show_disabled'] }}</small></span>
+          </label>
         </div>
       </div>
-      <div [ngClass]="isMaint ? 'five wide column' : 'eleven wide column'">
+      <div [ngClass]="isMaint ? 'w-5/16' : 'w-11/16'" class="flex flex-wrap gap-4">
         @for (d of documentTypeChoices; track d.value) {
-          <div class="ui radio checkbox" >
-            <input type="radio"  [value]="d.value" [checked]="d.isSelected" (change)="setDocumentType($event)">
-            <label>{{d.text}}</label>
+          <div class="form-control">
+            <label class="label cursor-pointer gap-2">
+              <input type="radio" class="radio radio-sm" [value]="d.value" [checked]="d.isSelected" (change)="setDocumentType($event)">
+              <span class="label-text">{{d.text}}</span>
+            </label>
           </div>
         }
       </div>
@@ -193,27 +196,28 @@
 }
 
 @if (auth && sessionForViews && showProgressSignal() > 0) {
-  <div class="ui indicating progress" [attr.data-percent]="progressPercent">
-    <div class="bar" [ngStyle]="progressStyle">
-      <div class="centered progress">{{progressValue + ' ' + auth.txt['documents']}}</div>
+  <div class="flex flex-col gap-1">
+    <progress class="progress progress-primary w-full" [value]="progressPercent" max="100"></progress>
+    <div class="flex justify-between text-sm">
+      <span>{{progressValue + ' ' + auth.txt['documents']}}</span>
+      <span>{{progressPercent + '% ' + (isProgressPrepare ? auth.txt['prepared'] :  auth.txt['uploaded']) }}</span>
     </div>
-    <div class="label">{{progressPercent + '% ' + (isProgressPrepare ? auth.txt['prepared'] :  auth.txt['uploaded']) }}</div>
   </div>
 }
 
 <!-- we activate data load dimmer depending on isDocumentsLoaded -->
 @if (refreshSignal() === 0 && isShowList) {
-  <div class="ui active inverted dimmer">
-    <div class="ui large text loader">{{auth.txt['loading_data'] }}</div>
+  <div class="flex flex-col items-center justify-center gap-2 py-8">
+    <span class="loading loading-spinner loading-lg"></span>
+    <span>{{auth.txt['loading_data'] }}</span>
   </div>
 }
 
 @if (popupSignal() === 1) {
-  <div Class="ui flowing popup visible">
-    <!-- we leave a few spaces due to arrow of popup  ... -->
-    <div class="header">&nbsp;&nbsp;&nbsp;{{popupHeaderText}}</div>
+  <div class="alert shadow-lg">
+    <div class="font-bold">&nbsp;&nbsp;&nbsp;{{popupHeaderText}}</div>
     @if (popupContentText !== '') {
-      <div class="content">{{popupContentText}}</div>
+      <div>{{popupContentText}}</div>
     }
     @if (popupConfirmText!== '') {
       <div [ngClass]="popupConfirmClass"
@@ -231,16 +235,10 @@
     [thumbnails]="thumbnails" [thumbnailCount]="thumbnailCountSignal()" [images]="images"
     [txt]="auth.txt" [documenttxt]="documenttxt"
     [isDistinctCategory]="isDistinctCategory" [isDistinctDirectory]="isDistinctDirectory" [isShowDisabled]="isShowDisabled"
-    [documentCategorys]="documentCategorys"  
+    [documentCategorys]="documentCategorys"
     (documentsShown)="getFilteredThumbnails($event)"
-    (documentListClose)="closeDocumentList()" 
+    (documentListClose)="closeDocumentList()"
     (documentShow)="showDocument($event)" (documentMaint)="maintDocument($event)"
     (documentDisable)="disableDocument($event)" (documentEnable)="enableDocument($event)">
   </dsy-document-list-view>
 }
-
-
-
-
-
-

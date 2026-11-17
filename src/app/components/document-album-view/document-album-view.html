@@ -1,54 +1,58 @@
 @if (auth && auth.txt && parametersSetSignal() > 0 ) {
-  <div class="ui grid container">
-    <div class="row">
-      <div class="five wide column"></div>
-      <div class="six wide column">
-        <h2 class="ui center aligned header"> {{immichAssetTxt['className']}} {{auth.txt['list']}}  {{action === 'getDocuments' ? '- import ' + category : ''}}  {{action === 'setAlbums' ? '- album' : ''}} </h2>
+  <div class="container mx-auto p-4 flex flex-col gap-2">
+    <div class="flex items-center justify-between gap-2">
+      <div class="w-5/12"></div>
+      <div class="w-3/8 flex justify-center">
+        <h2 class="text-2xl md:text-3xl font-bold text-center"> {{immichAssetTxt['className']}} {{auth.txt['list']}}  {{action === 'getDocuments' ? '- import ' + category : ''}}  {{action === 'setAlbums' ? '- album' : ''}} </h2>
       </div>
-      <div class="five wide column">
+      <div class="w-5/12">
         <!-- here comes selection of list/chronicle -->
       </div>
     </div>
-    <div class="row">
-      <div class="two wide column"></div>
-      <div class="three wide column">
-        <div class="ui checkbox">
-          <input type="checkbox" [checked]="isShowSelectable" (change)="showSelectable($event)">
-          <label><small>{{auth.txt['show_selectable'] }}</small></label>
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="w-1/8"></div>
+      <div class="w-3/16">
+        <div class="form-control">
+          <label class="label cursor-pointer gap-2">
+            <input type="checkbox" class="checkbox checkbox-sm" [checked]="isShowSelectable" (change)="showSelectable($event)">
+            <span class="label-text"><small>{{auth.txt['show_selectable'] }}</small></span>
+          </label>
         </div>
       </div>
-      <div class="three wide column">
-        <div class="ui checkbox">
-          <input type="checkbox" [checked]="isSelectAll" (change)="selectAll($event)">
-          <label><small>{{auth.txt['select_all'] }}</small></label>
+      <div class="w-3/16">
+        <div class="form-control">
+          <label class="label cursor-pointer gap-2">
+            <input type="checkbox" class="checkbox checkbox-sm" [checked]="isSelectAll" (change)="selectAll($event)">
+            <span class="label-text"><small>{{auth.txt['select_all'] }}</small></span>
+          </label>
         </div>
       </div>
-      <div class="three wide column">
+      <div class="w-3/16 flex items-center gap-2">
         @if (action === 'getDocuments') {
           @if (importCounter >= 0) {
-            <button class="ui tiny circular green icon button"
-              [attr.data-tooltip]="auth.txt['submit']" data-position="top center"
+            <button class="btn btn-xs btn-circle btn-success text-primary-content tooltip tooltip-top tooltip-primary"
+              [attr.data-tip]="auth.txt['submit']"
               type="button"
               (click)="import()">
-              <i class="check icon"></i>
+              <i class="fas fa-check"></i>
             </button>
-            <label>import {{importCounter}} assets</label>
+            <span class="label-text">import {{importCounter}} assets</span>
           }
         } @else if (action === 'setAlbums') {
-          <button class="ui tiny circular green icon button"
-            [attr.data-tooltip]="auth.txt['submit']" data-position="top center"
+          <button class="btn btn-xs btn-circle btn-success text-primary-content tooltip tooltip-top tooltip-primary"
+            [attr.data-tip]="auth.txt['submit']"
             type="button"
             (click)="insertInAlbum()">
-            <i class="check icon"></i>
+            <i class="fas fa-check"></i>
           </button>
-          <label>set albums</label>
+          <span class="label-text">set albums</span>
         }
       </div>
-      <div class="three wide column">
-        <button class="ui tiny circular red icon button"
-          type="button" [attr.data-tooltip]="auth.txt['cancel'] " data-position="top center"
+      <div class="w-3/16">
+        <button class="btn btn-xs btn-circle btn-error text-primary-content tooltip tooltip-top tooltip-accent"
+          type="button" [attr.data-tip]="auth.txt['cancel'] "
           (click)="cancel()">
-          <i class="times icon"></i>
+          <i class="fas fa-times"></i>
         </button>
       </div>
     </div>
@@ -57,114 +61,117 @@
 
 <!-- we await update and getting new data from server   -->
 @if (foldersReadySignal() === 0) {
-  <h3>immich provider not ready</h3>
+  <h3 class="text-xl md:text-2xl font-semibold">immich provider not ready</h3>
 } @else if (foldersReadySignal() === 1) {
-  <div class="ui active inverted dimmer">
-    <div class="ui large text loader">processing data on server  ...</div>
+  <div class="flex flex-col items-center justify-center gap-2 py-8">
+    <span class="loading loading-spinner loading-lg"></span>
+    <span>processing data on server  ...</span>
   </div>
 }
 
 @if (auth && foldersReadySignal() === 2 && showProgressSignal() > 0) {
-  <div class="ui indicating progress" [attr.data-percent]="progressPercent">
-    <div class="bar" [ngStyle]="progressStyle">
-      <div class="centered progress">{{progressValue + ' ' + ' folders'}}</div>
+  <div class="flex flex-col gap-1">
+    <progress class="progress progress-primary w-full" [value]="progressPercent" max="100"></progress>
+    <div class="flex justify-between text-sm">
+      <span>{{progressValue + ' ' + ' folders'}}</span>
+      <span>{{progressPercent + '% ' + auth.txt['prepared']}}</span>
     </div>
-    <div class="label">{{progressPercent + '% ' + auth.txt['prepared']}}</div>
   </div>
 }
 
 
- @if (foldersReadySignal() > 2) {
+@if (foldersReadySignal() > 2) {
   <br>
   <div [style]="scrollWrapperStyle">
-  <!-- first stuck to fix first column since fomantic 2.9 -->
-    <table class="ui first stuck celled structured unstackable table" [style]="tableScrollStyle">
-      <thead>
-        <tr>
-          <th class="two wide left aligned" rowspan="3">
-            folder name
-          </th>
-          <th class="four wide left aligned">
-            # of assets
-          </th>
-          <th class="one wide"></th>
-          <th class="one wide"></th>
-          @if (action === 'getDocuments') {
-            <th class="one wide"></th>
-            <th class="one wide"></th>
-          }
-          <th class="two wide" rowspan="3">
-            {{auth.txt['select']}}
-          </th>
-        </tr>
-        <tr>
-          <th class="right aligned">
-            total
-          </th>
-          <th class="right aligned">
-            {{action === 'getDocuments' ? 'new' : 'not in album' }}
-          </th>
-          <th class="right aligned">
-            {{action === 'getDocuments' ? 'no id' : 'create album'}} 
-          </th>
-          @if (action === 'getDocuments') {
-            <th class="right aligned">
-              same id
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full" [style]="tableScrollStyle">
+        <thead>
+          <tr>
+            <th class="w-1/8 text-left" rowspan="3">
+              folder name
             </th>
-            <th class="right aligned">
-              other id
+            <th class="w-1/6 text-left">
+              # of assets
             </th>
+            <th class="w-1/12"></th>
+            <th class="w-1/12"></th>
+            @if (action === 'getDocuments') {
+              <th class="w-1/12"></th>
+              <th class="w-1/12"></th>
             }
-        </tr>
-        <tr>
-          <th class="left aligned">
-            (in subdir)
-          </th>
-          <th [attr.colspan] ="action === 'getDocuments' ? 4 : 2"></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (line of shownFolderLines; track $index; let i = $index) {
-          @if (line.type === 1) {
-            <tr>
-              <td class="left aligned" rowspan="3">
-                {{line.text[1] === '' ? '/' : line.text[1]}}
-              </td>
-              <td [attr.colspan] ="action === 'getDocuments' ? 6 : 4"></td>
-            </tr>
-          }
-          @if (line.type === 2) {
-            <tr>
-              @for (counter of line.counters; track $index; let ix = $index) {
-                <td class="right aligned">
-                  {{counter}}
+            <th class="w-1/8" rowspan="3">
+              {{auth.txt['select']}}
+            </th>
+          </tr>
+          <tr>
+            <th class="text-right">
+              total
+            </th>
+            <th class="text-right">
+              {{action === 'getDocuments' ? 'new' : 'not in album' }}
+            </th>
+            <th class="text-right">
+              {{action === 'getDocuments' ? 'no id' : 'create album'}}
+            </th>
+            @if (action === 'getDocuments') {
+              <th class="text-right">
+                same id
+              </th>
+              <th class="text-right">
+                other id
+              </th>
+            }
+          </tr>
+          <tr>
+            <th class="text-left">
+              (in subdir)
+            </th>
+            <th [attr.colspan] ="action === 'getDocuments' ? 4 : 2"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of shownFolderLines; track $index; let i = $index) {
+            @if (line.type === 1) {
+              <tr>
+                <td class="text-left" rowspan="3">
+                  {{line.text[1] === '' ? '/' : line.text[1]}}
                 </td>
-              }
-              <td class="left aligned">
-                @if (line.isSelectable) {
-                  <div class="ui checkbox">
-                    <input type="checkbox" [checked]="line.isSelected" (change)="select($event, line.sort)">
-                    <label><small>{{auth.txt['select'] }} </small></label>
-                  </div>
-                } @else if (line.text[0] && line.text[0] !== '') {
-                  {{line.text[0]}}
-                } 
-              </td>
-            </tr>
-          }
-          @if (line.type === 3) {
-            <tr>
-              @for (counter of line.counters; track $index; let ix = $index) {
-                <td class="right aligned">
-                  ({{counter}})
+                <td [attr.colspan] ="action === 'getDocuments' ? 6 : 4"></td>
+              </tr>
+            }
+            @if (line.type === 2) {
+              <tr>
+                @for (counter of line.counters; track $index; let ix = $index) {
+                  <td class="text-right">
+                    {{counter}}
+                  </td>
+                }
+                <td class="text-left">
+                  @if (line.isSelectable) {
+                    <label class="label cursor-pointer gap-2">
+                      <input type="checkbox" class="checkbox checkbox-xs" [checked]="line.isSelected" (change)="select($event, line.sort)">
+                      <span class="label-text"><small>{{auth.txt['select'] }} </small></span>
+                    </label>
+                  } @else if (line.text[0] && line.text[0] !== '') {
+                    {{line.text[0]}}
+                  }
                 </td>
-              }
-            <td></td>
-            </tr>
+              </tr>
+            }
+            @if (line.type === 3) {
+              <tr>
+                @for (counter of line.counters; track $index; let ix = $index) {
+                  <td class="text-right">
+                    ({{counter}})
+                  </td>
+                }
+              <td></td>
+              </tr>
+            }
           }
-        }
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
   </div>
 }
 
@@ -177,5 +184,3 @@
     [names]="names" (pageSelect)="onPageSelect($event)">
   </dsy-paginator>
 }
-
-
