@@ -1,4 +1,3 @@
-
 <br>
 @if (session && !isShowDocument) {
   <dsy-paginator [(ngModel)]="selectedPage"
@@ -10,54 +9,53 @@
   </dsy-paginator>
 }
 @if (showSignal() >= 0 && session && txt && documenttxt && eventtxt && yearElements && !isShowDocument) {
-  <div class="ui grid">
+  <div class="flex flex-col gap-2">
     @for (element of shownElements; track $index; let i = $index) {
-      <div class="row">
-        <div class="eight wide column">
-          <button class="ui fluid huge button" 
+      <div class="flex items-center justify-between gap-2">
+        <div class="w-1/2">
+          <button class="btn btn-lg w-full tooltip tooltip-bottom tooltip-accent"
             [style]="element.isElementShown ? headerSelectedStyle : headerStyle"
-            [attr.data-tooltip]="(element.isElementShown  ? txt['hide_details'] : txt['show_details']) + ' ' + txt['for'] + ' ' + txt['year'] + ' ' + element.year"
-            data-position="bottom center"
+            [attr.data-tip]="(element.isElementShown  ? txt['hide_details'] : txt['show_details']) + ' ' + txt['for'] + ' ' + txt['year'] + ' ' + element.year"
             (click)="toggleShowYear(i)"
           >
             {{element.year}}
           </button>
         </div>
-        <div class="four wide bottom aligned column">
+        <div class="w-1/4 flex items-end justify-center gap-1">
           @if (element.eventsCount > 0) {
-            <div class="ui tiny statistic">
-              <div class="value">
+            <div class="flex flex-col items-center">
+              <span class="text-2xl font-bold">
                 {{element.eventsCount}}
-              </div>
-              <div class="label">
+              </span>
+              <span class="text-sm opacity-70">
                 {{txt['events']}}
-              </div>
+              </span>
             </div>
           }
         </div>
-        <div class="four wide bottom aligned column">
+        <div class="w-1/4 flex items-end justify-center gap-1">
           @if (element.documentsCount > 0) {
-            <div class="ui tiny statistic">
-              <div class="value">
+            <div class="flex flex-col items-center">
+              <span class="text-2xl font-bold">
                 {{element.documentsCount}}
-              </div>
-              <div class="label">
+              </span>
+              <span class="text-sm opacity-70">
                 {{txt['documents'] }}
-              </div>
+              </span>
             </div>
           }
         </div>
       </div>
       <!-- years element is shown in detail -->
       @if (element.isElementShown) {
-        <div class="ui divider"></div>
+        <div class="divider"></div>
         @for (quarter of element.subElements; track $index; let q = $index) {
-          <div class="row">
+          <div class="flex flex-wrap items-start gap-2">
             @for (month of quarter.subElements; track $index; let m = $index) {
               <!--  at smartphone viw we show no qurter rows 
                 and we show month and year at month button     -->
               @if (quarter.isElementShown && windowWidth > WINDOW_WIDTH_TABLET) {
-                <div class="five wide column">
+                <div class="w-5/16 flex flex-col gap-1">
                   @if (month.documentsCount > 0 || month.eventsCount > 0) {
                     <ng-container *ngTemplateOutlet="monthButton"></ng-container>
                     <ng-container *ngTemplateOutlet="monthEvents"></ng-container>
@@ -66,21 +64,21 @@
                 </div>
               } @else {
                 @if (month.documentsCount > 0 || month.eventsCount > 0) {
-                  <div class="four wide column">
+                  <div class="w-1/4">
                       <ng-container *ngTemplateOutlet="monthButton"></ng-container>
                   </div>
-                  <div class="three wide column">
+                  <div class="w-3/16">
                     <ng-container *ngTemplateOutlet="monthEvents"></ng-container>
                   </div>
-                  <div class="three wide column">
+                  <div class="w-3/16">
                     <ng-container *ngTemplateOutlet="monthDocuments"></ng-container>
                   </div>
-                  <div class="six wide column">
-                   <!-- filler to have 16 columns   --> 
+                  <div class="w-3/8">
+                   <!-- filler to have full width   --> 
                   </div>
                   <!-- month element is shown in detail -->
                   @if (month.isElementShown) {
-                    <div class="sixteen wide column">
+                    <div class="w-full">
                     <!--  if there is month content, quarter.isElementShown is anyway set to false ...     -->
                     <dsy-chronicle-month-view
                       [session]="session"
@@ -103,10 +101,9 @@
                 }
               }
               <ng-template #monthButton>
-                <button class="ui small button" 
+                <button class="btn btn-sm tooltip tooltip-bottom tooltip-accent"
                   [style]="month.isElementShown ? headerSelectedStyle : headerStyle"
-                  [attr.data-tooltip]="month.isElementShown  ? txt['hide_details'] : txt['show_details']"
-                  data-position="bottom center"
+                  [attr.data-tip]="month.isElementShown  ? txt['hide_details'] : txt['show_details']"
                   (click)="toggleShowMonth(i, q, m)"
                 >
                   <!-- we use date pipe to get localized month abbreviated name -->
@@ -115,40 +112,36 @@
               </ng-template>
               <ng-template #monthDocuments>
                 @if (month.documentsCount > 0) {
-                  <div class="ui mini statistic">
-                    <div class="value">
+                  <div class="flex flex-col items-center">
+                    <span class="text-lg font-bold">
                       {{month.documentsCount}}
-                    </div>
-                    <div class="label">
+                    </span>
+                    <span class="text-xs opacity-70">
                       {{month.eventsCount > 0 && quarter.isElementShown && windowWidth > WINDOW_WIDTH_TABLET ? txt['documents'].substring(0,3) : txt['documents'] }}
-                    </div>
+                    </span>
                   </div>
                 }
               </ng-template>
               <ng-template #monthEvents>   
                   @if (month.eventsCount > 0) {
-                    <div class="ui mini statistic">
-                      <div class="value">
+                    <div class="flex flex-col items-center">
+                      <span class="text-lg font-bold">
                         {{month.eventsCount}}
-                      </div>
-                      <div class="label">
+                      </span>
+                      <span class="text-xs opacity-70">
                         {{month.documentsCount > 0 && quarter.isElementShown && windowWidth > WINDOW_WIDTH_TABLET ? txt['events'].substring(0,6) : txt['events'] }}
-                      </div>
+                      </span>
                     </div>
                   }
               </ng-template>
             }
           </div>
         }
-        <div class="ui divider"></div>
+        <div class="divider"></div>
       }
     }
   </div>
 }
-<!-- we do not use template - we have different parameters ...
-<ng-container *ngTemplateOutlet="paginator"></ng-container>
-<ng-template #paginator>
-  -->
 <!-- paginator selectedPage as ngModel -->
 @if (session && !isShowDocument) {
   <dsy-paginator [(ngModel)]="selectedPage"
